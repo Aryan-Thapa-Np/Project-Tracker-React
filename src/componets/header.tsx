@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import profile from '../assets/profile.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch,faUser,faArrowRightFromBracket,faGear } from '@fortawesome/free-solid-svg-icons';
+import { faSearch,faUser, } from '@fortawesome/free-solid-svg-icons';
 import { faBell } from '@fortawesome/free-regular-svg-icons';
 import { Link } from 'react-router-dom';
 
@@ -32,7 +32,7 @@ function Header() {
     return (
         <header className="flex justify-between items-center px-4 py-2 shadow-sm fixed w-full h-[70px] bg-white">
             <div className="nav-left">
-                <h1 className="text-xl font-bold font-mono">Tracker</h1>
+                <h1 className="text-xl font-bold font-mono">Project Tracker</h1>
             </div>
 
             <div className="nav-right flex items-center gap-4">
@@ -76,11 +76,7 @@ function Header() {
                         className="h-[40px] w-[40px] rounded-full object-cover"
                     />
 
-                    <div className="user-menu bg-white flex flex-col absolute w-[150px] gap-1 pl-5 pr-5  py-4 top-12 right-0 justify-center rounded-[5px] shadow-md">
-                        <Link to="/home"><FontAwesomeIcon icon={faUser} />Profile</Link>
-                        <Link to="/home"><FontAwesomeIcon icon={faGear} />Settings</Link>
-                        <Link to="/home" className="text-red-500"><FontAwesomeIcon icon={faArrowRightFromBracket} />Log Out</Link>
-                    </div>
+                 
                 </div>
             </div>
         </header>
