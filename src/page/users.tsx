@@ -1,11 +1,12 @@
 
+import React from 'react';
 import Sidebar from "../componets/sidebar.tsx";
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { faPlus, faArrowUp, faArrowDown, faMinus } from '@fortawesome/free-solid-svg-icons';
 
 
 
-const UserManagement = () => {
+const UserManagement:React.FC  = () => {
     return (
         <>
             <div className="flex w-full min-h-screen bg-gray-100">

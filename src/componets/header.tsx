@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import profile from '../assets/profile.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch,faUser, } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faBars, } from '@fortawesome/free-solid-svg-icons';
 import { faBell } from '@fortawesome/free-regular-svg-icons';
-import { Link } from 'react-router-dom';
 
 
-function Header() {
+
+const Header: React.FC = () => {
     const [isFocused, setIsFocused] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,9 +29,16 @@ function Header() {
     }, [])
 
 
+    
+
+
+
     return (
-        <header className="flex justify-between items-center px-4 py-2 shadow-sm fixed w-full h-[70px] bg-white">
-            <div className="nav-left">
+        <header className="z-10 flex justify-between  items-center px-4 py-2 shadow-sm fixed w-full h-[70px] bg-white">
+            <div className="nav-left flex gap-1 items-center">
+                <div  className="hamburger  cursor-pointer p-2 hover:bg-gray-200 rounded-xl transition-colors">
+                    <FontAwesomeIcon icon={faBars} />
+                </div>
                 <h1 className="text-xl font-bold font-mono">Project Tracker</h1>
             </div>
 
@@ -76,7 +83,7 @@ function Header() {
                         className="h-[40px] w-[40px] rounded-full object-cover"
                     />
 
-                 
+
                 </div>
             </div>
         </header>

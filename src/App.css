@@ -56,13 +56,41 @@ input[type="search"]::-moz-search-clear-button {
     color: #22c55e;
 }
 
+.hamburger {
+    display: none;
+    cursor: pointer;
+}
+
+.sidebar.show {
+    position:unset;
+    transform: translateX(0);
+    transition: all 1s linear;
+    z-index: 1;
+
+}
 
 
-
-@media (max-width:700px) {
+@media (max-width:800px) {
     .sidebar {
-
-        display: none;
+        position: fixed;
+        transform: translateX(-400px);
+        transition: all 1s linear;
+        z-index: -1;
 
     }
+
+    .hamburger {
+        display: flex;
+    }
+
+}
+
+@media (max-width:700px) {
+
+    .searchBox {
+        display: none;
+    }
+
+
+
 }

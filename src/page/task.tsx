@@ -1,11 +1,11 @@
-
+import React from 'react';
 import Sidebar from "../componets/sidebar.tsx";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 
 
-function Task() {
+const Task:React.FC  = ()=> {
     return (
         <div className="flex w-full min-h-screen bg-gray-100">
             <Sidebar />

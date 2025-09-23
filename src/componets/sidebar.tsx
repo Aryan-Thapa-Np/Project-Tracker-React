@@ -1,17 +1,24 @@
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHouse, faArrowRightFromBracket } from '@fortawesome/free-solid-svg-icons';
 import { faBell } from '@fortawesome/free-regular-svg-icons';
 import { Link, useLocation } from 'react-router-dom';
 
-function Sidebar() {
+
+
+const Sidebar: React.FC = () => {
   const location = useLocation();
 
 
   const getActiveClass = (path: string) =>
     location.pathname === path ? 'bg-black/5 text-[#1173d4]' : 'hover:text-gray-600 hover:bg-black/5';
 
+
+
+
+
   return (
-    <div className="sidebar flex flex-col justify-between w-56 bg-white shadow-lg p-6">
+    <div className="sidebar  flex flex-col justify-between w-56 bg-white shadow-lg p-6">
       <div className="py-15">
         <ul className="space-y-2 text-gray-600 font-medium">
           <li className={`cursor-pointer p-2 rounded-sm ${getActiveClass('/')}`}>
@@ -43,7 +50,7 @@ function Sidebar() {
           <li className={`cursor-pointer p-2 rounded-sm ${getActiveClass('/notifications')}`}>
             <Link to="/notifications" className="flex items-center space-x-2">
               <FontAwesomeIcon icon={faBell} className='text-[18px]' />
-                <span>Notifications</span>
+              <span>Notifications</span>
             </Link>
           </li>
           <li className={`cursor-pointer p-2 rounded-sm ${getActiveClass('/users')}`}>

@@ -1,3 +1,4 @@
+import React from 'react';
 import Sidebar from "../componets/sidebar.tsx";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -11,7 +12,7 @@ import {
     faCheckCircle 
 } from '@fortawesome/free-solid-svg-icons';
 
-function Notifications() {
+const Notifications:React.FC = ()=>{
     const notifications = [
         { icon: faFileAlt, title: "New task assigned: 'Prepare presentation slides'", project: "Project Alpha", time: "2h ago" },
         { icon: faCommentDots, title: "Comment on 'Design review'", project: "Project Beta", time: "4h ago" },

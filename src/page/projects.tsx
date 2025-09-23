@@ -1,6 +1,7 @@
+import React from 'react';
 import Sidebar from "../componets/sidebar.tsx";
 
-const Projects = () => {
+const Projects:React.FC = () => {
   return (
     <div className="flex flex-col md:flex-row w-full min-h-screen  bg-gray-100">
       <Sidebar />

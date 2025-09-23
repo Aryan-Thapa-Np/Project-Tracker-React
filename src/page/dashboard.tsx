@@ -1,9 +1,13 @@
+
+import React from 'react';
 import Sidebar from "../componets/sidebar.tsx";
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
-function Dashboard() {
+const Dashboard: React.FC = () =>{
     return (
+        
         <div className="flex flex-col md:flex-row w-full min-h-screen bg-gray-100">
             <Sidebar />
             
