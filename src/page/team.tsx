@@ -99,7 +99,7 @@ const TeamTasks = () => {
                                     />
                                     <h2 className="text-2xl font-bold text-gray-900">Olivia Chen</h2>
                                 </div>
-                                <div className="bg-white rounded-sm shadow-sm overflow-hidden">
+                                <div className="bg-white rounded-sm shadow-sm overflow-x-auto">
                                     <table className="w-full text-sm text-left text-gray-500">
                                         <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                                             <tr>
@@ -117,7 +117,7 @@ const TeamTasks = () => {
                                                 </th>
                                                 <td className="px-6 py-4">Website Redesign</td>
                                                 <td className="px-6 py-4">
-                                                    <span className="status-badge  bg-yellow-100 text-yellow-700">In Progress</span>
+                                                    <span className="status-badge text-nowrap  bg-yellow-100 text-yellow-700">In Progress</span>
                                                 </td>
                                                 <td className="px-6 py-4 flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm priority-high">
@@ -133,7 +133,7 @@ const TeamTasks = () => {
                                                 </th>
                                                 <td className="px-6 py-4">Mobile App Development</td>
                                                 <td className="px-6 py-4">
-                                                    <span className="status-badge  bg-gray-100 text-gray-700">To Do</span>
+                                                    <span className="status-badge  text-nowrap bg-gray-100 text-gray-700">To Do</span>
                                                 </td>
                                                 <td className="px-6 py-4 flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm priority-medium">
@@ -158,7 +158,7 @@ const TeamTasks = () => {
                                     />
                                     <h2 className="text-2xl font-bold text-gray-900">Benjamin Carter</h2>
                                 </div>
-                                <div className="bg-white rounded-sm shadow-sm overflow-hidden">
+                                <div className="bg-white rounded-sm shadow-sm overflow-x-auto">
                                     <table className="w-full text-sm text-left text-gray-500">
                                         <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                                             <tr>
@@ -176,7 +176,7 @@ const TeamTasks = () => {
                                                 </th>
                                                 <td className="px-6 py-4">API Integration</td>
                                                 <td className="px-6 py-4">
-                                                    <span className="status-badge bg-green-100 text-green-700">Completed</span>
+                                                    <span className="status-badge text-nowrap bg-green-100 text-green-700">Completed</span>
                                                 </td>
                                                 <td className="px-6 py-4 flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm priority-high">
@@ -192,7 +192,7 @@ const TeamTasks = () => {
                                                 </th>
                                                 <td className="px-6 py-4">Backend Optimization</td>
                                                 <td className="px-6 py-4">
-                                                    <span className="status-badge  bg-yellow-100 text-yellow-700">In Progress</span>
+                                                    <span className="status-badge text-nowrap  bg-yellow-100 text-yellow-700">In Progress</span>
                                                 </td>
                                                 <td className="px-6 py-4 flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm priority-low">
@@ -217,8 +217,8 @@ const TeamTasks = () => {
                                     />
                                     <h2 className="text-2xl font-bold text-gray-700">Sophia Rodriguez</h2>
                                 </div>
-                                <div className="bg-white rounded-sm shadow-sm overflow-hidden">
-                                    <table className="w-full text-sm text-left text-gray-500">
+                                <div className="bg-white rounded-sm  shadow-sm overflow-x-auto">
+                                    <table className="w-full text-sm text-left text-gray-500 ">
                                         <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                                             <tr>
                                                 <th className="px-6 py-3">Task Name</th>
@@ -228,14 +228,14 @@ const TeamTasks = () => {
                                                 <th className="px-6 py-3">Due Date</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody> 
                                             <tr className="bg-white border-b border-gray-200">
-                                                <th className="px-6 py-4 font-medium text-gray-700" scope="row">
+                                                <th className="px-6 py-4  font-medium text-gray-700" scope="row">
                                                     Plan social media campaign
                                                 </th>
                                                 <td className="px-6 py-4">Marketing Campaign</td>
                                                 <td className="px-6 py-4">
-                                                    <span className="status-badge  bg-gray-100 text-gray-700">To Do</span>
+                                                    <span className="status-badge  bg-gray-100 text-nowrap text-gray-700">To Do</span>
                                                 </td>
                                                 <td className="px-6 py-4 flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm priority-medium">

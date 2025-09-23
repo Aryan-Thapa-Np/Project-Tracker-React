@@ -39,7 +39,7 @@ function Task() {
                                         </td>
                                         <td className="px-6 py-4">Website Redesign</td>
                                         <td className="px-6 py-4">
-                                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                                            <span className="px-3 py-1 text-nowrap rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
                                                 In Progress
                                             </span>
                                         </td>
@@ -54,7 +54,7 @@ function Task() {
                                         </td>
                                         <td className="px-6 py-4">Mobile App Development</td>
                                         <td className="px-6 py-4">
-                                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                            <span className="px-3 py-1 text-nowrap rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                                                 To Do
                                             </span>
                                         </td>
@@ -69,7 +69,7 @@ function Task() {
                                         </td>
                                         <td className="px-6 py-4">API Integration</td>
                                         <td className="px-6 py-4">
-                                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                            <span className="px-3 py-1 text-nowrap  rounded-full text-xs font-medium bg-green-100 text-green-700">
                                                 Completed
                                             </span>
                                         </td>
@@ -83,7 +83,7 @@ function Task() {
                                         </td>
                                         <td className="px-6 py-4">Marketing Campaign</td>
                                         <td className="px-6 py-4">
-                                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                                            <span className="px-3 py-1 text-nowrap rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
                                                 In Progress
                                             </span>
                                         </td>
@@ -99,7 +99,7 @@ function Task() {
                                         </td>
                                         <td className="px-6 py-4">Backend Optimization</td>
                                         <td className="px-6 py-4">
-                                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                            <span className="px-3 py-1 text-nowrap rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                                                 To Do
                                             </span>
                                         </td>
