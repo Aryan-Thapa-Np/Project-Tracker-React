@@ -12,7 +12,7 @@ const TeamTasks:React.FC = () => {
                 <Sidebar />
 
 
-                <main className="flex-1 overflow-y-auto p-8 bg-gray-100 content-area  h-screen ">
+                <main className=" flex-1 overflow-y-auto p-8 bg-gray-100 content-area  h-screen ">
                     <div className="max-w-7xl mx-auto p-2 pt-15">
                         <header className="mb-8">
                             <div className="flex justify-between items-center">

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHouse, faArrowRightFromBracket } from '@fortawesome/free-solid-svg-icons';
 import { faBell } from '@fortawesome/free-regular-svg-icons';
@@ -9,16 +9,40 @@ import { Link, useLocation } from 'react-router-dom';
 const Sidebar: React.FC = () => {
   const location = useLocation();
 
-
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(true);
   const getActiveClass = (path: string) =>
     location.pathname === path ? 'bg-black/5 text-[#1173d4]' : 'hover:text-gray-600 hover:bg-black/5';
+
+  useEffect(() => {
+    const handleToggle = () => {
+      setIsOpen((prev) => !prev);
+    };
+
+    window.addEventListener('toggleSidebar', handleToggle);
+    return () => window.removeEventListener('toggleSidebar', handleToggle);
+  }, []);
+
+
+  useEffect(() => {
+    if (sidebarRef.current) {
+      if (isOpen) {
+        sidebarRef.current.classList.add('show');
+      } else {
+        sidebarRef.current.classList.remove('show');
+      }
+    }
+  }, [isOpen]);
+
+
+
 
 
 
 
 
   return (
-    <div className="sidebar  flex flex-col justify-between w-56 bg-white shadow-lg p-6">
+    <div ref={sidebarRef} className="sidebar  flex flex-col justify-between w-56 bg-white shadow-lg p-6">
       <div className="py-15">
         <ul className="space-y-2 text-gray-600 font-medium">
           <li className={`cursor-pointer p-2 rounded-sm ${getActiveClass('/')}`}>
@@ -48,9 +72,12 @@ const Sidebar: React.FC = () => {
             </Link>
           </li>
           <li className={`cursor-pointer p-2 rounded-sm ${getActiveClass('/notifications')}`}>
-            <Link to="/notifications" className="flex items-center space-x-2">
+            <Link to="/notifications" className="flex items-center space-x-2 relative">
               <FontAwesomeIcon icon={faBell} className='text-[18px]' />
               <span>Notifications</span>
+              <span className="absolute top-[-5px] right-[-5px] cursor-pointer bg-red-500 pr-1 pl-1 rounded-full text-white text-[12px]">
+                12
+              </span>
             </Link>
           </li>
           <li className={`cursor-pointer p-2 rounded-sm ${getActiveClass('/users')}`}>

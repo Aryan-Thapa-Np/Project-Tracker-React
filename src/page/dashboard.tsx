@@ -91,7 +91,7 @@ const Dashboard: React.FC = () =>{
                                     { title: "Design Review", date: "Oct 5, 2025", percent: 80 },
                                     { title: "Final Report", date: "Oct 15, 2025", percent: 80 },
                                 ].map((deadline, i) => (
-                                    <li key={i} className="p-3 border-b last:border-0">
+                                    <li key={i} className="p-3 ">
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 gap-2">
                                             <span className="flex items-center gap-2 text-base font-medium">
                                                 <FontAwesomeIcon icon={faCalendarAlt} className="text-blue-500 bg-blue-100 p-2 rounded-md" />

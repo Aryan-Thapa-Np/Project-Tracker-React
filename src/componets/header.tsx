@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import profile from '../assets/profile.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faBars, } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faBars, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { faBell } from '@fortawesome/free-regular-svg-icons';
 
 
@@ -10,6 +10,7 @@ const Header: React.FC = () => {
     const [isFocused, setIsFocused] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
+    const [hamburgerChange, setHamburgerChange] = useState<boolean>(true);
     useEffect(() => {
 
         const handleKey = (event: KeyboardEvent) => {
@@ -29,15 +30,26 @@ const Header: React.FC = () => {
     }, [])
 
 
-    
+
+
+    const toggleSidebar = () => {
+        setHamburgerChange((prev: boolean) => !prev);
+        const event = new CustomEvent('toggleSidebar', { bubbles: true });
+        window.dispatchEvent(event);
+    };
+
+
+ 
+
 
 
 
     return (
         <header className="z-10 flex justify-between  items-center px-4 py-2 shadow-sm fixed w-full h-[70px] bg-white">
             <div className="nav-left flex gap-1 items-center">
-                <div  className="hamburger  cursor-pointer p-2 hover:bg-gray-200 rounded-xl transition-colors">
-                    <FontAwesomeIcon icon={faBars} />
+                <div onClick={toggleSidebar} className="hamburger  cursor-pointer p-2 hover:bg-gray-200 rounded-xl transition-colors">
+
+                    <FontAwesomeIcon icon={hamburgerChange ? faXmark : faBars} />
                 </div>
                 <h1 className="text-xl font-bold font-mono">Project Tracker</h1>
             </div>
