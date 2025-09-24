@@ -1,3 +1,4 @@
+-- USERS TABLE
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -5,19 +6,24 @@ CREATE TABLE users (
     role ENUM('admin', 'project_manager', 'team_member') NOT NULL DEFAULT 'team_member',
     email VARCHAR(100) UNIQUE NOT NULL,
     email_verified BOOLEAN DEFAULT FALSE,
+    pc_token VARCHAR(250) NULL,
+    otp_code int NULL,
+    otp_code_type VARCHAR(50) NULL,
+    code_expire  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status ENUM('active', 'inactive', 'banned') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- PERMISSIONS TABLE
 CREATE TABLE permissions (
     permission_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    permission_key VARCHAR(100) NOT NULL,   -- e.g. "create_project", "delete_task"
+    permission_key VARCHAR(100) NOT NULL, 
     allowed BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
-
+-- PROJECTS TABLE
 CREATE TABLE projects (
     project_id INT AUTO_INCREMENT PRIMARY KEY,
     project_name VARCHAR(150) NOT NULL,
@@ -27,7 +33,7 @@ CREATE TABLE projects (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
+-- MILESTONES TABLE
 CREATE TABLE milestones (
     milestone_id INT AUTO_INCREMENT PRIMARY KEY,
     project_id INT NOT NULL,
@@ -37,11 +43,11 @@ CREATE TABLE milestones (
     FOREIGN KEY (project_id) REFERENCES projects(project_id) ON DELETE CASCADE
 );
 
-
+-- TASKS TABLE
 CREATE TABLE tasks (
     task_id INT AUTO_INCREMENT PRIMARY KEY,
     project_id INT NOT NULL,
-    assigned_to INT NOT NULL,
+    assigned_to INT NULL, -- must be nullable to support ON DELETE SET NULL
     task_name VARCHAR(200) NOT NULL,
     status ENUM('todo', 'in_progress', 'completed') DEFAULT 'todo',
     priority ENUM('low', 'medium', 'high', 'urgent') DEFAULT 'medium',
@@ -50,13 +56,12 @@ CREATE TABLE tasks (
     FOREIGN KEY (assigned_to) REFERENCES users(user_id) ON DELETE SET NULL
 );
 
-
-
+-- NOTIFICATIONS TABLE
 CREATE TABLE notifications (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     message TEXT NOT NULL,
-    fa_icon VARCHAR(100) DEFAULT 'fa-bell', -- default icon
+    fa_icon VARCHAR(100) DEFAULT 'fa-bell',
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
@@ -64,23 +69,17 @@ CREATE TABLE notifications (
 
 
 
-CREATE TABLE csrf_tokens (
-    token_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    token VARCHAR(255) UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
-
-
-
+-- REFRESH TOKENS TABLE
 CREATE TABLE refresh_tokens (
     token_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     token VARCHAR(255) UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP,
+    expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revoked BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+
+
+
+
