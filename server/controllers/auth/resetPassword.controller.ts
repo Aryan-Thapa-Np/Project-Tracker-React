@@ -4,18 +4,7 @@ import pool from '../../database/db.ts';
 import type { ResultSetHeader } from 'mysql2/promise';
 import { passwordChangeReqService } from "../../services/email.ts";
 import type { AuthenticatedRequest } from "../../types/auth.types.ts"; 
-
-interface User {
-    user_id: number;
-    username: string;
-    password: string;
-    role: string;
-    email: string;
-    email_verified: boolean;
-    status: string;
-    created_at: Date;
-
-}
+import {User} from "../../interface/users.ts";
 
 
 

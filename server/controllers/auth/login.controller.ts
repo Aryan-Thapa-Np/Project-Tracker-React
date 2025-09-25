@@ -3,22 +3,12 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import pool from '../../database/db.ts';
 import { emailVerificationService } from "../../services/email.ts";
+import { User } from "../../interface/users.ts";
 
-
-interface User {
-    user_id: number;
-    username: string;
-    password: string;
-    role: string;
-    email: string;
-    email_verified: boolean;
-    status: string;
-    created_at: Date;
-
-}
+const statusTypes = ["banned", "inactive"];
 
 export const loginController = async (req: Request, res: Response) => {
-   
+
     try {
         const { email, password, rememberMe = true } = req.body;
 
@@ -36,10 +26,44 @@ export const loginController = async (req: Request, res: Response) => {
 
         const user = (rows as User[])[0];
 
-        console.log(user.password);
+        if (statusTypes.includes(user.status)) {
+            return res.status(401).json({ success: false, error: "Account banned. please contact your admin for further instructions." });
+
+        }
+
+        
+        if (user.attempts >= 5 && user.status_expire && new Date(user.status_expire) > new Date()) {
+            if (user.status !== "inactive") {
+                await pool.execute(
+                    `UPDATE users SET status = ?, attempts = ? WHERE user_id = ?`,
+                    ["locked", null, user.user_id]
+                );
+                return res.status(401).json({
+                    success: false,
+                    error: `Account locked until ${user.status_expire}.`
+                });
+            }
+        }
+
+
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            return res.status(401).json({ success: false, error: "Invalid credentials" });
+            let attempts = user.attempts + 1;
+            let lockUntil = null;
+
+            if (attempts >= 5) {
+                lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+                attempts = 0;
+            }
+
+            await pool.execute(
+                `UPDATE users 
+                 SET attempts = ?, status = ?, status_expire = ? 
+                 WHERE user_id = ?`,
+                [attempts, "locked", lockUntil, user.user_id]
+            );
+
+            return res.status(401).json({ success: false, error: `Invalid credentials. ${user.attempts} attemps remanning` });
         }
 
         if (user.email_verified == false) {
@@ -48,7 +72,7 @@ export const loginController = async (req: Request, res: Response) => {
             await pool.execute(`update users set otp_code =?,otp_code_type=?,code_expire=? where user_id=?`, [code, "email_verification", expire_code, user.user_id])
             await emailVerificationService(email, code.toString());
 
-            return res.status(400).json({ success: false, isEmailVerified: user.email_verified, message: "Email verification Required." });
+            return res.status(200).json({ success: true, isEmailVerified: false, message: "Email verification Required." });
 
         }
 
@@ -60,7 +84,7 @@ export const loginController = async (req: Request, res: Response) => {
             { expiresIn: '1d' }
         );
 
-        res.cookie("Act", token, {
+        res.cookie("act", token, {
             httpOnly: true,
             sameSite: 'strict',
             maxAge: 24 * 60 * 60 * 1000 // 1 day
@@ -76,7 +100,7 @@ export const loginController = async (req: Request, res: Response) => {
             const expire_time = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // current time + 7 days in ms
 
 
-            await pool.execute(`update refresh_tokens set user_id= ?,token=? ,expires_at=?,revoked =?`, [user.user_id, refToken, expire_time, false])
+            await pool.execute(`insert into refresh_tokens(user_id,token ,expires_at,revoked) values(?,?,?,?)`, [user.user_id, refToken, expire_time, false])
             res.cookie("rft", refToken, {
                 httpOnly: true,
                 sameSite: 'strict',

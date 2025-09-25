@@ -1,17 +1,21 @@
 -- USERS TABLE
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
+    username VARCHAR(50) NOT NULL,
     password VARCHAR(255) NOT NULL,
     role ENUM('admin', 'project_manager', 'team_member') NOT NULL DEFAULT 'team_member',
     email VARCHAR(100) UNIQUE NOT NULL,
     email_verified BOOLEAN DEFAULT FALSE,
     pc_token VARCHAR(250) NULL,
+    token_type VARCHAR(50) NULL,
+    token_expire TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     otp_code int NULL,
     otp_code_type VARCHAR(50) NULL,
     code_expire  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status ENUM('active', 'inactive', 'banned') DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    attempts int null,
+    status ENUM('active','locked', 'inactive', 'banned') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status_expire TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- PERMISSIONS TABLE
