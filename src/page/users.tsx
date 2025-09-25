@@ -19,7 +19,7 @@ const UserManagement:React.FC  = () => {
                             <div>
                                 <h1 className="text-3xl font-bold tracking-tight text-gray-900">
                                     User Management
-                                </h1>
+                                </h1> 
                                 <p className="mt-1 text-sm text-gray-500">
                                     Manage user accounts, roles, and project assignments.
                                 </p>
