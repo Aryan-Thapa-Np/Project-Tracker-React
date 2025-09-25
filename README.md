@@ -1,5 +1,5 @@
  
-# Todo Management Platform
+# Project Tracker Platform
 
 A full-stack project management and team collaboration platform built with React, Express, TypeScript, and MySQL. This application enables teams to manage projects, tasks, users, and notifications efficiently with robust authentication and role-based access control.
 
@@ -72,16 +72,6 @@ src/
 - `componets/`: Contains reusable UI components like the header and sidebar.
 - `page/`: Contains main pages for dashboard, login, projects, tasks, team, users, notifications, and settings.
 
-### Running the Frontend
-
----
-
-## Setup Instructions
-
----
-
-## Database Schema & Migration
----
 
 ## Contributing
 
