@@ -3,7 +3,9 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import pool from '../../database/db.ts';
 import { emailVerificationService } from "../../services/email.ts";
-import { User } from "../../interface/users.ts";
+import type { User } from "../../types/usersTypes.ts";
+
+
 
 const statusTypes = ["banned", "inactive"];
 
@@ -31,16 +33,20 @@ export const loginController = async (req: Request, res: Response) => {
 
         }
 
-        
+
         if (user.attempts >= 5 && user.status_expire && new Date(user.status_expire) > new Date()) {
             if (user.status !== "inactive") {
                 await pool.execute(
                     `UPDATE users SET status = ?, attempts = ? WHERE user_id = ?`,
                     ["locked", null, user.user_id]
                 );
+
+                const diffMs = new Date().getTime() - new Date(user.status_expire).getTime();
+                const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
                 return res.status(401).json({
                     success: false,
-                    error: `Account locked until ${user.status_expire}.`
+                    error: `Account locked until ${minutes} mins.`
                 });
             }
         }
@@ -101,7 +107,7 @@ export const loginController = async (req: Request, res: Response) => {
 
 
             await pool.execute(`insert into refresh_tokens(user_id,token ,expires_at,revoked) values(?,?,?,?)`, [user.user_id, refToken, expire_time, false])
-            res.cookie("rft", refToken, {
+            res.cookie("ref", refToken, {
                 httpOnly: true,
                 sameSite: 'strict',
                 maxAge: 7 * 24 * 60 * 60 * 1000

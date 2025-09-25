@@ -51,6 +51,7 @@ CREATE TABLE milestones (
 CREATE TABLE tasks (
     task_id INT AUTO_INCREMENT PRIMARY KEY,
     project_id INT NOT NULL,
+    milestone_id int not null,
     assigned_to INT NULL, -- must be nullable to support ON DELETE SET NULL
     task_name VARCHAR(200) NOT NULL,
     status ENUM('todo', 'in_progress', 'completed') DEFAULT 'todo',
@@ -64,13 +65,14 @@ CREATE TABLE tasks (
 CREATE TABLE notifications (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    message TEXT NOT NULL,
-    fa_icon VARCHAR(100) DEFAULT 'fa-bell',
+    type ENUM('Task', 'Deadline', 'user', 'new_member', 'Document_update', 'announcement') NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    project VARCHAR(255) DEFAULT 'none',
+    icon_class VARCHAR(100) NOT NULL DEFAULT 'faBell',
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
-
 
 
 -- REFRESH TOKENS TABLE

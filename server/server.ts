@@ -1,17 +1,18 @@
-import express, { urlencoded } from 'express';
+import express from 'express';
 import type { Express, Request, Response } from 'express';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-
 dotenv.config({ quiet: true });
+import cookieParser from "cookie-parser";
 import { testConnection } from './database/db.ts';
-import user from "./routes/auth.route.ts";
+
 
 
 
 const app: Express = express();
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use(
   helmet({
@@ -31,11 +32,14 @@ app.use(
   })
 );
 
+import user from "./routes/auth.route.ts";
+import task from "./routes/task.route.ts";
 
 const port: number = parseInt(process.env.PORT || '4000', 10);
 
 
 app.use("/api", user);
+app.use("/api", task);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello, TypeScript + Express 🚀');
