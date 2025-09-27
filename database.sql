@@ -1,6 +1,7 @@
 -- USERS TABLE
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
+    profile_pic VARCHAR(250) NULL,
     username VARCHAR(50) NOT NULL,
     password VARCHAR(255) NOT NULL,
     role ENUM('admin', 'project_manager', 'team_member') NOT NULL DEFAULT 'team_member',

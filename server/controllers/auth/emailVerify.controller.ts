@@ -32,10 +32,10 @@ export const emailVerifyController = async (req: Request, res: Response) => {
             process.env.JWT_SECRET as string,
             { expiresIn: '1d' }
         );
-        
+
         res.cookie('act', token, {
             httpOnly: true,
-            sameSite: 'none',
+            sameSite: "lax",
             secure: process.env.NODE_ENV === 'production', // Secure only in production
             maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
@@ -55,7 +55,7 @@ export const emailVerifyController = async (req: Request, res: Response) => {
 
             res.cookie('ref', refToken, {
                 httpOnly: true,
-                sameSite: 'none',
+                sameSite: 'lax',
                 secure: process.env.NODE_ENV === 'production', // Secure only in production
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });

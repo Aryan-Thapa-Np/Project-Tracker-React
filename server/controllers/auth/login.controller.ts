@@ -73,7 +73,7 @@ export const loginController = async (req: Request, res: Response) => {
 
             return res.status(401).json({
                 success: false,
-                error: `Invalid credentials. (${MAX_LOGIN_ATTEMPTS - attempts} attempts remaining)`,
+                error: `Invalid credentials. ${MAX_LOGIN_ATTEMPTS - attempts} attempts remaining`,
             });
         }
 
@@ -107,7 +107,7 @@ export const loginController = async (req: Request, res: Response) => {
             { expiresIn: '1d' }
         );
 
-
+     
         res.cookie('act', token, {
             httpOnly: true,
             sameSite: 'lax',
@@ -131,7 +131,7 @@ export const loginController = async (req: Request, res: Response) => {
 
             res.cookie('ref', refToken, {
                 httpOnly: true,
-                sameSite: 'none',
+                sameSite: 'lax',
                 secure: process.env.NODE_ENV === 'production', // Secure only in production
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });

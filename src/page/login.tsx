@@ -13,10 +13,10 @@ import { escapeHTML, escapeForSQL } from "../sub-components/sanitize.tsx";
 import { toast } from "react-toastify";
 
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import "react-activity/dist/Sentry.css";
 
-
-
-
+import { Sentry } from "react-activity";
+import { getCsrfTokne } from '../sub-components/csrfToken.tsx';
 
 export default function LoginPage() {
 
@@ -24,7 +24,7 @@ export default function LoginPage() {
   const [passwordRaw, setPasswordRaw] = useState("");
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [code, setCode] = useState(["", "", "", "", "", ""]);
-
+  const [isLoading, setIsLoading] = useState(false);
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
@@ -41,6 +41,8 @@ export default function LoginPage() {
   // ---------- Handlers ----------
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setIsLoading(true);
 
     // Raw -> sanitized versions
     const cleanEmail = sanitizeEmailInput(email);
@@ -71,8 +73,10 @@ export default function LoginPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          credentials: 'include'
+          "x-csrf-token": await getCsrfTokne(),
+
         },
+        credentials: 'include',
         body: JSON.stringify({
           email: finalEmail,
           password: finalPassword,
@@ -100,9 +104,17 @@ export default function LoginPage() {
     } catch (error) {
 
       console.log(error);
+    } finally {
+      setTimeout(() => {
+
+        setIsLoading(false);
+      }, 500);
     }
 
   };
+
+
+
 
   // Keep code digits numeric only
   const handleCodeChange = (value: string, index: number) => {
@@ -210,8 +222,15 @@ export default function LoginPage() {
           </a>
         </div>
 
-        <Button type="submit" className="w-full py-3 text-lg cursor-pointer">
-          Login
+
+        <Button type="submit" className="w-full py-6 text-lg cursor-pointer" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Sentry size={15} color="#fff" /> Logging in...
+            </>
+          ) : (
+            "Login"
+          )}
         </Button>
       </form>
 

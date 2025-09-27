@@ -9,7 +9,7 @@ import Notifications from './page/Notifications.tsx';
 import LoginPage from "./page/login.tsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import PrivateRoute from "./sub-components/protected.tsx";
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -20,11 +20,13 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={
-          <>
-            <Header />
-            <Dashboard />
-       
-          </>
+          <PrivateRoute>
+            <>
+              <Header />
+              <Dashboard />
+
+            </>
+          </PrivateRoute>
         } />
         <Route path="/tasks" element={
           <>
@@ -66,7 +68,7 @@ function App() {
 
             <LoginPage />
             <ToastContainer
-            className="px-5 pt-1 text-sm"
+              className="px-5 pt-1 text-sm"
               position="top-center"
               autoClose={3000}
               hideProgressBar={true}
