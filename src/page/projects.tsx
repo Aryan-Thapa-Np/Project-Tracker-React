@@ -1,5 +1,5 @@
 import React from 'react';
-import Sidebar from "../componets/sidebar.tsx";
+import Sidebar from "../sub-components/sidebar.tsx";
 
 const Projects:React.FC = () => {
   return (

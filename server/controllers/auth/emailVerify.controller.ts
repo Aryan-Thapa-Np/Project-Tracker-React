@@ -2,7 +2,7 @@
 import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import pool from '../../database/db.ts';
-import type {User}  from "../../types/usersTypes.ts";
+import type { User } from "../../types/usersTypes.ts";
 import { emailVerificationService } from "../../services/email.ts";
 
 
@@ -32,12 +32,14 @@ export const emailVerifyController = async (req: Request, res: Response) => {
             process.env.JWT_SECRET as string,
             { expiresIn: '1d' }
         );
-
-        res.cookie("Act", token, {
+        
+        res.cookie('act', token, {
             httpOnly: true,
-            sameSite: 'strict',
-            maxAge: 24 * 60 * 60 * 1000 // 1 day
+            sameSite: 'none',
+            secure: process.env.NODE_ENV === 'production', // Secure only in production
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
+
 
         if (rememberMe) {
             const refToken = jwt.sign(
@@ -51,10 +53,11 @@ export const emailVerifyController = async (req: Request, res: Response) => {
 
             await pool.execute(`insert into refresh_tokens(user_id,token ,expires_at,revoked) values(?,?,?,?)`, [user.user_id, refToken, expire_time, false])
 
-            res.cookie("ref", refToken, {
+            res.cookie('ref', refToken, {
                 httpOnly: true,
-                sameSite: 'strict',
-                maxAge: 7 * 24 * 60 * 60 * 1000
+                sameSite: 'none',
+                secure: process.env.NODE_ENV === 'production', // Secure only in production
+                maxAge: 7 * 24 * 60 * 60 * 1000,
             });
         }
 

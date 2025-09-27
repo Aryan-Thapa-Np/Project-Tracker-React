@@ -39,7 +39,7 @@ export const authenticateUserMiddleware = async (
         }
 
         const user = (rows as User[])[0];
-        (req as AuthenticatedRequest).user = { id: user.user_id, email: user.email,role:user.role };
+        (req as AuthenticatedRequest).user = { id: user.user_id, email: user.email, role: user.role };
         return next();
       }
     }
@@ -59,7 +59,7 @@ export const authenticateUserMiddleware = async (
       }
 
       const user = (rows as User[])[0];
-      (req as AuthenticatedRequest).user = { id: user.user_id, email: user.email,role:user.role };
+      (req as AuthenticatedRequest).user = { id: user.user_id, email: user.email, role: user.role };
 
       const token = jwt.sign(
         { id: user.user_id, email: user.email },
@@ -67,11 +67,13 @@ export const authenticateUserMiddleware = async (
         { expiresIn: '1d' }
       );
 
-      res.cookie("act", token, {
+      res.cookie('act', token, {
         httpOnly: true,
-        sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000 // 1 day
+        sameSite: 'none',
+        secure: process.env.NODE_ENV === 'production', // Secure only in production
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
       });
+
       return next();
     }
 

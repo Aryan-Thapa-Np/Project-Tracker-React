@@ -28,7 +28,7 @@ const router = express.Router();
 router.get("/user/getCsrf",csrfGetLimiter, createCsrfTokenMiddleware as RequestHandler);
 
 
-router.post("/user/login",loginLimiter,verifyCsrfTokenMiddleware,loginValidation, loginController as RequestHandler);
+router.post("/user/login",loginValidation, loginController as RequestHandler);
 
 // router.post("/user/regi", regiii as RequestHandler);
 
