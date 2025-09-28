@@ -64,12 +64,7 @@ export const loginController = async (req: Request, res: Response) => {
                 [attempts, status, lockUntil, user.user_id]
             );
 
-            if (status === 'locked') {
-                return res.status(401).json({
-                    success: false,
-                    error: `Account locked due to too many failed attempts. Please try again in ${LOCKOUT_DURATION_MINUTES} minute${LOCKOUT_DURATION_MINUTES === 1 ? '' : 's'}.`,
-                });
-            }
+            
 
             return res.status(401).json({
                 success: false,
@@ -110,7 +105,7 @@ export const loginController = async (req: Request, res: Response) => {
      
         res.cookie('act', token, {
             httpOnly: true,
-            sameSite: 'lax',
+            sameSite: 'none',
             secure: process.env.NODE_ENV === 'production', // Secure only in production
             maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
@@ -131,7 +126,7 @@ export const loginController = async (req: Request, res: Response) => {
 
             res.cookie('ref', refToken, {
                 httpOnly: true,
-                sameSite: 'lax',
+                sameSite: 'none',
                 secure: process.env.NODE_ENV === 'production', // Secure only in production
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });

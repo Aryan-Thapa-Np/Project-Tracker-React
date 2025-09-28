@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import "react-activity/dist/Sentry.css";
+import { Link } from 'react-router-dom';
 
 import { Sentry } from "react-activity";
 import { getCsrfTokne } from '../sub-components/csrfToken.tsx';
@@ -25,6 +26,10 @@ export default function LoginPage() {
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingVerify, setIsLoadingVerify] = useState(false);
+  const [isLoadingResend, setIsLoadingResend] = useState(false);
+
+
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
@@ -54,10 +59,6 @@ export default function LoginPage() {
       return;
     }
 
-    if (cleanPassword.length < 6) {
-      alert("Password must be at least 6 characters.");
-      return;
-    }
 
 
     const emailForSql = escapeForSQL(cleanEmail);
@@ -87,7 +88,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok && data.success === false) {
-        console.log(data);
+
         msg = data.error;
         return toast.error(msg);
       }
@@ -129,11 +130,63 @@ export default function LoginPage() {
     }
   };
 
-  const handleVerifyCode = () => {
+  const handleVerifyCode = async (e: React.FormEvent) => {
     const finalCode = code.join("");
-    console.log("Entered Code:", finalCode);
-    // TODO: Verify code with backend
-    setShowCodeModal(false);
+
+    e.preventDefault();
+
+    setIsLoadingVerify(true);
+
+
+    const cleanEmail = sanitizeEmailInput(email);
+    const emailForSql = escapeForSQL(cleanEmail);
+    const finalEmail = escapeHTML(emailForSql);
+    const codeForSql = escapeForSQL(finalCode);
+    const codeForHtml = escapeHTML(codeForSql);
+
+
+    try {
+      const res = await fetch(`${apiUrl}/api/user/verifyEmail`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": await getCsrfTokne(),
+
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          code: codeForHtml,
+          email: finalEmail,
+          rememberMe: true
+        })
+      });
+      let msg: string;
+      const data = await res.json();
+
+      if (!res.ok && data.success === false) {
+
+        msg = data.error;
+        return toast.error(msg);
+      }
+
+      msg = data.message;
+      toast.success(msg);
+      setShowCodeModal(false);
+
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
+
+    } catch (error) {
+
+      console.log(error);
+    } finally {
+      setTimeout(() => {
+
+        setIsLoadingVerify(false);
+      }, 500);
+    }
+
   };
 
   // Password focus handlers (show/hide toggle)
@@ -142,6 +195,60 @@ export default function LoginPage() {
     setIsPasswordFocused(false);
     setIsPasswordVisible(false); // hide password when blur for security
   };
+
+
+
+  const handleEmailResend = async (e: React.FormEvent) => {
+
+
+    e.preventDefault();
+
+    setIsLoadingResend(true);
+
+
+    const cleanEmail = sanitizeEmailInput(email);
+    const emailForSql = escapeForSQL(cleanEmail);
+    const finalEmail = escapeHTML(emailForSql);
+
+
+    try {
+      const res = await fetch(`${apiUrl}/api/user/emailResend`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": await getCsrfTokne(),
+
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: finalEmail,
+        })
+      });
+      let msg: string;
+      const data = await res.json();
+
+      if (!res.ok && data.success === false) {
+
+        msg = data.error;
+        return toast.error(msg);
+      }
+
+      msg = data.message;
+      toast.success(msg);
+
+
+    } catch (error) {
+
+      console.log(error);
+    } finally {
+      setTimeout(() => {
+
+        setIsLoadingResend(false);
+      }, 500);
+    }
+
+  };
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-6">
@@ -217,9 +324,9 @@ export default function LoginPage() {
         </div>
 
         <div className="text-right">
-          <a href="/forgotPassword" className="text-sm text-blue-600 hover:underline">
+          <Link to="/resetPassword" className="text-sm text-blue-600 hover:underline">
             Forgot password?
-          </a>
+          </Link>
         </div>
 
 
@@ -256,10 +363,28 @@ export default function LoginPage() {
               />
             ))}
           </div>
+          <button onClick={handleEmailResend} className="m-auto cursor-pointer outline-0 border-0 text-gray-400 hover:text-gray-600 " disabled={isLoadingResend}>
+
+
+            {isLoadingResend ? (
+              <>
+                <Sentry size={10} color="#fff" /> Sending...
+              </>
+            ) : (
+              "Resend"
+            )}
+          </button>
 
           <DialogFooter className="mt-6">
-            <Button onClick={handleVerifyCode} className="py-2 px-6 text-lg">
-              Verify
+            <Button onClick={handleVerifyCode} className="py-2 px-6 text-lg" disabled={isLoadingVerify}>
+
+              {isLoadingVerify ? (
+                <>
+                  <Sentry size={15} color="#fff" /> Verifying...
+                </>
+              ) : (
+                "Verify"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

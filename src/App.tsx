@@ -10,7 +10,7 @@ import LoginPage from "./page/login.tsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PrivateRoute from "./sub-components/protected.tsx";
-
+import PasswordResetPage from "./page/passwordReset.tsx";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import './App.css'
@@ -62,6 +62,25 @@ function App() {
             <Notifications />
           </>
         } />
+        <Route path="/resetPassword" element={
+          <>
+
+            <PasswordResetPage />
+            <ToastContainer
+              className="px-5 pt-1 text-sm "
+              position="top-center"
+              autoClose={3000}
+              hideProgressBar={true}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
+          </>
+        } />
+
 
         <Route path="/login" element={
           <>

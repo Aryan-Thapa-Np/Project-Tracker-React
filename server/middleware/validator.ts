@@ -56,13 +56,6 @@ const emailVerificationValidation = [
 
 
 const resendEmailVerificationValidation = [
-
-    body("userId")
-        .trim()
-        .notEmpty().withMessage("userId is required.")
-        .isNumeric().withMessage("userId must be a number."),
-
-
     body("email")
         .trim()
         .notEmpty().withMessage("Email is required.")
@@ -87,13 +80,12 @@ const changePasswordvalidation = [
 
 const resetChangePasswordValidation = [
 
-    body("token")
-        .notEmpty()
-        .withMessage("Token is required")
-        .isString()
-        .withMessage("Token must be a string")
-        .isLength({ min: 10, max: 200 })
-        .withMessage("Token must be between 10 and 100 characters"),
+     body("code")
+        .trim()
+        .notEmpty().withMessage("Code is required.")
+        .isNumeric().withMessage("Code must be a number.")
+        .isLength({ min: 4, max: 6 }).withMessage("Code must be exactly 6 digits."),
+
 
     body("email")
         .trim()
@@ -101,7 +93,7 @@ const resetChangePasswordValidation = [
         .isEmail().withMessage("Invalid email format."),
 
 
-    body("NewPassword")
+    body("newPassword")
         .notEmpty().withMessage("Password is required.")
         .custom((value) => {
             if (!includesUppercase(value)) {
@@ -117,22 +109,6 @@ const resetChangePasswordValidation = [
         })
         .isLength({ min: 6 }).withMessage("Password must be at least 6 characters long."),
 
-
-    body("ConfirmPassword")
-        .notEmpty().withMessage("Password is required.")
-        .custom((value) => {
-            if (!includesUppercase(value)) {
-                throw new Error("Password must include at least one uppercase letter.");
-            }
-            if (!includesNumber(value)) {
-                throw new Error("Password must include at least one number.");
-            }
-            if (!includesSpecialCharacter(value)) {
-                throw new Error("Password must include at least one special character.");
-            }
-            return true;
-        })
-        .isLength({ min: 6 }).withMessage("Password must be at least 6 characters long."),
 
     validationresults,
 ];

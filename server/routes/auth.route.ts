@@ -8,6 +8,7 @@ import {
     reqResetPasswordController,
     ResetSettingPasswordController,
     regiii,
+    resendEmailController,
     getUserDetailsController
 } from "../controllers/auth.controller.ts";
 
@@ -21,7 +22,7 @@ import {
 
 import { verifyCsrfTokenMiddleware, createCsrfTokenMiddleware } from "../middleware/crf.middleware.ts";
 import { authenticateUserMiddleware } from "../middleware/auth.middleware.ts";
-import { emailVerificationValidation, loginValidation, resetEmailValidation, resetChangePasswordValidation, changePasswordvalidation } from "../middleware/validator.ts";
+import { emailVerificationValidation, loginValidation,resendEmailVerificationValidation, resetEmailValidation, resetChangePasswordValidation, changePasswordvalidation } from "../middleware/validator.ts";
 
 const router = express.Router();
 
@@ -34,10 +35,16 @@ router.post("/user/login", loginLimiter, verifyCsrfTokenMiddleware, loginValidat
 
 // router.post("/user/regi", regiii as RequestHandler);
 
-router.post("/user/reqResetPassword", reqresetPasswordLimiter, verifyCsrfTokenMiddleware, resetEmailValidation, reqResetPasswordController as RequestHandler);
+// router.post("/user/reqResetPassword", reqresetPasswordLimiter, verifyCsrfTokenMiddleware, resetEmailValidation, reqResetPasswordController as RequestHandler);
 
 
-router.post("/user/resetPassword", resetPasswordLimiter, verifyCsrfTokenMiddleware, resetChangePasswordValidation, ResetPasswordController as RequestHandler);
+// router.post("/user/resetPassword", resetPasswordLimiter, verifyCsrfTokenMiddleware, resetChangePasswordValidation, ResetPasswordController as RequestHandler);
+
+
+router.post("/user/reqResetPassword", verifyCsrfTokenMiddleware, resetEmailValidation, reqResetPasswordController as RequestHandler);
+
+
+router.post("/user/resetPassword", verifyCsrfTokenMiddleware, resetChangePasswordValidation, ResetPasswordController as RequestHandler);
 
 
 router.post(
@@ -52,6 +59,7 @@ router.post(
 
 
 router.post("/user/verifyEmail", EamilverificationLimiter, verifyCsrfTokenMiddleware, emailVerificationValidation, emailVerifyController as RequestHandler);
+router.post("/user/emailResend", EamilverificationLimiter, verifyCsrfTokenMiddleware, resendEmailVerificationValidation, resendEmailController as RequestHandler);
 
 
 export default router;
