@@ -11,7 +11,11 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PrivateRoute from "./sub-components/protected.tsx";
 import PasswordResetPage from "./page/passwordReset.tsx";
+import SettingsPage from "./page/settings.tsx";
+import LogsPage from "./page/logs.tsx";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+
 
 import './App.css'
 
@@ -21,11 +25,11 @@ function App() {
       <Routes>
         <Route path="/" element={
           <PrivateRoute>
-            <>
-              <Header />
-              <Dashboard />
 
-            </>
+            <Header />
+            <Dashboard />
+
+
           </PrivateRoute>
         } />
         <Route path="/tasks" element={
@@ -54,6 +58,34 @@ function App() {
             <Header />
             <UserManagement />
           </>
+        } />
+
+        <Route path="/settings" element={
+          <PrivateRoute>
+            <Header />
+            <SettingsPage />
+          </PrivateRoute>
+        } />
+
+
+        <Route path="/logs" element={
+          <PrivateRoute>
+            <Header />
+            <LogsPage />
+             <ToastContainer
+              className="px-5 pt-1 text-sm "
+              position="top-center"
+              autoClose={3000}
+              hideProgressBar={true}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
+          </PrivateRoute>
+
         } />
 
         <Route path="/notifications" element={

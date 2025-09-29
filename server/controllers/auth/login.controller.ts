@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import pool from '../../database/db.ts';
 import { emailVerificationService } from "../../services/email.ts";
 import type { User } from "../../types/usersTypes.ts";
+import { insertLog } from "../../services/logger.ts";
 
 
 const statusTypes = ['banned', 'inactive'];
@@ -64,7 +65,7 @@ export const loginController = async (req: Request, res: Response) => {
                 [attempts, status, lockUntil, user.user_id]
             );
 
-            
+
 
             return res.status(401).json({
                 success: false,
@@ -101,11 +102,12 @@ export const loginController = async (req: Request, res: Response) => {
             process.env.JWT_SECRET as string,
             { expiresIn: '1d' }
         );
+        await insertLog(user.user_id, user.username, 0);
 
-     
+
         res.cookie('act', token, {
             httpOnly: true,
-            sameSite: 'none',
+            sameSite: 'lax',
             secure: process.env.NODE_ENV === 'production', // Secure only in production
             maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
@@ -126,7 +128,7 @@ export const loginController = async (req: Request, res: Response) => {
 
             res.cookie('ref', refToken, {
                 httpOnly: true,
-                sameSite: 'none',
+                sameSite: 'lax',
                 secure: process.env.NODE_ENV === 'production', // Secure only in production
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
@@ -152,7 +154,7 @@ export const regiii = async (req: Request, res: Response) => {
 
         const hash = await bcrypt.hash(password, 10);
 
-        const [rows] = await pool.execute(`insert into users(username,email,password)values(?,?,?)`, [username, email, hash]);
+        const [rows] = await pool.execute(`insert into users(username,profile_pic,email,password)values(?,?,?)`, [username, "/image.png", email, hash]);
 
 
 

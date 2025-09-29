@@ -2,6 +2,7 @@ import React from 'react';
 import Sidebar from "../sub-components/sidebar.tsx";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus,faArrowUp,faArrowDown,faMinus } from '@fortawesome/free-solid-svg-icons';
+import {DiamondPlus } from "lucide-react";
 
 
 const TeamTasks:React.FC = () => {
@@ -22,8 +23,8 @@ const TeamTasks:React.FC = () => {
                                         Manage and track your team's tasks and progress.
                                     </p>
                                 </div>
-                                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors">
-                                    <FontAwesomeIcon icon={faPlus} />
+                                <button className="bg-blue-600 cursor-pointer text-white px-4 py-2 rounded-sm flex items-center gap-2 hover:bg-blue-700 transition-colors">
+                                    <DiamondPlus />
                                     <span>Assign Task</span>
                                 </button>
                             </div>
@@ -36,7 +37,7 @@ const TeamTasks:React.FC = () => {
                                         Project
                                     </label>
                                     <select
-                                        className="mt-1 block w-full rounded-sm border-gray-300 p-2 outline-0 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50"
+                                        className="mt-1 block w-full rounded-sm border-gray-300 p-2 outline-0 shadow-sm focus:border-gray-300 focus:ring focus:ring-gray-300 focus:ring-opacity-50"
                                         id="project-filter"
                                     >
                                         <option>All Projects</option>
@@ -51,7 +52,7 @@ const TeamTasks:React.FC = () => {
                                         Status
                                     </label>
                                     <select
-                                        className="mt-1 block w-full rounded-sm p-2 outline-0 border-gray-300 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50"
+                                        className="mt-1 block w-full rounded-sm p-2 outline-0 border-gray-300 shadow-sm focus:border-gray-300 focus:ring focus:ring-gray-300 focus:ring-opacity-50"
                                         id="status-filter"
                                     >
                                         <option>All Statuses</option>
@@ -66,7 +67,7 @@ const TeamTasks:React.FC = () => {
                                         Team Member
                                     </label>
                                     <select
-                                        className="mt-1 block w-full rounded-sm p-2 outline-0 border-gray-300 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50"
+                                        className="mt-1 block w-full rounded-sm p-2 outline-0 border-gray-300 shadow-sm focus:border-gray-300 focus:ring focus:ring-gray-300 focus:ring-opacity-50"
                                         id="member-filter"
                                     >
                                         <option>All Members</option>
@@ -81,7 +82,7 @@ const TeamTasks:React.FC = () => {
                                         Due Date
                                     </label>
                                     <input
-                                        className="mt-1 block p-2 outline-0 w-full rounded-sm border-gray-300 shadow-sm focus:border-blue-600 focus:ring focus:ring-blue-600 focus:ring-opacity-50"
+                                        className="mt-1 block p-2 outline-0 w-full rounded-sm border-gray-300 shadow-sm focus:border-gray-300 focus:ring focus:ring-gray-300 focus:ring-opacity-50"
                                         id="due-date-filter"
                                         type="date"
                                     />

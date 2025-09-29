@@ -80,7 +80,7 @@ const changePasswordvalidation = [
 
 const resetChangePasswordValidation = [
 
-     body("code")
+    body("code")
         .trim()
         .notEmpty().withMessage("Code is required.")
         .isNumeric().withMessage("Code must be a number.")
@@ -297,7 +297,36 @@ const updateUsersValidation = [
     validationresults
 ];
 
+const logsFiltersValidation = [
+    query("limit")
+        .optional()
+        .isInt({ min: 1, max: 100 })
+        .withMessage("Limit must be a number between 1 and 100"),
 
+    query("offset")
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage("Offset must be a positive number"),
+
+    query("search")
+        .optional()
+        .isString()
+        .trim()
+        .isLength({ max: 255 })
+        .withMessage("Search term too long"),
+
+    query("startDate")
+        .optional()
+        .isISO8601()
+        .withMessage("Start date must be a valid date"),
+
+    query("endDate")
+        .optional()
+        .isISO8601()
+        .withMessage("End date must be a valid date"),
+
+    validationresults,
+];
 
 
 export {
@@ -316,5 +345,6 @@ export {
     createProjectValidation,
     getProjectsValidation,
     getTeamTasksValidation,
-    updateUsersValidation
+    updateUsersValidation,
+    logsFiltersValidation
 };

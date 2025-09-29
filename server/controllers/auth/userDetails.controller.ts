@@ -16,7 +16,22 @@ export const getUserDetailsController = async (req: Request, res: Response) => {
 
         }
 
-        const [rows] = await pool.execute(`select user_id,username,email from users where user_id =?`, [user_id]);
+
+        const [rows] = await pool.execute(
+            `SELECT 
+                user_id,
+                profile_pic,
+                username,
+                role,
+                email,
+                (SELECT COUNT(*) FROM notifications WHERE notifications.user_id = users.user_id AND is_read = false) AS notification_count
+            FROM users
+            WHERE user_id = ?`,
+            [user_id]
+        );
+
+
+
 
         if (!Array.isArray(rows) || rows.length === 0) {
             return res.status(400).json({ success: false, error: "User data not found." });
@@ -32,3 +47,4 @@ export const getUserDetailsController = async (req: Request, res: Response) => {
         res.status(500).json({ success: false, error: "Internal Server Error" });
     }
 }
+

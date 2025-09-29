@@ -3,8 +3,8 @@
 
 export interface User {
     user_id: number;
-    username: string;
     profile_pic:string;
+    username: string;
     password: string;
     role: string;
     email: string;
@@ -20,4 +20,5 @@ export interface User {
     attempts: number;
     status_expire:Date;
     notification_count:number;
+
 }

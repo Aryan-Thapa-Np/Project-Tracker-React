@@ -9,6 +9,9 @@ import{
     getProjectNamesController
 } from "./projects/project.controller.ts";
 
+import{
+getLogsController
+} from "./logs/logs.Controller.ts";
 
 
 
@@ -17,5 +20,6 @@ export {
     createTaskController,
     getProjectsController,
     createProjectController,
-    getProjectNamesController
+    getProjectNamesController,
+    getLogsController
 }

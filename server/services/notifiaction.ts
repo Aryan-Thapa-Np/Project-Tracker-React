@@ -1,6 +1,6 @@
 import pool from '../database/db.ts';
 import type { Request, Response } from 'express';
-import { User } from "../interface/users.ts";
+import type { User } from "../types/usersTypes.ts";
 
 // Notification configuration using switch-case
 function getNotificationConfig(type: string, titleName: string, project: string = "none") {

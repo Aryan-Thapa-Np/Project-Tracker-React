@@ -4,7 +4,7 @@ CREATE TABLE users (
     profile_pic VARCHAR(250) NULL,
     username VARCHAR(50) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'project_manager', 'team_member') NOT NULL DEFAULT 'team_member',
+    role ENUM('admin', 'project_manager', 'team_member','team_memberPlus','team_memberSuper') NOT NULL DEFAULT 'team_member',
     email VARCHAR(100) UNIQUE NOT NULL,
     email_verified BOOLEAN DEFAULT FALSE,
     pc_token VARCHAR(250) NULL,
@@ -19,14 +19,7 @@ CREATE TABLE users (
     status_expire TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- PERMISSIONS TABLE
-CREATE TABLE permissions (
-    permission_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    permission_key VARCHAR(100) NOT NULL, 
-    allowed BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
+
 
 -- PROJECTS TABLE
 CREATE TABLE projects (
@@ -75,7 +68,7 @@ CREATE TABLE notifications (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
-
+    
 -- REFRESH TOKENS TABLE
 CREATE TABLE refresh_tokens (
     token_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -90,3 +83,11 @@ CREATE TABLE refresh_tokens (
 
 
 
+CREATE TABLE logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    username VARCHAR(255) NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);

@@ -2,9 +2,11 @@ import type { NextFunction, Request, Response } from 'express';
 import type { AuthenticatedRequest } from "../types/auth.types";
 
 export const rolesPermissions: Record<string, string[]> = {
-    project_manager: ["create_task","create_project"],
-    admin: ["create_task","create_project","create_users"],
-    team_member:["ws5523sdfo"]
+    project_manager: ["create_task", "create_project", "get_logs"],
+    admin: ["create_task", "create_project", "create_users", "get_logs"],
+    team_member: ["ws5523sdfo"],
+    team_memberPlus: ["get_logs"],
+    team_memberSuper: ["get_logs","create_task"],
 };
 
 export const checkPermission = (requiredPermissions: string[]) => {

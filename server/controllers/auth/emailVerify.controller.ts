@@ -5,6 +5,7 @@ import pool from '../../database/db.ts';
 import type { User } from "../../types/usersTypes.ts";
 import { emailVerificationService } from "../../services/email.ts";
 import type { ResultSetHeader } from 'mysql2/promise';
+import { insertLog } from "../../services/logger.ts";
 
 
 
@@ -37,6 +38,9 @@ export const emailVerifyController = async (req: Request, res: Response) => {
             process.env.JWT_SECRET as string,
             { expiresIn: '1d' }
         );
+
+        await insertLog(user.user_id, user.username, 1)
+
 
         res.cookie('act', token, {
             httpOnly: true,

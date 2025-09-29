@@ -1,12 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
-import profile from '../assets/profile.jpg';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faBars, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { faBell } from '@fortawesome/free-regular-svg-icons';
+import type { User } from "../types/usersFTypes.tsx";
+import { Link } from 'react-router-dom';
 
 
 
-const Header: React.FC = () => {
+interface HeaderProps {
+    user?: User | null;
+}
+
+
+const Header: React.FC<HeaderProps> = ({ user }) => {
     const [isFocused, setIsFocused] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -24,6 +31,7 @@ const Header: React.FC = () => {
 
         window.addEventListener("keydown", handleKey);
 
+
         return () => window.removeEventListener("keydown", handleKey);
 
 
@@ -39,7 +47,7 @@ const Header: React.FC = () => {
     };
 
 
- 
+
 
 
 
@@ -78,18 +86,20 @@ const Header: React.FC = () => {
                 </div>
 
                 <div className="headerIcons relative p-[5px]">
-                    <FontAwesomeIcon
-                        icon={faBell}
-                        className="text-[17px] text-gray-600 cursor-pointer"
-                    />
-                    <span className="absolute top-[-5px] right-[-5px] cursor-pointer bg-red-500 pr-1 pl-1 rounded-full text-white text-[12px]">
-                        12
-                    </span>
+                    <Link to="/notifications">
+                        <FontAwesomeIcon
+                            icon={faBell}
+                            className="text-[17px] text-gray-600 cursor-pointer"
+                        />
+                        <span className="absolute top-[-5px] right-[-5px] cursor-pointer bg-red-500 pr-1 pl-1 rounded-full text-white text-[12px]">
+                            {user?.notification_count || ""}
+                        </span>
+                    </Link>
                 </div>
 
                 <div className="profile relative">
                     <img
-                        src={profile}
+                        src={user?.profile_pic || "/image.png"}
                         alt="profile"
                         id="profilePicture"
                         className="h-[40px] w-[40px] rounded-full object-cover"
