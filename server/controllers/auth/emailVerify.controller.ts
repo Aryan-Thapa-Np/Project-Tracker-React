@@ -2,8 +2,10 @@
 import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import pool from '../../database/db.ts';
-import { User } from "../../interface/users.ts";
+import type { User } from "../../types/usersTypes.ts";
 import { emailVerificationService } from "../../services/email.ts";
+import type { ResultSetHeader } from 'mysql2/promise';
+import { insertLog } from "../../services/logger.ts";
 
 
 
@@ -25,6 +27,10 @@ export const emailVerifyController = async (req: Request, res: Response) => {
         const user = (rows as User[])[0];
 
 
+        const [update] = await pool.execute(`UPDATE users SET email_verified = ? where user_id =?`, [true, user.user_id]);
+        if (!update || (update as ResultSetHeader).affectedRows === 0) {
+            return res.status(401).json({ success: false, error: "Failed to update status." });
+        }
 
         // Generate JWT token
         const token = jwt.sign(
@@ -33,11 +39,16 @@ export const emailVerifyController = async (req: Request, res: Response) => {
             { expiresIn: '1d' }
         );
 
-        res.cookie("Act", token, {
+        await insertLog(user.user_id, user.username, 1)
+
+
+        res.cookie('act', token, {
             httpOnly: true,
-            sameSite: 'strict',
-            maxAge: 24 * 60 * 60 * 1000 // 1 day
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === 'production', // Secure only in production
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
+
 
         if (rememberMe) {
             const refToken = jwt.sign(
@@ -51,10 +62,11 @@ export const emailVerifyController = async (req: Request, res: Response) => {
 
             await pool.execute(`insert into refresh_tokens(user_id,token ,expires_at,revoked) values(?,?,?,?)`, [user.user_id, refToken, expire_time, false])
 
-            res.cookie("rft", refToken, {
+            res.cookie('ref', refToken, {
                 httpOnly: true,
-                sameSite: 'strict',
-                maxAge: 7 * 24 * 60 * 60 * 1000
+                sameSite: 'lax',
+                secure: process.env.NODE_ENV === 'production', // Secure only in production
+                maxAge: 7 * 24 * 60 * 60 * 1000,
             });
         }
 
@@ -80,7 +92,8 @@ export const resendEmailController = async (req: Request, res: Response) => {
         await pool.execute(`update users set otp_code =?,otp_code_type=?,code_expire=? where email=?`, [code, "email_verification", expire_code, email])
         await emailVerificationService(email, code.toString());
 
-        res.status(200).json({ success: true, message: "Code resent Successfull." });
+        res.status(200).json({ success: true, message: "Verification code resent successfully." });
+
 
 
     } catch (error) {

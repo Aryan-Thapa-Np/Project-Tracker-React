@@ -1,16 +1,22 @@
 
 import React from 'react';
-import Sidebar from "../componets/sidebar.tsx";
+import Sidebar from "../sub-components/sidebar.tsx";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import type { User } from "../types/usersFTypes.tsx";
 
-const Dashboard: React.FC = () =>{
+
+interface DashboardProps {
+    user?: User | null;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     return (
-        
+
         <div className="flex flex-col md:flex-row w-full min-h-screen bg-gray-100">
-            <Sidebar />
-            
+            <Sidebar user={user} />
+
             {/* Content Area */}
             <div className="content-area flex-1 h-screen overflow-y-auto">
                 <section className="py-10 px-4 sm:px-6 md:px-8 bg-gray-50 min-h-full">

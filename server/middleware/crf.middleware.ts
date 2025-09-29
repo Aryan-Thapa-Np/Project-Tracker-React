@@ -34,7 +34,7 @@ export const verifyCsrfTokenMiddleware = async (req: Request, res: Response, nex
         const csrfToken = req.cookies?.csrfToken;
         const csrfHeaderToken = req.headers['x-csrf-token'];
 
-        console.log(csrfHeaderToken,csrfToken);
+
 
 
         if (!csrfToken || !csrfHeaderToken) {

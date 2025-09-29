@@ -1,6 +1,6 @@
 
 import React from 'react';
-import Sidebar from "../componets/sidebar.tsx";
+import Sidebar from "../sub-components/sidebar.tsx";
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { faPlus, faArrowUp, faArrowDown, faMinus } from '@fortawesome/free-solid-svg-icons';
 

@@ -75,8 +75,8 @@ export const passwordChangeReqService = async (
 ): Promise<void> => {
     const verifyHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 6px; border: 1px solid #ddd; text-align: center;">
-        <h2 style="color: #333;">Email Verification</h2>
-        <p style="color: #555;">Use the code below to reset your password. This code will expire in 2 minutes.</p>
+        <h2 style="color: #333;">Password Change Request</h2>
+        <p style="color: #555;">Use the code below to reset your password. This code will expire in 3 minutes.</p>
         <div style="display: inline-block; background: #e7edf4; color: #0d141c; font-size: 24px; letter-spacing: 6px; padding: 10px 20px; border-radius: 4px; font-weight: bold;">
             ${code}
         </div>

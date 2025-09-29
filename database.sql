@@ -1,9 +1,10 @@
 -- USERS TABLE
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
+    profile_pic VARCHAR(250) NULL,
     username VARCHAR(50) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'project_manager', 'team_member') NOT NULL DEFAULT 'team_member',
+    role ENUM('admin', 'project_manager', 'team_member','team_memberPlus','team_memberSuper') NOT NULL DEFAULT 'team_member',
     email VARCHAR(100) UNIQUE NOT NULL,
     email_verified BOOLEAN DEFAULT FALSE,
     pc_token VARCHAR(250) NULL,
@@ -18,14 +19,7 @@ CREATE TABLE users (
     status_expire TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- PERMISSIONS TABLE
-CREATE TABLE permissions (
-    permission_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    permission_key VARCHAR(100) NOT NULL, 
-    allowed BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
+
 
 -- PROJECTS TABLE
 CREATE TABLE projects (
@@ -51,6 +45,7 @@ CREATE TABLE milestones (
 CREATE TABLE tasks (
     task_id INT AUTO_INCREMENT PRIMARY KEY,
     project_id INT NOT NULL,
+    milestone_id int not null,
     assigned_to INT NULL, -- must be nullable to support ON DELETE SET NULL
     task_name VARCHAR(200) NOT NULL,
     status ENUM('todo', 'in_progress', 'completed') DEFAULT 'todo',
@@ -64,15 +59,16 @@ CREATE TABLE tasks (
 CREATE TABLE notifications (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    message TEXT NOT NULL,
-    fa_icon VARCHAR(100) DEFAULT 'fa-bell',
+    type ENUM('Task', 'Deadline', 'user', 'new_member', 'Document_update', 'announcement') NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    project VARCHAR(255) DEFAULT 'none',
+    icon_class VARCHAR(100) NOT NULL DEFAULT 'faBell',
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
-
-
+    
 -- REFRESH TOKENS TABLE
 CREATE TABLE refresh_tokens (
     token_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -87,3 +83,11 @@ CREATE TABLE refresh_tokens (
 
 
 
+CREATE TABLE logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    username VARCHAR(255) NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);

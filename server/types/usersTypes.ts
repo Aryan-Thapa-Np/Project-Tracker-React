@@ -4,6 +4,7 @@
 export interface User {
     user_id: number;
     username: string;
+    profile_pic:string;
     password: string;
     role: string;
     email: string;
@@ -18,4 +19,5 @@ export interface User {
     code_expire: Date;
     attempts: number;
     status_expire:Date;
+    notification_count:number;
 }

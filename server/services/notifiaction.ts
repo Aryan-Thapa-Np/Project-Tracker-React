@@ -1,112 +1,116 @@
+import pool from '../database/db.ts';
+import type { Request, Response } from 'express';
+import type { User } from "../types/usersTypes.ts";
 
 // Notification configuration using switch-case
-function getNotificationConfig(type:string, itemName:string) {
+function getNotificationConfig(type: string, titleName: string, project: string = "none") {
     switch (type) {
-        case 'wishlist':
+        case 'Task':
             return {
-                type: 'wishlist',
-                title: 'Added to Wishlist',
-                message: `${itemName} added to your wishlist`,
-                icon_class: 'fas fa-heart',
-                icon_background: '#3b82f6'
+                icon_class: 'faFileAlt',
+                title: `New task assigned: ${titleName}`,
+                project: `${project}`,
+
             };
-        case 'cart':
+        case 'Deadline':
             return {
-                type: 'cart',
-                title: 'Added to Cart',
-                message: `${itemName} added to your cart`,
-                icon_class: 'fas fa-shopping-cart',
-                icon_background: '#10b981'
+                icon_class: 'faClock',
+                title: `Deadline approaching for: ${titleName}`,
+                project: `${project}`
+
             };
-        case 'profile':
+        case 'user':
             return {
-                type: 'profile',
-                title: 'Profile Updated',
-                message: 'Your profile information was updated',
-                icon_class: 'fas fa-user',
-                icon_background: '#f59e0b'
+                icon_class: 'faUser',
+                title: `${titleName}`
+
             };
-        case '2fa_enable':
+        case 'new_member':
             return {
-                type: '2fa_enable',
-                title: '2FA Enabled',
-                message: 'Two-factor authentication has been enabled',
-                icon_class: 'fas fa-shield-alt',
-                icon_background: '#8b5cf6'
+                icon_class: 'faUsers',
+                title: `New member: ${titleName} joined the team.`,
+                project: `${project}`
+
             };
-        case '2fa_disable':
+        case 'Document_update':
             return {
-                type: '2fa_disable',
-                title: '2FA Disabled',
-                message: 'Two-factor authentication has been disabled',
-                icon_class: 'fas fa-shield-alt',
-                icon_background: '#ef4444'
-            };
-        case 'order_created':
-            return {
-                type: 'order_created',
-                title: 'Order Created',
-                message: `Order for ${itemName} has been created`,
-                icon_class: 'fas fa-shopping-bag',
-                icon_background: '#6366f1'
-            };
-        case 'order_shipped':
-            return {
-                type: 'order_shipped',
-                title: 'Order Shipped',
-                message: `Order for ${itemName} has been shipped`,
-                icon_class: 'fas fa-truck',
-                icon_background: '#06b6d4'
-            };
-        case 'order_delivered':
-            return {
-                type: 'order_delivered',
-                title: 'Order Delivered',
-                message: `Order for ${itemName} has been delivered`,
-                icon_class: 'fas fa-check-circle',
-                icon_background: '#22c55e'
-            };
-        case 'order_cancelled':
-            return {
-                type: 'order_cancelled',
-                title: 'Order Cancelled',
-                message: `Order for ${itemName} has been cancelled`,
-                icon_class: 'fas fa-times-circle',
-                icon_background: '#ef4444'
-            };
-        case 'order_failed':
-            return {
-                type: 'order_failed',
-                title: 'Order Failed',
-                message: `Order for ${itemName} has been failed`,
-                icon_class: 'fas fa-times-circle',
-                icon_background: '#ef4444'
-            };
-        case 'coupon':
-            return {
-                type: 'coupon',
-                title: 'New Coupon Available',
-                message: itemName,
-                icon_class: 'fas fa-ticket-alt',
-                icon_background: '#ec4899'
+                icon_class: 'faFileAlt',
+                title: `Document updated: ${titleName}`,
+                project: `${project}`
+
             };
         case 'announcement':
             return {
-                type: 'announcement',
-                title: 'Announcement',
-                message: itemName,
-                icon_class: 'fas fa-bullhorn',
-                icon_background: '#f97316'
-            };
-        case 'password_reset':
-            return {
-                type: 'password_reset',
-                title: 'Password Reset',
-                message: 'Your password has been successfully reset',
-                icon_class: 'fas fa-key',
-                icon_background: '#4b5563'
+                icon_class: 'faBullhorn',
+                title: `Announcement : ${titleName}`
             };
         default:
             throw new Error('Invalid notification type');
     }
 }
+
+export const pushNotifications = async (
+    type: string,
+    user_id: number,
+    titleName: string,
+    project: string = "none",
+    role: string, 
+    req: Request,
+    res: Response
+) => {
+    try {
+        if (!user_id || !titleName || !type) {
+            return res.status(400).json({ success: false, error: "type, user_id & titleName required." });
+        }
+
+        const config = getNotificationConfig(type, titleName, project);
+
+        // Special case: ANNOUNCEMENT
+        if (type === "announcement") {
+            // Only admins and project managers allowed
+            if (role !== "admin" && role !== "project_manager") {
+                return res.status(403).json({ success: false, error: "Not authorized to push announcements." });
+            }
+
+            // Fetch all users
+            const [users] = await pool.execute("SELECT user_id FROM users");
+
+            // Insert for each user
+            const query = `
+                INSERT INTO notifications (user_id, type, title, project, icon_class)
+                VALUES (?, ?, ?, ?, ?)
+            `;
+
+            for (const u of users as User[]) {
+                await pool.execute(query, [
+                    u.user_id,
+                    type,
+                    config.title,
+                    config.project ?? "none",
+                    config.icon_class
+                ]);
+            }
+
+            return res.status(201).json({ success: true, message: "Announcement sent to all users." });
+        }
+
+        // Normal notification
+        const query = `
+            INSERT INTO notifications (user_id, type, title, project, icon_class)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+
+        await pool.execute(query, [
+            user_id,
+            type,
+            config.title,
+            config.project ?? "none",
+            config.icon_class
+        ]);
+
+        res.status(201).json({ success: true, message: "Notification added." });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};

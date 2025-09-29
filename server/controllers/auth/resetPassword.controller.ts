@@ -3,8 +3,8 @@ import bcrypt from 'bcrypt';
 import pool from '../../database/db.ts';
 import type { ResultSetHeader } from 'mysql2/promise';
 import { passwordChangeReqService } from "../../services/email.ts";
-import type { AuthenticatedRequest } from "../../types/auth.types.ts"; 
-import {User} from "../../interface/users.ts";
+import type { AuthenticatedRequest } from "../../types/auth.types.ts";
+import type { User } from "../../types/usersTypes.ts";
 
 
 
@@ -12,7 +12,6 @@ import {User} from "../../interface/users.ts";
 export const reqResetPasswordController = async (req: Request, res: Response) => {
     try {
         const { email } = req.body;
-
         if (!email) {
             return res.status(400).json({ success: false, error: "Email required" });
         }
@@ -22,13 +21,14 @@ export const reqResetPasswordController = async (req: Request, res: Response) =>
             return res.status(401).json({ success: false, error: "Invalid credentials" });
         }
 
+
         const user = (rows as User[])[0];
 
-        if (user.email_verified !== true) {
+        if (!user.email_verified) {
             return res.status(400).json({ success: false, error: "Email not verified!" });
 
         }
-        const expire_time = new Date(Date.now() + 2 * 60 * 1000);
+        const expire_time = new Date(Date.now() + 3 * 60 * 1000);
 
 
         const code: number = Math.floor(100000 + Math.random() * 900000);
@@ -53,10 +53,10 @@ export const reqResetPasswordController = async (req: Request, res: Response) =>
 
 export const ResetPasswordController = async (req: Request, res: Response) => {
     try {
-        const { password, email, code } = req.body;
+        const { newPassword, email, code } = req.body;
 
 
-        if (!email || !code || !password) {
+        if (!email || !code || !newPassword) {
             return res.status(400).json({ success: false, error: "Email & Token & Password required" });
         }
 
@@ -70,7 +70,7 @@ export const ResetPasswordController = async (req: Request, res: Response) => {
 
         const user = (rows as User[])[0];
 
-        const hashPassword = await bcrypt.hash(password, 10);
+        const hashPassword = await bcrypt.hash(newPassword, 10);
 
 
         const [updatePassword] = await pool.execute(`update users set password = ? where email=?`, [hashPassword, user.email]);
@@ -78,6 +78,10 @@ export const ResetPasswordController = async (req: Request, res: Response) => {
         if (!updatePassword || (updatePassword as ResultSetHeader).affectedRows === 0) {
             return res.status(401).json({ success: false, error: "Invalid credentials" });
         }
+
+        res.clearCookie("act", { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: "lax" });
+        res.clearCookie("rft", { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: "lax" });
+
 
         res.status(200).json({
             success: true,

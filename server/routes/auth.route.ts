@@ -1,5 +1,5 @@
 import express from "express";
-import type {RequestHandler} from "express";
+import type { RequestHandler } from "express";
 
 import {
     emailVerifyController,
@@ -7,30 +7,52 @@ import {
     ResetPasswordController,
     reqResetPasswordController,
     ResetSettingPasswordController,
-    regiii
+    regiii,
+    resendEmailController,
+    getUserDetailsController
 } from "../controllers/auth.controller.ts";
+import { getLogsController } from "../controllers/others.controller.ts";
+import {
+    reqresetPasswordLimiter,
+    loginLimiter,
+    csrfGetLimiter,
+    resetPasswordLimiter,
+    EamilverificationLimiter
+} from "../middleware/ratelimit.ts";
+
 import { verifyCsrfTokenMiddleware, createCsrfTokenMiddleware } from "../middleware/crf.middleware.ts";
 import { authenticateUserMiddleware } from "../middleware/auth.middleware.ts";
-import {emailVerificationValidation,loginValidation,resetEmailValidation,resetChangePasswordValidation,changePasswordvalidation} from "../middleware/validator.ts";
+import { emailVerificationValidation, logsFiltersValidation, loginValidation, resendEmailVerificationValidation, resetEmailValidation, resetChangePasswordValidation, changePasswordvalidation } from "../middleware/validator.ts";
+
+import {
+    checkPermission
+} from "../middleware/roleBaseAccess.middleware.ts";
+
+
 
 const router = express.Router();
 
 
-router.get("/get/csrf", createCsrfTokenMiddleware as RequestHandler);
+router.get("/user/getCsrf", csrfGetLimiter, createCsrfTokenMiddleware as RequestHandler);
+router.get("/user/auth/check", csrfGetLimiter, authenticateUserMiddleware, getUserDetailsController as RequestHandler);
 
 
-router.post("/user/login",loginValidation, loginController as RequestHandler);
+router.post("/user/login", loginLimiter, verifyCsrfTokenMiddleware, loginValidation, loginController as RequestHandler);
 
-router.post("/user/regi", regiii as RequestHandler);
+// router.post("/user/regi", regiii as RequestHandler);
 
-router.post("/user/reqResetPassword",resetEmailValidation, reqResetPasswordController as RequestHandler);
+router.post("/user/reqResetPassword", reqresetPasswordLimiter, verifyCsrfTokenMiddleware, resetEmailValidation, reqResetPasswordController as RequestHandler);
 
 
-router.post("/user/resetPassword",resetChangePasswordValidation, ResetPasswordController as RequestHandler);
+router.post("/user/resetPassword", resetPasswordLimiter, verifyCsrfTokenMiddleware, resetChangePasswordValidation, ResetPasswordController as RequestHandler);
+
+
 
 
 router.post(
     "/user/ResetSettingPassword",
+    resetPasswordLimiter,
+    verifyCsrfTokenMiddleware,
     changePasswordvalidation,
     authenticateUserMiddleware,
     verifyCsrfTokenMiddleware,
@@ -38,7 +60,9 @@ router.post(
 );
 
 
-router.post("/user/verifyEmail",emailVerificationValidation, emailVerifyController as RequestHandler);
+router.post("/user/verifyEmail", EamilverificationLimiter, verifyCsrfTokenMiddleware, emailVerificationValidation, emailVerifyController as RequestHandler);
+router.post("/user/emailResend", EamilverificationLimiter, verifyCsrfTokenMiddleware, resendEmailVerificationValidation, resendEmailController as RequestHandler);
+router.get("/database/auth/logs", verifyCsrfTokenMiddleware, logsFiltersValidation, authenticateUserMiddleware, checkPermission(["get_logs"]), getLogsController as RequestHandler);
 
 
 export default router;
