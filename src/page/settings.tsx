@@ -78,7 +78,7 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
                 setMessage({ text: data.message || "Update failed!", type: "error" });
             }
         } catch (err) {
-            setMessage({ text: "Something went wrong!", type: "error" });
+          console.log(err);
         } finally {
             setLoading(false);
             setIsModalOpen(false);
