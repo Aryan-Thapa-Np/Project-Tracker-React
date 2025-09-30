@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import type { User } from "../types/usersFTypes.tsx";
-import { Users, Bell, UserCog,ArrowRightToLine, FolderClock, ClipboardCheck,House, Settings, Clock9 } from "lucide-react";
+import { Users, Bell, UserCog, ArrowRightToLine, FolderClock, ClipboardCheck, House, Settings, Clock9 } from "lucide-react";
+import { CheckPermSide } from "../sub-components/checkPerm.tsx";
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { toast } from "react-toastify";
+import { getCsrfToken } from '../sub-components/csrfToken.tsx';
+
 
 
 interface SidebarProps {
@@ -14,6 +19,8 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(true);
+
+
   const getActiveClass = (path: string) =>
     location.pathname === path ? 'bg-black/5 text-[#1173d4]' : 'hover:text-gray-600 hover:bg-black/5';
 
@@ -28,6 +35,9 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
 
 
   useEffect(() => {
+
+
+
     if (sidebarRef.current) {
       if (isOpen) {
         sidebarRef.current.classList.add('show');
@@ -39,7 +49,37 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
 
 
 
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${apiUrl}/api/user/logout`, {
+        method: "GET",
+        headers: {
+          "x-csrf-token": await getCsrfToken(),
+        },
+        credentials: "include",
+      });
+      const data = await res.json();
+      let msg: string;
+      if (!res.ok && data.success === false) {
 
+        msg = data.error;
+        return toast.error(msg);
+      }
+      msg = data.message;
+      toast.success(msg);
+      setTimeout(() => {
+        window.location.href = "/login";
+
+      }, 500);
+    } catch (err) {
+
+
+      toast.error(err && typeof err === "object" && "error" in err
+        ? String((err as { error: unknown }).error)
+        : "Something went wrong!");
+    }
+  };
 
 
 
@@ -50,7 +90,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
         <ul className="space-y-2 text-gray-600 font-medium">
           <li className={`cursor-pointer p-2 rounded-sm ${getActiveClass('/')}`}>
             <Link to="/" className="flex items-center space-x-2">
-              <House size={20}/>
+              <House size={20} />
               <span>Dashboard</span>
             </Link>
           </li>
@@ -73,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
             </Link>
           </li>
           <li className={`cursor-pointer p-2 rounded-sm ${getActiveClass('/notifications')}`}>
-            <Link to="/notifications" className="flex items-center space-x-2 relative">
+            <Link to="/notifications" className="flex items-center space-x-2 relative" >
               <Bell size={20} />
               <span>Notifications</span>
               <span className="absolute top-[-5px] right-[-5px] cursor-pointer bg-red-500 pr-1 pl-1 rounded-full text-white text-[12px]">
@@ -81,19 +121,28 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
               </span>
             </Link>
           </li>
-          <li className={`cursor-pointer p-2 rounded-sm ${getActiveClass('/users')}`}>
-            <Link to="/users" className="flex items-center space-x-2">
 
-              <UserCog size={20} />
-              <span>Users</span>
-            </Link>
-          </li>
-          <li className={`cursor-pointer p-2 rounded-sm ${getActiveClass('/logs')}`}>
-            <Link to="/logs" className="flex items-center space-x-2">
-              <Clock9 size={20} />
-              <span>Logs</span>
-            </Link>
-          </li>
+   
+
+          <CheckPermSide>
+            <li className={`opp  cursor-pointer p-2 rounded-sm ${getActiveClass('/users')}`} style={{ "--timer": "0.3s" } as React.CSSProperties}>
+              <Link to="/users" className="flex items-center space-x-2">
+
+                <UserCog size={20} />
+                <span>Users</span>
+              </Link>
+            </li>
+
+            <li className={`opp  cursor-pointer p-2 rounded-sm ${getActiveClass('/logs')}`} style={{ "--timer": "0.8s" } as React.CSSProperties}>
+              <Link to="/logs" className="flex items-center space-x-2">
+                <Clock9 size={20} />
+                <span>Logs</span>
+              </Link>
+            </li>
+          </CheckPermSide>
+
+
+
         </ul>
       </div>
 
@@ -106,7 +155,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
             </Link>
           </li>
           <li className="hover:text-red-500 cursor-pointer p-2 rounded-sm">
-            <Link to="/logout" className="flex items-center space-x-2">
+            <Link to="/login" onClick={handleLogout} className="flex items-center space-x-2">
               <ArrowRightToLine size={20} />
               <span>Log out</span>
             </Link>

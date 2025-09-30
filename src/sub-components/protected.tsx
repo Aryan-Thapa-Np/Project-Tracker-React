@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import "react-activity/dist/Sentry.css";
 import type { User } from "../types/usersFTypes.tsx";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { Navigate } from "react-router-dom";

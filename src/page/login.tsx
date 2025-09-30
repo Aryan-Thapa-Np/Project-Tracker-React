@@ -17,7 +17,7 @@ import "react-activity/dist/Sentry.css";
 import { Link } from 'react-router-dom';
 
 import { Sentry } from "react-activity";
-import { getCsrfTokne } from '../sub-components/csrfToken.tsx';
+import { getCsrfToken } from '../sub-components/csrfToken.tsx';
 
 export default function LoginPage() {
 
@@ -74,7 +74,7 @@ export default function LoginPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-csrf-token": await getCsrfTokne(),
+          "x-csrf-token": await getCsrfToken(),
 
         },
         credentials: 'include',
@@ -150,7 +150,7 @@ export default function LoginPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-csrf-token": await getCsrfTokne(),
+          "x-csrf-token": await getCsrfToken(),
 
         },
         credentials: 'include',
@@ -216,7 +216,7 @@ export default function LoginPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-csrf-token": await getCsrfTokne(),
+          "x-csrf-token": await getCsrfToken(),
 
         },
         credentials: 'include',

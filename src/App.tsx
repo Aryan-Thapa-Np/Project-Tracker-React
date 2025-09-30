@@ -14,7 +14,10 @@ import PasswordResetPage from "./page/passwordReset.tsx";
 import SettingsPage from "./page/settings.tsx";
 import LogsPage from "./page/logs.tsx";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import CheckPerm from "./sub-components/checkPerm.tsx";
+import PageNotFound from "./page/404.tsx";
 
+import InsufficientPermissionPage from "./page/permisiion.tsx";
 
 
 import './App.css'
@@ -54,10 +57,12 @@ function App() {
 
 
         <Route path="/users" element={
-          <>
-            <Header />
-            <UserManagement />
-          </>
+          <CheckPerm>
+            <PrivateRoute>
+              <Header />
+              <UserManagement />
+            </PrivateRoute>
+          </CheckPerm>
         } />
 
         <Route path="/settings" element={
@@ -69,22 +74,24 @@ function App() {
 
 
         <Route path="/logs" element={
-          <PrivateRoute>
-            <Header />
-            <LogsPage />
-             <ToastContainer
-              className="px-5 pt-1 text-sm "
-              position="top-center"
-              autoClose={3000}
-              hideProgressBar={true}
-              newestOnTop={true}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
-          </PrivateRoute>
+          <CheckPerm>
+            <PrivateRoute>
+              <Header />
+              <LogsPage />
+              <ToastContainer
+                className="px-5 pt-1 text-sm "
+                position="top-center"
+                autoClose={3000}
+                hideProgressBar={true}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+              />
+            </PrivateRoute>
+          </CheckPerm>
 
         } />
 
@@ -133,7 +140,22 @@ function App() {
 
           </>
         } />
+
+
+        <Route path="/InsufficientPermission" element={
+
+          <InsufficientPermissionPage />
+        } />
+
+        <Route path="*" element={
+
+          <PageNotFound />
+        } />
+
+
       </Routes >
+
+
     </Router >
 
 

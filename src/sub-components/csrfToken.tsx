@@ -1,5 +1,5 @@
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
-export const getCsrfTokne = async () => {
+export const getCsrfToken = async () => {
     try {
         const res = await fetch(`${apiUrl}/api/user/getCsrf`, {
             method: "GET",

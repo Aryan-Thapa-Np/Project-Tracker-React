@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import Sidebar from "../sub-components/sidebar.tsx";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { toast } from "react-toastify";
-import { getCsrfTokne } from '../sub-components/csrfToken.tsx';
+import { getCsrfToken } from '../sub-components/csrfToken.tsx';
 
 
 
@@ -49,7 +49,7 @@ const LogsPage: React.FC = () => {
       const res = await fetch(`${apiUrl}/api/database/auth/logs?${params.toString()}`, {
         method: "GET",
         headers: {
-          "x-csrf-token": await getCsrfTokne(),
+          "x-csrf-token": await getCsrfToken(),
         },
         credentials: 'include',
       });
@@ -64,8 +64,8 @@ const LogsPage: React.FC = () => {
       setLogs(data);
     } catch (err: unknown) {
       setError(
-        err && typeof err === "object" && "message" in err
-          ? String((err as { message: unknown }).message)
+        err && typeof err === "object" && "error" in err
+          ? String((err as { error: unknown }).error)
           : "Something went wrong!"
       );
     } finally {
@@ -87,7 +87,7 @@ const LogsPage: React.FC = () => {
         <h1 className="text-3xl font-bold mb-6 text-gray-900">Database Logs</h1>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-6 items-center bg-white p-4 rounded-lg shadow-md">
+        <div className="flex flex-wrap gap-4 mb-6 items-center bg-white p-4 rounded-sm shadow-md">
           <input
             type="text"
             placeholder="Search username or action"
@@ -131,7 +131,7 @@ const LogsPage: React.FC = () => {
         {error && <p className="text-red-500">{error}</p>}
 
         {!loading && !error && (
-          <div className="overflow-x-auto bg-white rounded-lg shadow-md">
+          <div className="overflow-x-auto bg-white rounded-sm shadow-md">
             <table className="min-w-full divide-y divide-gray-200 text-gray-700">
               <thead className="bg-gray-100 sticky top-0">
                 <tr>

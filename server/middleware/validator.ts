@@ -288,13 +288,18 @@ const getUsersValidation = [
 ];
 
 const updateUsersValidation = [
-    body("user_id").notEmpty().withMessage("user_id is required").isInt({ min: 1 }).withMessage("Invalid user_id"),
-    body("email_verified").optional().isBoolean().withMessage("email_verified must be a boolean"),
-    body("attempts").optional().isInt({ min: 0 }).withMessage("attempts must be a positive integer"),
-    body("status").optional().isIn(["active", "locked", "inactive", "banned"]).withMessage("Invalid status"),
-    body("status_expire").optional().isISO8601().withMessage("status_expire must be a valid date"),
-    body("role").optional().isIn(["admin", "project_manager", "team_member"]).withMessage("Invalid role"),
-    validationresults
+    body("username")
+        .optional()
+        .isString()
+        .isLength({ min: 3, max: 50 })
+        .withMessage("username must be between 3 and 50 characters"),
+
+    body("email")
+        .optional()
+        .isEmail()
+        .withMessage("Invalid email address"),
+
+    validationresults,
 ];
 
 const logsFiltersValidation = [

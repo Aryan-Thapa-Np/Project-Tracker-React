@@ -165,3 +165,30 @@ export const regiii = async (req: Request, res: Response) => {
         res.status(500).json({ success: false, error: "Internal Server Error" });
     }
 };
+
+
+
+
+export const LogoutController = async (req: Request, res: Response) => {
+
+    try {
+        res.clearCookie('act', {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
+        });
+
+        res.clearCookie('ref', {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+        res.status(200).json({ success: true, message: "Logged out successfully" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};

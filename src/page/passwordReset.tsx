@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { Sentry } from "react-activity";
 import "react-activity/dist/Sentry.css";
 import { escapeHTML, escapeForSQL } from "../sub-components/sanitize.tsx";
-import { getCsrfTokne } from "../sub-components/csrfToken.tsx";
+import { getCsrfToken } from "../sub-components/csrfToken.tsx";
 import { Link } from 'react-router-dom';
 
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
@@ -48,7 +48,7 @@ export default function PasswordResetPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-csrf-token": await getCsrfTokne(),
+          "x-csrf-token": await getCsrfToken(),
         },
         credentials: "include",
         body: JSON.stringify({ email: sanitizeEmail(email) }),
@@ -84,7 +84,7 @@ export default function PasswordResetPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-csrf-token": await getCsrfTokne(),
+          "x-csrf-token": await getCsrfToken(),
         },
         credentials: "include",
         body: JSON.stringify({

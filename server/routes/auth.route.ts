@@ -7,7 +7,9 @@ import {
     ResetPasswordController,
     reqResetPasswordController,
     ResetSettingPasswordController,
+    LogoutController,
     regiii,
+    permissionSendController,
     resendEmailController,
     getUserDetailsController
 } from "../controllers/auth.controller.ts";
@@ -17,6 +19,8 @@ import {
     loginLimiter,
     csrfGetLimiter,
     resetPasswordLimiter,
+    normalLimiter,
+    universalLimiter,
     EamilverificationLimiter
 } from "../middleware/ratelimit.ts";
 
@@ -62,7 +66,13 @@ router.post(
 
 router.post("/user/verifyEmail", EamilverificationLimiter, verifyCsrfTokenMiddleware, emailVerificationValidation, emailVerifyController as RequestHandler);
 router.post("/user/emailResend", EamilverificationLimiter, verifyCsrfTokenMiddleware, resendEmailVerificationValidation, resendEmailController as RequestHandler);
-router.get("/database/auth/logs", verifyCsrfTokenMiddleware, logsFiltersValidation, authenticateUserMiddleware, checkPermission(["get_logs"]), getLogsController as RequestHandler);
+router.get("/database/auth/logs", normalLimiter, verifyCsrfTokenMiddleware, logsFiltersValidation, authenticateUserMiddleware, checkPermission(["get_logs"]), getLogsController as RequestHandler);
+
+router.get("/user/checkPerm", normalLimiter, authenticateUserMiddleware, checkPermission(["get_logs"]), permissionSendController as RequestHandler);
+
+
+router.get("/user/logout", universalLimiter, authenticateUserMiddleware,LogoutController as RequestHandler);
+
 
 
 export default router;

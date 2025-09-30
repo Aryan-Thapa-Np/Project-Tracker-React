@@ -1,11 +1,11 @@
 import React from 'react';
 import Sidebar from "../sub-components/sidebar.tsx";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus,faArrowUp,faArrowDown,faMinus } from '@fortawesome/free-solid-svg-icons';
-import {DiamondPlus } from "lucide-react";
+import { faArrowUp, faArrowDown, faMinus } from '@fortawesome/free-solid-svg-icons';
+import { CirclePlus } from "lucide-react";
 
 
-const TeamTasks:React.FC = () => {
+const TeamTasks: React.FC = () => {
     return (
 
         <>
@@ -24,7 +24,7 @@ const TeamTasks:React.FC = () => {
                                     </p>
                                 </div>
                                 <button className="bg-blue-600 cursor-pointer text-white px-4 py-2 rounded-sm flex items-center gap-2 hover:bg-blue-700 transition-colors">
-                                    <DiamondPlus />
+                                    <CirclePlus size={18}/>
                                     <span>Assign Task</span>
                                 </button>
                             </div>
@@ -123,7 +123,7 @@ const TeamTasks:React.FC = () => {
                                                 </td>
                                                 <td className="px-6 py-4 flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm priority-high">
-                                                       <FontAwesomeIcon icon={faArrowUp} />
+                                                        <FontAwesomeIcon icon={faArrowUp} />
                                                     </span>{" "}
                                                     High
                                                 </td>
@@ -139,7 +139,7 @@ const TeamTasks:React.FC = () => {
                                                 </td>
                                                 <td className="px-6 py-4 flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm priority-medium">
-                                                   <FontAwesomeIcon icon={faMinus} />
+                                                        <FontAwesomeIcon icon={faMinus} />
                                                     </span>{" "}
                                                     Medium
                                                 </td>
@@ -182,7 +182,7 @@ const TeamTasks:React.FC = () => {
                                                 </td>
                                                 <td className="px-6 py-4 flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm priority-high">
-                                                      <FontAwesomeIcon icon={faArrowUp} />
+                                                        <FontAwesomeIcon icon={faArrowUp} />
                                                     </span>{" "}
                                                     High
                                                 </td>
@@ -198,7 +198,7 @@ const TeamTasks:React.FC = () => {
                                                 </td>
                                                 <td className="px-6 py-4 flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm priority-low">
-                                                  <FontAwesomeIcon icon={faArrowDown} />
+                                                        <FontAwesomeIcon icon={faArrowDown} />
                                                     </span>{" "}
                                                     Low
                                                 </td>
@@ -230,7 +230,7 @@ const TeamTasks:React.FC = () => {
                                                 <th className="px-6 py-3">Due Date</th>
                                             </tr>
                                         </thead>
-                                        <tbody> 
+                                        <tbody>
                                             <tr className="bg-white border-b border-gray-200">
                                                 <th className="px-6 py-4  font-medium text-gray-700" scope="row">
                                                     Plan social media campaign
@@ -241,7 +241,7 @@ const TeamTasks:React.FC = () => {
                                                 </td>
                                                 <td className="px-6 py-4 flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm priority-medium">
-                                                      <FontAwesomeIcon icon={faMinus} />
+                                                        <FontAwesomeIcon icon={faMinus} />
                                                     </span>{" "}
                                                     Medium
                                                 </td>

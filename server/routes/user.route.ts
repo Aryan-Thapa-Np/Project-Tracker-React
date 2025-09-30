@@ -23,15 +23,15 @@ import {
 
 import { verifyCsrfTokenMiddleware } from "../middleware/crf.middleware.ts";
 import { authenticateUserMiddleware } from "../middleware/auth.middleware.ts";
-
+import { upload } from "../services/multer.ts";
 const router = express.Router();
 
 
 router.get("/users/getAllUsers", normalLimiter, authenticateUserMiddleware, getUsersValidation, getUsersController as RequestHandler);
 
-router.post("/users/createUsers", universalLimiter,verifyCsrfTokenMiddleware, authenticateUserMiddleware, createUserValidation, checkPermission(["create_users"]), createUserController as RequestHandler);
+router.post("/users/createUsers", universalLimiter, verifyCsrfTokenMiddleware, authenticateUserMiddleware, createUserValidation, checkPermission(["create_users"]), createUserController as RequestHandler);
 
-router.post("/users/updateUsers", universalLimiter,verifyCsrfTokenMiddleware, authenticateUserMiddleware, updateUsersValidation, checkPermission(["create_users"]), updateUsersController as RequestHandler);
+router.post("/users/updateUsers", verifyCsrfTokenMiddleware, authenticateUserMiddleware, updateUsersValidation,upload.single("profile_pic"),updateUsersController as RequestHandler);
 
 router.get("/users/userNames", normalLimiter, authenticateUserMiddleware, getUsersNamesController as RequestHandler);
 

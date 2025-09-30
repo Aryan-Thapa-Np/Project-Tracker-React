@@ -19,7 +19,7 @@ export const authenticateUserMiddleware = async (
 
 
     if (!act && !ref) {
-      return res.status(401).json({ success: false, error: "No token provided" });
+      return res.status(401).json({ success: false, isAuth: false, error: "No token provided" });
     }
 
     if (act) {
@@ -77,10 +77,10 @@ export const authenticateUserMiddleware = async (
       return next();
     }
 
-    return res.status(401).json({ success: false, error: "Invalid Or Expired Token!" });
+    return res.status(401).json({ success: false, isAuth: false, error: "Invalid Or Expired Token!" });
 
   } catch (error) {
     console.error(error);
-    return res.status(401).json({ success: false, error: "Authentication failed" });
+    return res.status(401).json({ success: false, isAuth: false, error: "Authentication failed" });
   }
 };

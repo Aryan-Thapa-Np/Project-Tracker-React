@@ -3,6 +3,12 @@ import type { User } from "../types/usersFTypes.tsx";
 import Sidebar from "../sub-components/sidebar.tsx";
 import { User as UserIcon, Mail, ShieldCheck, ShieldX, Pencil, Camera } from "lucide-react";
 
+
+import { toast } from "react-toastify";
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { getCsrfToken } from '../sub-components/csrfToken.tsx';
+// import { escapeHTML, escapeForSQL } from "../sub-components/sanitize.tsx";
+
 interface SettingsProps {
     user?: User | null;
 }
@@ -10,7 +16,6 @@ interface SettingsProps {
 interface FormData {
     username: string;
     email: string;
-    role: string;
     profile_pic?: string;
 }
 
@@ -19,15 +24,11 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
     const [formData, setFormData] = useState<FormData>({
         username: user?.username || "",
         email: user?.email || "",
-        role: user?.role || "user",
-        profile_pic: user?.profile_pic || "",
+        profile_pic: user?.profile_pic || ""
     });
     const [previewPic, setPreviewPic] = useState<string>(user?.profile_pic || "");
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState<{ text: string; type: "success" | "error" | "" }>({
-        text: "",
-        type: "",
-    });
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,32 +54,40 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
         });
 
         if (previewPic && previewPic !== user?.profile_pic) {
-            updates.profile_pic = previewPic; // send base64 or upload logic
+            updates.profile_pic = previewPic;
         }
 
         if (Object.keys(updates).length === 0) {
-            setMessage({ text: "No changes to update.", type: "error" });
+            toast.error("No changes to update.");
             return;
         }
 
         setLoading(true);
-        setMessage({ text: "", type: "" });
 
         try {
-            const res = await fetch("/api/users/updateProfile", {
+            const res = await fetch(`${apiUrl}/api/users/updateUsers`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-csrf-token": await getCsrfToken(),
+                },
+                credentials: "include",
                 body: JSON.stringify(updates),
             });
 
             const data = await res.json();
+            console.log(data);
+            let msg: string;
+
             if (res.ok) {
-                setMessage({ text: "Profile updated successfully!", type: "success" });
+                msg = data.message;
+                toast.success(msg || "Profile updated successfully!");
             } else {
-                setMessage({ text: data.message || "Update failed!", type: "error" });
+                msg = data.error;
+                toast.error(msg || "Update failed!");
             }
         } catch (err) {
-          console.log(err);
+            console.log(err);
         } finally {
             setLoading(false);
             setIsModalOpen(false);
@@ -126,14 +135,7 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
                             <Pencil size={18} />Update Profile
                         </button>
 
-                        {message.text && (
-                            <p
-                                className={`mt-4 text-sm font-medium ${message.type === "success" ? "text-green-600" : "text-red-600"
-                                    }`}
-                            >
-                                {message.text}
-                            </p>
-                        )}
+
                     </div>
                 </div>
             </main>
@@ -191,21 +193,7 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-gray-700 font-medium mb-1">Role</label>
-                                <select
-                                    name="role"
-                                    value={formData.role}
-                                    onChange={handleChange}
-                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                                >
-                                    <option value="team_member">team_member</option>
-                                    <option value="team_memberPlus">team_memberPlus</option>
-                                    <option value="team_memberSuper">team_memberSuper</option>
-                                    <option value="project_manager">project_manager</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
+
                         </div>
 
                         <div className="flex justify-end gap-3 mt-6">

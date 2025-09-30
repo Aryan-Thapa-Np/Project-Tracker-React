@@ -2,9 +2,9 @@ import pool from '../../database/db.ts';
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import type { QueryError } from "mysql2";
-
 import type { AuthenticatedRequest } from "../../types/auth.types.ts";
-
+import path from "path";
+import type { MulterRequest } from "../../types/multerTypes.ts";
 
 export const getUsersController = async (req: Request, res: Response) => {
     try {
@@ -56,54 +56,37 @@ export const getUsersController = async (req: Request, res: Response) => {
 };
 
 
+
+
+
 export const updateUsersController = async (req: Request, res: Response) => {
+
     try {
-        const { user_id, email_verified, attempts, status, status_expire, role } = req.body;
+        const { username, email } = req.body;
+        const user_id = (req as AuthenticatedRequest).user.id;
 
         if (!user_id) {
             return res.status(400).json({ success: false, error: "user_id is required" });
         }
 
         const updates: string[] = [];
-        const params: (string | number | boolean | null)[] = [];
+        const params: (string | number)[] = [];
 
-        if (typeof email_verified === "boolean") {
-            updates.push("email_verified = ?");
-            params.push(email_verified);
+        if (username) {
+            updates.push("username = ?");
+            params.push(username);
         }
 
-        if (typeof attempts === "number") {
-            updates.push("attempts = ?");
-            params.push(attempts);
+        if (email) {
+            updates.push("email = ?");
+            params.push(email);
         }
 
-        if (status) {
-            const validStatus = ["active", "locked", "inactive", "banned"];
-            if (!validStatus.includes(status)) {
-                return res.status(400).json({ success: false, error: "Invalid status" });
-            }
-            updates.push("status = ?");
-            params.push(status);
-        }
-
-        if (status_expire) {
-            const expireDate = new Date(status_expire);
-            if (isNaN(expireDate.getTime())) {
-                return res.status(400).json({ success: false, error: "Invalid status_expire date" });
-            }
-
-
-            const mysqlDate = expireDate.toISOString().slice(0, 19).replace("T", " ");
-            updates.push("status_expire = ?");
-            params.push(mysqlDate);
-        }
-        if (role) {
-            const validRoles = ["admin", "project_manager", "team_member"];
-            if (!validRoles.includes(role)) {
-                return res.status(400).json({ success: false, error: "Invalid role" });
-            }
-            updates.push("role = ?");
-            params.push(role);
+        const multerReq = req as unknown as MulterRequest;
+        if (multerReq.file) {
+            const profilePicPath = path.join("uploads/users", String(user_id), multerReq.file.filename);
+            updates.push("profile_pic = ?");
+            params.push(profilePicPath);
         }
 
         if (updates.length === 0) {
@@ -111,18 +94,16 @@ export const updateUsersController = async (req: Request, res: Response) => {
         }
 
         params.push(user_id);
+
         const query = `UPDATE users SET ${updates.join(", ")} WHERE user_id = ?`;
         await pool.execute(query, params);
 
-        res.status(200).json({ success: true, message: "User updated successfully" });
-
+        return res.status(200).json({ success: true, message: "User updated successfully" });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, error: "Internal Server Error" });
+        console.error("Update user error:", error);
+        return res.status(500).json({ success: false, error: "Internal Server Error" });
     }
 };
-
-
 
 export const createUserController = async (req: Request, res: Response) => {
     try {

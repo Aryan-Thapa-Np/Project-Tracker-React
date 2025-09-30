@@ -6,7 +6,7 @@ export const rolesPermissions: Record<string, string[]> = {
     admin: ["create_task", "create_project", "create_users", "get_logs"],
     team_member: ["ws5523sdfo"],
     team_memberPlus: ["get_logs"],
-    team_memberSuper: ["get_logs","create_task"],
+    team_memberSuper: ["get_logs", "create_task"],
 };
 
 export const checkPermission = (requiredPermissions: string[]) => {
@@ -21,6 +21,7 @@ export const checkPermission = (requiredPermissions: string[]) => {
             if (!hasPermission) {
                 return res.status(403).json({
                     success: false,
+                    isAuth: false,
                     error: "Forbidden: insufficient permissions"
                 });
             }
@@ -30,6 +31,7 @@ export const checkPermission = (requiredPermissions: string[]) => {
             console.error(error);
             res.status(500).json({
                 success: false,
+                isAuth: false,
                 error: "Internal Server Error"
             });
         }
