@@ -23,7 +23,7 @@ const TeamTasks: React.FC = () => {
                                         Manage and track your team's tasks and progress.
                                     </p>
                                 </div>
-                                <button className="bg-blue-600 cursor-pointer text-white px-4 py-2 rounded-sm flex items-center gap-2 hover:bg-blue-700 transition-colors">
+                                <button className="bg-blue-600 cursor-pointer text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors">
                                     <CirclePlus size={18}/>
                                     <span>Assign Task</span>
                                 </button>

@@ -1,5 +1,5 @@
 import pool from '../../database/db.ts';
-import { response, type Request, type Response } from 'express';
+import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import type { QueryError } from "mysql2";
 import type { AuthenticatedRequest } from "../../types/auth.types.ts";
@@ -8,12 +8,18 @@ import type { MulterRequest } from "../../types/multerTypes.ts";
 import fs from "fs";
 import { insertLog } from "../../services/logger.ts";
 import { pushNotifications } from "../../services/notifiaction.ts";
-import { request } from 'http';
+import type { User } from "../../types/usersTypes.ts";
+
+import { validRoles } from "../../middleware/valiRoles.ts";
 
 
 export const getUsersController = async (req: Request, res: Response) => {
     try {
-        const { search, role } = req.query;
+        const { search, role, status, page = "1", limit = "5" } = req.query;
+
+        const pageNumber = parseInt(page as string, 10);
+        const pageSize = parseInt(limit as string, 10);
+        const offset = (pageNumber - 1) * pageSize;
 
         let baseQuery = `
             SELECT 
@@ -31,7 +37,6 @@ export const getUsersController = async (req: Request, res: Response) => {
         `;
         const params: (string | number)[] = [];
 
-
         if (search && typeof search === "string") {
             baseQuery += " AND (username LIKE ? OR email LIKE ?)";
             const searchValue = `%${search}%`;
@@ -39,19 +44,38 @@ export const getUsersController = async (req: Request, res: Response) => {
         }
 
         if (role && typeof role === "string") {
-            const validRoles = ["admin", "project_manager", "team_member"];
-            if (!validRoles.includes(role)) {
+            const validRoles2 = validRoles;
+            if (!validRoles2.includes(role)) {
                 return res.status(400).json({ success: false, error: "Invalid role." });
             }
+
+
             baseQuery += " AND role = ?";
             params.push(role);
         }
+
+        if (status && typeof status === "string") {
+            const validStatuses = ["active", "locked", "banned", "inactive"];
+            if (!validStatuses.includes(status)) {
+                return res.status(400).json({ success: false, error: "Invalid status." });
+            }
+            baseQuery += " AND status = ?";
+            params.push(status);
+        }
+
+        const countQuery = `SELECT COUNT(*) as total FROM (${baseQuery}) AS count_table`;
+        const [countRows] = await pool.execute(countQuery, params);
+        const total = (countRows as { total: number }[])[0].total;
+
+        baseQuery += " LIMIT ? OFFSET ?";
+        params.push(pageSize, offset);
 
         const [rows] = await pool.execute(baseQuery, params);
 
         res.status(200).json({
             success: true,
-            users: Array.isArray(rows) ? rows : []
+            users: Array.isArray(rows) ? rows : [],
+            total
         });
 
     } catch (error) {
@@ -64,7 +88,91 @@ export const getUsersController = async (req: Request, res: Response) => {
 
 
 
-export const updateUsersController = async (req: Request, res: Response) => {
+export const updateUserController = async (req: Request, res: Response) => {
+    try {
+        const { user_id, status, status_expire, role, email_verified } = req.body;
+        const user_role = (req as AuthenticatedRequest).user.role;
+        if (!user_id) {
+            return res.status(400).json({ success: false, error: "user_id is required" });
+        }
+
+        // Validate status
+        const validStatuses = ["locked", "active", "banned", "inactive"];
+        if (status && !validStatuses.includes(status)) {
+            return res.status(400).json({ success: false, error: "Invalid status" });
+        }
+
+        // Validate role
+        const validRoles2 = validRoles;
+        if (role && !validRoles2.includes(role)) {
+            return res.status(400).json({ success: false, error: "Invalid role" });
+        }
+
+        const [rows] = await pool.execute(`select role from users where user_id =?`, [user_id]);
+        const user = (rows as User[])[0];
+    
+
+        if (user.role === "admin") {
+            if (user_role !== "admin") {
+                return res.status(400).json({ success: false, error: "Insufficient Permission.." });
+            }
+        }
+        if (role === "admin") {
+            if (user_role !== "admin") {
+
+                return res.status(400).json({ success: false, error: "Insufficient Permission.." });
+            }
+        }
+
+        // If status is locked or banned, status_expire must be provided
+        if ((status === "locked" || status === "banned") && !status_expire) {
+            return res.status(400).json({ success: false, error: "status_expire is required for locked/banned users" });
+        }
+
+        // Build dynamic query
+        const updates: string[] = [];
+        const params: (string | number | boolean | null)[] = [];
+
+        if (status) {
+            updates.push("status = ?");
+            params.push(status);
+        }
+
+        if (status_expire) {
+            updates.push("status_expire = ?");
+            params.push(status_expire);
+        }
+
+        if (role) {
+            updates.push("role = ?");
+            params.push(role);
+        }
+
+        if (typeof email_verified === "boolean") {
+            updates.push("email_verified = ?");
+            params.push(email_verified);
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({ success: false, error: "No fields to update" });
+        }
+
+        const query = `UPDATE users SET ${updates.join(", ")} WHERE user_id = ?`;
+        params.push(user_id);
+
+        const [result] = await pool.execute(query, params);
+
+        res.status(200).json({ success: true, message: "User updated successfully" });
+
+    } catch (error) {
+        const err = error as QueryError;
+        console.error(err);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};
+
+
+export const updateUserSelfController = async (req: Request, res: Response) => {
     try {
         const { username, email } = req.body;
         const user_id = (req as AuthenticatedRequest).user.id;

@@ -1,160 +1,316 @@
-
-import React from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import Sidebar from "../sub-components/sidebar.tsx";
+import { getCsrfToken } from '../sub-components/csrfToken.tsx';
+import { sanitizeInput } from "../sub-components/sanitize.tsx";
+import { toast } from "react-toastify";
 
 
+interface User {
+    user_id: number;
+    username: string;
+    email: string;
+    role: string;
+    status: string;
+    status_expire: string | null;
+    email_verified: boolean;
+}
 
-const UserManagement:React.FC  = () => {
+const roles = ["admin", "project_manager", "team_member", "team_memberPlus", "team_memberSuper"];
+const statuses = ["active", "locked", "banned", "inactive"];
+
+const UserManagement: React.FC = () => {
+    const [users, setUsers] = useState<User[]>([]);
+    const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [roleFilter, setRoleFilter] = useState("");
+    const [statusFilter, setStatusFilter] = useState("");
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+
+    const [newUser, setNewUser] = useState({ username: "", email: "", password: "", role: "team_member" });
+    const [editUser, setEditUser] = useState<Partial<User>>({});
+
+    const pageSize = 5;
+    const apiUrl = import.meta.env.VITE_BACKEND_URL;
+
+    // Debounce search input
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedSearch(search), 500);
+        return () => clearTimeout(handler);
+    }, [search]);
+
+    // Reset page when filters/search change
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch, roleFilter, statusFilter]);
+
+    // Fetch users
+    const fetchUsers = useCallback(async () => {
+        try {
+            const params = new URLSearchParams();
+            if (debouncedSearch) params.append("search", debouncedSearch);
+            if (roleFilter) params.append("role", roleFilter);
+            if (statusFilter) params.append("status", statusFilter);
+            params.append("page", String(page));
+            params.append("limit", String(pageSize));
+
+            const res = await fetch(`${apiUrl}/api/users/getAllUsers?${params.toString()}`, {
+                method: "GET",
+                headers: { "x-csrf-token": await getCsrfToken() },
+                credentials: 'include',
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                setUsers(data.users);
+                setTotalPages(Math.max(Math.ceil(data.total / pageSize), 1));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }, [debouncedSearch, roleFilter, statusFilter, page, apiUrl]);
+
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
+
+    // Create User
+    const handleCreateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const sanitizedUser = {
+                username: sanitizeInput(newUser.username),
+                email: sanitizeInput(newUser.email),
+                password: sanitizeInput(newUser.password),
+                role: newUser.role
+            };
+
+            const res = await fetch(`${apiUrl}/api/users/createUsers`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "x-csrf-token": await getCsrfToken() },
+                body: JSON.stringify(sanitizedUser),
+                credentials: "include",
+            });
+
+            const data = await res.json();
+
+            let msg: string;
+
+            if (data.success) {
+                msg = data.message;
+                toast.success(msg || "User created successfully!");
+                setShowCreateModal(false);
+                setNewUser({ username: "", email: "", password: "", role: "team_member" });
+                setPage(1);
+                fetchUsers();
+            } else {
+                msg = data.error;
+
+                toast.error(msg || "Failed to create user");
+            }
+        } catch (err) {
+            toast.error(err && typeof err === "object" && "error" in err
+                ? String((err as { error: unknown }).error)
+                : "Something went wrong!");
+        }
+    };
+
+    // Update User
+    const handleUpdateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const sanitizedEdit = {
+                ...editUser,
+                role: editUser.role,
+                status: editUser.status,
+                status_expire: editUser.status_expire,
+                email_verified: editUser.email_verified
+            };
+
+            const res = await fetch(`${apiUrl}/api/users/updateusersData`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "x-csrf-token": await getCsrfToken() },
+                body: JSON.stringify(sanitizedEdit),
+                credentials: "include",
+            });
+
+            const data = await res.json();
+            let msg: string;
+            if (data.success) {
+                msg = data.message;
+                toast.success(msg || "User updated successfully!");
+                setShowEditModal(false);
+                setEditUser({});
+                fetchUsers();
+            } else {
+                msg = data.error;
+                toast.error(msg || "Failed to update user");
+
+            }
+        } catch (err) {
+            toast.error(err && typeof err === "object" && "error" in err
+                ? String((err as { error: unknown }).error)
+                : "Something went wrong!");
+        }
+    };
+
     return (
-        <>
-            <div className="flex w-full min-h-screen bg-gray-100">
-                <Sidebar />
-
-                <main className="flex-1 overflow-y-auto p-2 bg-gray-100 content-area  h-screen">
-                    <div className="mx-auto max-w-7xl px-2 py-8 sm:px-6 lg:px-8">
-                        {/* Header */}
-                        <div className="mb-8 pt-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                            <div>
-                                <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-                                    User Management
-                                </h1> 
-                                <p className="mt-1 text-sm text-gray-500">
-                                    Manage user accounts, roles, and project assignments.
-                                </p>
-                            </div>
-                            <button className="flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm cursor-pointer hover:bg-blue-700 transition-colors">
-                                <svg
-                                    className="mr-2"
-                                    fill="currentColor"
-                                    height="16"
-                                    viewBox="0 0 256 256"
-                                    width="16"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"></path>
-                                </svg>
-                                Add New User
-                            </button>
+        <div className="flex w-full min-h-screen bg-gray-100">
+            <Sidebar />
+            <main className="flex-1 overflow-y-auto p-2 bg-gray-100 content-area h-screen">
+                <div className="mx-auto max-w-7xl px-2 py-8 sm:px-6 lg:px-8">
+                    {/* Header */}
+                    <div className="mb-8 pt-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight text-gray-900">User Management</h1>
+                            <p className="mt-1 text-sm text-gray-500">Manage user accounts, roles, and project assignments.</p>
                         </div>
+                        <button
+                            onClick={() => setShowCreateModal(true)}
+                            className="flex items-center justify-center cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+                        >
+                            Add New User
+                        </button>
+                    </div>
 
-                        {/* Filters */}
-                        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
-                            <div className="relative flex-1 ">
-                                <svg
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
-                                    fill="currentColor"
-                                    height="24"
-                                    viewBox="0 0 256 256"
-                                    width="24"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
-                                </svg>
-                                <input
-                                    className="h-12 w-full rounded-lg border outline-0 border-gray-200 bg-white pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200"
-                                    placeholder="Search users by name or email..."
-                                />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <select className="flex h-12 outline-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                    <option value="">Role</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="project-manager">Project Manager</option>
-                                    <option value="team-member">Team Member</option>
-                                </select>
+                    {/* Filters */}
+                    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+                        <input
+                            className="h-12 w-full rounded-lg border outline-0 border-gray-200 bg-white pl-4 pr-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                            placeholder="Search users by name or email..."
+                            value={search}
+                            onChange={(e) => setSearch(sanitizeInput(e.target.value))}
+                        />
+                        <select
+                            className="flex h-12 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm text-gray-700 hover:bg-gray-50"
+                            value={roleFilter}
+                            onChange={(e) => setRoleFilter(e.target.value)}
+                        >
+                            <option value="">All Roles</option>
+                            {roles.map(r => <option key={r} value={r}>{r.replace("_", " ")}</option>)}
+                        </select>
+                        <select
+                            className="flex h-12 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm text-gray-700 hover:bg-gray-50"
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                        >
+                            <option value="">All Statuses</option>
+                            {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                    </div>
 
-                            </div>
-                        </div>
-
-                        {/* Table */}
-                        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            Name
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            Role
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            Assigned Projects
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            Status
-                                        </th>
-                                        <th className="relative px-6 py-3">
-                                            <span className="sr-only">Actions</span>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {/* User Row Example */}
-                                    <tr>
+                    {/* Users Table */}
+                    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Role</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email Verified</th>
+                                    <th className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {users.map(user => (
+                                    <tr key={user.user_id}>
                                         <td className="whitespace-nowrap px-6 py-4">
-                                            <div className="flex items-center">
-                                                <div className="h-10 w-10 flex-shrink-0">
-                                                    <img
-                                                        alt=""
-                                                        className="h-10 w-10 rounded-full"
-                                                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJdVdiPR7USDkGfE014CAbF6TBlKwY-yYm1t_fmtjibHL-Pk-vm4UFnvHHGvj6Gre15uB72asgSF8SOnDLKw52XyYS07o1gAzR2dI87TP0sSH2n2j8zWYKRfhiRRRggp2ZMQ8nLeWJO_gRwzyUfnOegMJdxELi4JPgoNr5VHdjQXRMpok5PgcazZoos58nDOfKR8wiv6uguSsnt82-U7Hb_AjwU1-U5N2qzxSjMmipZK7A8IWBxA79NS5o1sWGykmkc43JBJEC4uo"
-                                                    />
-                                                </div>
-                                                <div className="ml-4">
-                                                    <div className="text-sm font-medium text-gray-900">Sophia Carter</div>
-                                                    <div className="text-sm text-gray-500">sophia.carter@example.com</div>
-                                                </div>
-                                            </div>
+                                            <div className="text-sm font-medium text-gray-900">{user.username}</div>
+                                            <div className="text-sm text-gray-500">{user.email}</div>
                                         </td>
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Administrator</td>
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">All Projects</td>
-                                        <td className="whitespace-nowrap px-6 py-4">
-                                            <span className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
-                                                Active
-                                            </span>
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{user.role}</td>
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm">
+                                            <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${user.status === "active" ? "bg-green-100 text-green-800" :
+                                                user.status === "locked" ? "bg-yellow-100 text-yellow-800" :
+                                                    user.status === "banned" ? "bg-red-100 text-red-800" :
+                                                        "bg-gray-100 text-gray-800"
+                                                }`}>{user.status}</span>
+                                        </td>
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm">
+                                            <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${user.email_verified ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                                                }`}>{user.email_verified ? "Yes" : "No"}</span>
                                         </td>
                                         <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                                            <a className="text-primary hover:text-primary/80" href="#">
+                                            <button
+                                                className="text-blue-600 hover:text-blue-800"
+                                                onClick={() => { setEditUser(user); setShowEditModal(true); }}
+                                            >
                                                 Edit
-                                            </a>
+                                            </button>
                                         </td>
                                     </tr>
-                                    {/* Add other users similarly */}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Pagination */}
-                        <div className="mt-6 flex items-center justify-between">
-                            <p className="text-sm text-gray-500">
-                                Showing <span className="font-medium">1</span> to <span className="font-medium">5</span> of <span className="font-medium">20</span> results
-                            </p>
-                            <nav aria-label="Pagination" className="isolate inline-flex -space-x-px rounded-lg shadow-sm">
-                                <a className="relative inline-flex items-center rounded-l-lg border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50" href="#">
-                                    <span className="sr-only">Previous</span>
-                                    <svg aria-hidden="true" className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path clipRule="evenodd" d="M12.79 5.23a.75.75 0 010 1.06L9.06 10l3.73 3.71a.75.75 0 11-1.06 1.06l-4.25-4.25a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 0z" fillRule="evenodd"></path>
-                                    </svg>
-                                </a>
-                                <a className="relative z-10 inline-flex items-center border border-primary bg-primary/20 px-4 py-2 text-sm font-medium text-primary" href="#">
-                                    1
-                                </a>
-                                <a className="relative inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50" href="#">2</a>
-                                <a className="relative hidden items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 md:inline-flex" href="#">3</a>
-                                <span className="relative inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700">...</span>
-                                <a className="relative hidden items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 md:inline-flex" href="#">10</a>
-                                <a className="relative inline-flex items-center rounded-r-lg border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50" href="#">
-                                    <span className="sr-only">Next</span>
-                                    <svg aria-hidden="true" className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path clipRule="evenodd" d="M7.21 14.77a.75.75 0 010-1.06L10.94 10 7.21 6.29a.75.75 0 111.06-1.06l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06 0z" fillRule="evenodd"></path>
-                                    </svg>
-                                </a>
-                            </nav>
-                        </div>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
-                </main>
-            </div>
-        </>
+
+                    {/* Pagination */}
+                    <div className="mt-6 flex items-center justify-between">
+                        <p className="text-sm text-gray-500">Page {page} of {totalPages}</p>
+                        {totalPages > 1 && (
+                            <div className="flex gap-2">
+                                <button disabled={page === 1} onClick={() => setPage(page - 1)} className="px-3 py-1 rounded border bg-white hover:bg-gray-50">Prev</button>
+                                <button disabled={page === totalPages} onClick={() => setPage(page + 1)} className="px-3 py-1 rounded border bg-white hover:bg-gray-50">Next</button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Create Modal */}
+                    {showCreateModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                                <h2 className="text-xl font-semibold mb-4">Create New User</h2>
+                                <form onSubmit={handleCreateUser} className="flex flex-col gap-4">
+                                    <input type="text" placeholder="Username" required className="border rounded px-3 py-2" value={newUser.username} onChange={e => setNewUser({ ...newUser, username: sanitizeInput(e.target.value) })} />
+                                    <input type="email" placeholder="Email" required className="border rounded px-3 py-2" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: sanitizeInput(e.target.value) })} />
+                                    <input type="password" placeholder="Password" required className="border rounded px-3 py-2" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: sanitizeInput(e.target.value) })} />
+                                    <select className="border rounded px-3 py-2" value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
+                                        {roles.map(r => <option key={r} value={r}>{r.replace("_", " ")}</option>)}
+                                    </select>
+                                    <div className="flex justify-end gap-2 mt-2">
+                                        <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 rounded border bg-gray-200 hover:bg-gray-300">Cancel</button>
+                                        <button type="submit" className="px-4 py-2 cursor-pointer rounded bg-blue-600 text-white hover:bg-blue-700">Create</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Edit Modal */}
+                    {showEditModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                                <h2 className="text-xl font-semibold mb-4">Edit User</h2>
+                                <form onSubmit={handleUpdateUser} className="flex flex-col gap-4">
+                                    <input type="text" placeholder="Username" disabled className="border rounded px-3 py-2" value={editUser.username} />
+                                    <input type="email" placeholder="Email" disabled className="border rounded px-3 py-2" value={editUser.email} />
+                                    <select className="border rounded px-3 py-2" value={editUser.role} onChange={e => setEditUser({ ...editUser, role: sanitizeInput(e.target.value) })}>
+                                        {roles.map(r => <option key={r} value={r}>{r.replace("_", " ")}</option>)}
+                                    </select>
+                                    <select className="border rounded px-3 py-2" value={editUser.status} onChange={e => setEditUser({ ...editUser, status: sanitizeInput(e.target.value) })}>
+                                        {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+                                    </select>
+                                    {(editUser.status === "locked" || editUser.status === "banned") && (
+                                        <input type="datetime-local" placeholder="Status Expire" className="border rounded px-3 py-2" value={editUser.status_expire || ""} onChange={e => setEditUser({ ...editUser, status_expire: e.target.value })} />
+                                    )}
+                                    <select className="border rounded px-3 py-2" value={editUser.email_verified ? "true" : "false"} onChange={e => setEditUser({ ...editUser, email_verified: e.target.value === "true" })}>
+                                        <option value="true">Yes</option>
+                                        <option value="false">No</option>
+                                    </select>
+                                    <div className="flex justify-end gap-2 mt-2">
+                                        <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 rounded border bg-gray-200 hover:bg-gray-300">Cancel</button>
+                                        <button type="submit" className="px-4 py-2 rounded bg-blue-600 cursor-pointer text-white hover:bg-blue-700">Update</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </main>
+        </div>
     );
 };
 

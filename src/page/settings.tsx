@@ -20,7 +20,7 @@ interface FormDataState {
 
 const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
 
-  
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState<FormDataState>({
         username: user?.username || "",
@@ -91,16 +91,15 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
             if (res.ok) {
                 msg = data.message;
                 toast.success(msg || "Profile updated successfully!");
-                setTimeout(() => {
-                    setReloadKey(prev => prev + 1);
-                }, 500);
+
             } else {
                 msg = data.error;
                 toast.error(msg || "Update failed!");
             }
         } catch (err) {
-            console.error(err);
-            toast.error("Something went wrong while updating.");
+            toast.error(err && typeof err === "object" && "error" in err
+                ? String((err as { error: unknown }).error)
+                : "Something went wrong!");
         } finally {
             setLoading(false);
             setIsModalOpen(false);
@@ -143,7 +142,7 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
 
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="mt-4 flex items-center gap-2 cursor-pointer px-5 py-2 bg-blue-600 text-white rounded-sm shadow hover:bg-blue-700 transition"
+                            className="mt-4 flex items-center gap-2 cursor-pointer px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
                         >
                             Update Profile
                         </button>

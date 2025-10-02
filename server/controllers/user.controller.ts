@@ -2,7 +2,8 @@
 import {
     getUsersController,
     createUserController,
-    updateUsersController,
+    updateUserSelfController,
+    updateUserController,
     getUsersNamesController
 } from "./users/users.controller.ts";
 
@@ -11,8 +12,9 @@ import {
 
 export {
     getUsersController,
+    updateUserController,
     createUserController,
-    updateUsersController,
+    updateUserSelfController,
     getUsersNamesController
 
 }

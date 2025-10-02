@@ -50,7 +50,7 @@ export const EamilverificationLimiter = rateLimit({
 
 export const csrfGetLimiter = rateLimit({
     windowMs: 10 * 60 * 1000,
-    max: 100,
+    max: 200,
     message: {
         success: false,
         error: "Too many attempts. Please try again after 10 minutes."

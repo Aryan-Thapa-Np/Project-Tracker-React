@@ -253,41 +253,85 @@ const getTeamTasksValidation = [
     validationresults
 ];
 
-
 const createUserValidation = [
     body("username")
-        .trim()
-        .notEmpty().withMessage("Username is required")
-        .isLength({ min: 3 }).withMessage("Username must be at least 3 characters long"),
+        .exists({ checkFalsy: true })
+        .withMessage("Username is required")
+        .isString()
+        .isLength({ min: 3, max: 50 })
+        .withMessage("Username must be between 3 and 50 characters"),
 
     body("email")
-        .trim()
-        .notEmpty().withMessage("Email is required")
-        .isEmail().withMessage("Invalid email format"),
+        .exists({ checkFalsy: true })
+        .withMessage("Email is required")
+        .isEmail()
+        .withMessage("Invalid email address"),
 
     body("password")
-        .notEmpty().withMessage("Password is required")
-        .isLength({ min: 6 }).withMessage("Password must be at least 6 characters long"),
+        .exists({ checkFalsy: true })
+        .withMessage("Password is required")
+        .isLength({ min: 6, max: 100 })
+        .withMessage("Password must be between 6 and 100 characters"),
 
     body("role")
-        .optional()
-        .isIn(["admin", "project_manager", "team_member"])
+        .exists({ checkFalsy: true })
+        .withMessage("Role is required")
+        .isIn(["admin", "project_manager", "team_member", "team_memberPlus", "team_memberSuper"])
         .withMessage("Invalid role"),
 
-    validationresults
+    validationresults,
 ];
-
 
 const getUsersValidation = [
-    query("search").optional().isString().withMessage("Search must be a string"),
+    query("search")
+        .optional()
+        .isString()
+        .isLength({ min: 0, max: 50 })
+        .withMessage("Search query too long"),
+    query("role")
+        .optional()
+        .isIn(["admin", "project_manager", "team_member", "team_memberPlus", "team_memberSuper"])
+        .withMessage("Invalid role filter"),
+    query("status")
+        .optional()
+        .isIn(["active", "locked", "banned", "inactive"])
+        .withMessage("Invalid status filter"),
+    query("page")
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage("Page must be a positive integer"),
     query("limit")
         .optional()
-        .isInt({ min: 1, max: 100 }).withMessage("Limit must be between 1 and 100."),
-    query("role").optional().isIn(["admin", "project_manager", "team_member"]).withMessage("Invalid role"),
-    validationresults
+        .isInt({ min: 1, max: 100 })
+        .withMessage("Limit must be between 1 and 100"),
+    validationresults,
 ];
 
+
+
 const updateUsersValidation = [
+    body("username")
+        .optional()
+        .isString()
+        .isLength({ min: 3, max: 50 })
+        .withMessage("Username must be between 3 and 50 characters"),
+    body("email")
+        .optional()
+        .isEmail()
+        .withMessage("Invalid email address"),
+    body("role")
+        .optional()
+        .isIn(["admin", "project_manager", "team_member", "team_memberPlus", "team_memberSuper"])
+        .withMessage("Invalid role"),
+    body("status")
+        .optional()
+        .isIn(["active", "locked", "banned", "inactive"])
+        .withMessage("Invalid status"),
+    validationresults,
+];
+
+
+const updateUserSelfValidation = [
     body("username")
         .optional()
         .isString()
@@ -348,6 +392,7 @@ export {
     createTaskValidation,
     getTaskValidation,
     createProjectValidation,
+    updateUserSelfValidation,
     getProjectsValidation,
     getTeamTasksValidation,
     updateUsersValidation,

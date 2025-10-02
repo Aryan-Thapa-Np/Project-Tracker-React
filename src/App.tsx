@@ -61,6 +61,18 @@ function App() {
             <PrivateRoute>
               <Header />
               <UserManagement />
+              <ToastContainer
+                className="px-5 pt-1 text-sm "
+                position="top-center"
+                autoClose={3000}
+                hideProgressBar={true}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+              />
             </PrivateRoute>
           </CheckPerm>
         } />

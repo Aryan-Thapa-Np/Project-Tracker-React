@@ -63,7 +63,7 @@ const Projects:React.FC = () => {
               </div>
             </div>
 
-            <button className="flex items-center justify-center gap-2 px-4 py-2 text-sm sm:text-base text-white bg-blue-500 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer">
+            <button className="flex items-center justify-center gap-2 px-4 py-2 text-sm sm:text-base text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer">
               <svg
                 className="h-4 w-4 sm:h-5 sm:w-5"
                 fill="currentColor"

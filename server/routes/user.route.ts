@@ -4,13 +4,15 @@ import type { RequestHandler } from "express";
 import {
     getUsersController,
     createUserController,
-    updateUsersController,
-    getUsersNamesController
+    updateUserSelfController,
+    getUsersNamesController,
+    updateUserController
 } from "../controllers/user.controller.ts";
 import {
     createUserValidation,
     getUsersValidation,
-    updateUsersValidation
+    updateUsersValidation,
+    updateUserSelfValidation
 } from "../middleware/validator.ts";
 import {
     universalLimiter,
@@ -31,7 +33,10 @@ router.get("/users/getAllUsers", normalLimiter, authenticateUserMiddleware, getU
 
 router.post("/users/createUsers", universalLimiter, verifyCsrfTokenMiddleware, authenticateUserMiddleware, createUserValidation, checkPermission(["create_users"]), createUserController as RequestHandler);
 
-router.post("/users/updateUsers", verifyCsrfTokenMiddleware, authenticateUserMiddleware,updateUsersValidation,upload.single("profile_pic"),updateUsersController as RequestHandler);
+router.post("/users/updateUsers", verifyCsrfTokenMiddleware, authenticateUserMiddleware, updateUserSelfValidation, upload.single("profile_pic"), updateUserSelfController as RequestHandler);
+
+router.post("/users/updateusersData", verifyCsrfTokenMiddleware, authenticateUserMiddleware, updateUsersValidation, updateUserController as RequestHandler);
+
 
 router.get("/users/userNames", normalLimiter, authenticateUserMiddleware, getUsersNamesController as RequestHandler);
 
