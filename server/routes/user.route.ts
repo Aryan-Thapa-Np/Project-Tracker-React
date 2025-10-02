@@ -31,7 +31,7 @@ router.get("/users/getAllUsers", normalLimiter, authenticateUserMiddleware, getU
 
 router.post("/users/createUsers", universalLimiter, verifyCsrfTokenMiddleware, authenticateUserMiddleware, createUserValidation, checkPermission(["create_users"]), createUserController as RequestHandler);
 
-router.post("/users/updateUsers", verifyCsrfTokenMiddleware, authenticateUserMiddleware, updateUsersValidation,upload.single("profile_pic"),updateUsersController as RequestHandler);
+router.post("/users/updateUsers", verifyCsrfTokenMiddleware, authenticateUserMiddleware,updateUsersValidation,upload.single("profile_pic"),updateUsersController as RequestHandler);
 
 router.get("/users/userNames", normalLimiter, authenticateUserMiddleware, getUsersNamesController as RequestHandler);
 

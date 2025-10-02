@@ -116,7 +116,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
             <Link to="/notifications" className="flex items-center space-x-2 relative" >
               <Bell size={20} />
               <span>Notifications</span>
-              <span className="absolute top-[-5px] right-[-5px] cursor-pointer bg-red-500 pr-1 pl-1 rounded-full text-white text-[12px]">
+              <span className="absolute top-[-5px] right-[-5px] cursor-pointer bg-red-500 pr-[6px] pl-[6px] rounded-full text-white text-[12px]">
                 {user?.notification_count || ""}
               </span>
             </Link>

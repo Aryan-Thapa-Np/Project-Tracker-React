@@ -1,16 +1,16 @@
 import pool from "../database/db.ts";
 
 const actions: string[] = [
-    "User successfully authenticated",
-    "User + Email successfully authenticated",
-    "A new project was created",
-    "A task was marked as completed",
-    "status was updated to 'To Do'",
-    "status was updated to 'In Progress'",
-    "status was updated to 'Completed'",
-    "A password reset was performed",
-    "User profile information was updated",
-];
+    "User successfully authenticated", //0
+    "User + Email successfully authenticated", //1
+    "A new project was created",  //2
+    "A task was marked as completed", //3
+    "status was updated to 'To Do'", //4
+    "status was updated to 'In Progress'", //5
+    "status was updated to 'Completed'", //6
+    "A password reset was performed", //7
+    "User profile information was updated",  //8
+]; 
 
 export const insertLog = async (
     userId: number,

@@ -22,6 +22,7 @@ export const getUserDetailsController = async (req: Request, res: Response) => {
                 user_id,
                 profile_pic,
                 username,
+                email_verified,
                 role,
                 email,
                 (SELECT COUNT(*) FROM notifications WHERE notifications.user_id = users.user_id AND is_read = false) AS notification_count

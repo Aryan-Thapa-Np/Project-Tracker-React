@@ -6,12 +6,15 @@ dotenv.config({ quiet: true });
 import cookieParser from "cookie-parser";
 import { testConnection } from './database/db.ts';
 import cors from "cors";
+import path from 'path';
+import { fileURLToPath } from "url";
 
-
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app: Express = express();
 app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" })); 
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
 
@@ -24,6 +27,8 @@ app.use(cors({
 
 
 
+app.use("/user", express.static(path.join(__dirname, "./uploads/user")));
+
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -32,20 +37,19 @@ app.use(
         scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:", "http://localhost:5173"],
-        connectSrc: ["'self'", "http://localhost:5173"],
-        objectSrc: ["'none'"], // disallow <object>, <embed>, <applet>
-        upgradeInsecureRequests: [], // upgrade http requests to https
+        imgSrc: ["'self'", "data:", "http://localhost:5173", "http://localhost:4000"], // allow images
+        connectSrc: ["'self'", "http://localhost:5173", "http://localhost:4000"],     // allow API
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
       },
     },
-    frameguard: { action: 'deny' },
+    frameguard: { action: "deny" },
   })
 );
 
 import user from "./routes/auth.route.ts";
 import task from "./routes/task.route.ts";
 import users from "./routes/user.route.ts";
-
 
 const port: number = parseInt(process.env.PORT || '4000', 10);
 

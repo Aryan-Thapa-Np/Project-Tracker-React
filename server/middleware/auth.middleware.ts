@@ -38,8 +38,11 @@ export const authenticateUserMiddleware = async (
           return res.status(401).json({ success: false, error: "Invalid token" });
         }
 
+
+
         const user = (rows as User[])[0];
-        (req as AuthenticatedRequest).user = { id: user.user_id, email: user.email, role: user.role };
+   
+        (req as AuthenticatedRequest).user = { id: user.user_id, email: user.email, role: user.role, profile_pic: user.profile_pic, username: user.username };
         return next();
       }
     }
@@ -59,7 +62,7 @@ export const authenticateUserMiddleware = async (
       }
 
       const user = (rows as User[])[0];
-      (req as AuthenticatedRequest).user = { id: user.user_id, email: user.email, role: user.role };
+      (req as AuthenticatedRequest).user = { id: user.user_id, email: user.email, role: user.role, profile_pic: user.profile_pic, username: user.username };
 
       const token = jwt.sign(
         { id: user.user_id, email: user.email },

@@ -91,7 +91,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                             icon={faBell}
                             className="text-[17px] text-gray-600 cursor-pointer"
                         />
-                        <span className="absolute top-[-5px] right-[-5px] cursor-pointer bg-red-500 pr-1 pl-1 rounded-full text-white text-[12px]">
+                        <span className="absolute top-[-5px] right-[-5px] cursor-pointer bg-red-500 pr-[6px] pl-[6px] rounded-full text-white text-[12px]">
                             {user?.notification_count || ""}
                         </span>
                     </Link>

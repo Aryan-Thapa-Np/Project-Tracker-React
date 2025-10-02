@@ -1,65 +1,75 @@
 import React, { useState } from "react";
 import type { User } from "../types/usersFTypes.tsx";
 import Sidebar from "../sub-components/sidebar.tsx";
-import { User as UserIcon, Mail, ShieldCheck, ShieldX, Pencil, Camera } from "lucide-react";
-
-
+import { User as UserIcon, Mail, ShieldCheck, ShieldX, Camera } from "lucide-react";
 import { toast } from "react-toastify";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
-import { getCsrfToken } from '../sub-components/csrfToken.tsx';
-// import { escapeHTML, escapeForSQL } from "../sub-components/sanitize.tsx";
+import { getCsrfToken } from "../sub-components/csrfToken.tsx";
+
+import { escapeHTML, escapeForSQL } from "../sub-components/sanitize.tsx";
 
 interface SettingsProps {
     user?: User | null;
 }
 
-interface FormData {
+interface FormDataState {
     username: string;
     email: string;
     profile_pic?: string;
 }
 
 const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
+
+  
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState<FormData>({
+    const [formData, setFormData] = useState<FormDataState>({
         username: user?.username || "",
         email: user?.email || "",
-        profile_pic: user?.profile_pic || ""
+        profile_pic: user?.profile_pic || "",
     });
     const [previewPic, setPreviewPic] = useState<string>(user?.profile_pic || "");
+    const [updatePic, setUpdatePic] = useState<File>();
     const [loading, setLoading] = useState(false);
 
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setFormData({
+            ...formData,
+            [e.target.name]: escapeForSQL(escapeHTML(e.target.value)),
+        });
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            setUpdatePic(file);
             const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewPic(reader.result as string);
-            };
+            reader.onloadend = () => setPreviewPic(reader.result as string);
             reader.readAsDataURL(file);
         }
     };
 
     const handleUpdate = async () => {
-        const updates: Partial<FormData> = {};
-        (Object.keys(formData) as (keyof FormData)[]).forEach((key) => {
-            if (formData[key] !== (user as User)?.[key]) {
-                updates[key] = formData[key];
-            }
-        });
+        const updates = new FormData();
 
-        if (previewPic && previewPic !== user?.profile_pic) {
-            updates.profile_pic = previewPic;
+
+
+        if (formData.username) {
+            if (user?.username !== formData.username) {
+
+                updates.append("username", formData.username);
+            }
+
         }
 
-        if (Object.keys(updates).length === 0) {
-            toast.error("No changes to update.");
-            return;
+        if (formData.email) {
+            if (user?.email !== formData.email) {
+                updates.append("email", formData.email);
+            }
+        }
+
+        if (updatePic) {
+            updates.append("uploadType", "user");
+            updates.append("profile_pic", updatePic);
         }
 
         setLoading(true);
@@ -68,26 +78,29 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
             const res = await fetch(`${apiUrl}/api/users/updateUsers`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
                     "x-csrf-token": await getCsrfToken(),
                 },
                 credentials: "include",
-                body: JSON.stringify(updates),
+                body: updates,
             });
 
             const data = await res.json();
-            console.log(data);
+
             let msg: string;
 
             if (res.ok) {
                 msg = data.message;
                 toast.success(msg || "Profile updated successfully!");
+                setTimeout(() => {
+                    setReloadKey(prev => prev + 1);
+                }, 500);
             } else {
                 msg = data.error;
                 toast.error(msg || "Update failed!");
             }
         } catch (err) {
-            console.log(err);
+            console.error(err);
+            toast.error("Something went wrong while updating.");
         } finally {
             setLoading(false);
             setIsModalOpen(false);
@@ -95,13 +108,13 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
     };
 
     return (
-        <div className="flex flex-col md:flex-row w-full min-h-screen  bg-gray-100">
+        <div className="flex flex-col md:flex-row w-full min-h-screen bg-gray-100" >
             <Sidebar user={user} />
 
             {/* Main content */}
             <main className="content-area flex-1 h-screen overflow-y-auto">
                 <div className="pt-20 px-10">
-                    <h1 className="text-3xl font-bold mb-6 text-gray-800"> User Settings</h1>
+                    <h1 className="text-3xl font-bold mb-6 text-gray-800">User Settings</h1>
 
                     {/* Profile Card */}
                     <div className="bg-white rounded-sm shadow-lg p-6 border border-gray-200">
@@ -130,12 +143,10 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
 
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="mt-4 flex  items-center gap-2 cursor-pointer px-5 py-2 bg-blue-600 text-white rounded-sm shadow hover:bg-blue-700 transition"
+                            className="mt-4 flex items-center gap-2 cursor-pointer px-5 py-2 bg-blue-600 text-white rounded-sm shadow hover:bg-blue-700 transition"
                         >
-                            <Pencil size={18} />Update Profile
+                            Update Profile
                         </button>
-
-
                     </div>
                 </div>
             </main>
@@ -192,8 +203,6 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
                                     className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300"
                                 />
                             </div>
-
-
                         </div>
 
                         <div className="flex justify-end gap-3 mt-6">

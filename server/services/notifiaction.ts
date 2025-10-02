@@ -108,7 +108,7 @@ export const pushNotifications = async (
             config.icon_class
         ]);
 
-        res.status(201).json({ success: true, message: "Notification added." });
+   
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, error: "Internal Server Error" });

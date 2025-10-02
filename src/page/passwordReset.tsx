@@ -229,7 +229,7 @@ export default function PasswordResetPage() {
           </Link>
         </div>
 
-        <Button type="submit" className="w-full py-6 text-lg" disabled={isLoading}>
+        <Button type="submit" className="w-full py-6 text-lg  bg-blue-600 hover:bg-blue-700 transition-colors" disabled={isLoading}>
           {isLoading ? (
             <>
               <Sentry size={15} color="#fff" /> {phase === "email" ? "Sending..." : "Resetting..."}

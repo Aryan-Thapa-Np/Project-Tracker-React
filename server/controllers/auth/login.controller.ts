@@ -39,7 +39,7 @@ export const loginController = async (req: Request, res: Response) => {
         // Check if account is locked
         if (user.status === 'locked' && user.status_expire && new Date(user.status_expire) > new Date()) {
             const diffMs = new Date(user.status_expire).getTime() - new Date().getTime();
-            const minutes = Math.ceil(diffMs / (1000 * 60)); // Use ceil for clearer remaining time
+            const minutes = Math.ceil(diffMs / (1000 * 60));
 
             return res.status(401).json({
                 success: false,
@@ -57,7 +57,7 @@ export const loginController = async (req: Request, res: Response) => {
             if (attempts >= MAX_LOGIN_ATTEMPTS) {
                 lockUntil = new Date(Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000);
                 status = 'locked';
-                attempts = 0; // Reset attempts after lockout
+                attempts = 0;
             }
 
             await pool.execute(
@@ -73,13 +73,12 @@ export const loginController = async (req: Request, res: Response) => {
             });
         }
 
-        // Reset attempts and status on successful login
+    
         await pool.execute(
             'UPDATE users SET attempts = ?, status = ?, status_expire = ? WHERE user_id = ?',
             [0, 'active', null, user.user_id]
         );
 
-        // Check email verification
         if (!user.email_verified) {
             const expire_code = new Date(Date.now() + 2 * 60 * 1000);
             const code: number = Math.floor(100000 + Math.random() * 900000);
@@ -96,7 +95,7 @@ export const loginController = async (req: Request, res: Response) => {
             });
         }
 
-        // Generate JWT token
+
         const token = jwt.sign(
             { id: user.user_id, email: user.email },
             process.env.JWT_SECRET as string,
@@ -112,7 +111,6 @@ export const loginController = async (req: Request, res: Response) => {
             maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
 
-        // Handle rememberMe for refresh token
         if (rememberMe) {
             const refToken = jwt.sign(
                 { id: user.user_id, email: user.email },
@@ -129,7 +127,7 @@ export const loginController = async (req: Request, res: Response) => {
             res.cookie('ref', refToken, {
                 httpOnly: true,
                 sameSite: 'lax',
-                secure: process.env.NODE_ENV === 'production', // Secure only in production
+                secure: process.env.NODE_ENV === 'production', 
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
         }

@@ -4,13 +4,12 @@ import fs from "fs";
 import type { Request } from "express";
 import type { AuthenticatedRequest } from "../types/auth.types";
 import { fileURLToPath } from "url";
+import crypto from "crypto";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
-//file 
 const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
-
 
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     if (!allowedMimeTypes.includes(file.mimetype)) {
@@ -19,26 +18,30 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
     cb(null, true);
 };
 
-
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadType = req.body.uploadType || "users";
-        const userId = (req as AuthenticatedRequest).user?.id || "general";
 
+
+        const uploadType = (req.body.uploadType || "users").toLowerCase();
+        const userId = (req as AuthenticatedRequest).user?.id || "general";
 
         const uploadPath = path.join(__dirname, `../uploads/${uploadType}/${userId}`);
 
+        // Create directory if not exists
+        fs.mkdir(uploadPath, { recursive: true }, (err) => {
+            if (err) return cb(err, uploadPath);
 
-        fs.mkdirSync(uploadPath, { recursive: true });
-
-        cb(null, uploadPath);
+           
+            cb(null, uploadPath);
+        });
     },
     filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        cb(null, `photo${ext}`);
+        const ext = path.extname(file.originalname) || ".png";
+        const uniqueName = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}${ext}`;
+        cb(null, uniqueName);
     }
 });
-// Multer config
+
 export const upload = multer({
     storage,
     fileFilter,

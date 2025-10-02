@@ -330,7 +330,7 @@ export default function LoginPage() {
         </div>
 
 
-        <Button type="submit" className="w-full py-6 text-lg cursor-pointer" disabled={isLoading}>
+        <Button type="submit" className="w-full py-6 text-lg cursor-pointer bg-blue-600 hover:bg-blue-700 transition-colors" disabled={isLoading}>
           {isLoading ? (
             <>
               <Sentry size={15} color="#fff" /> Logging in...
@@ -376,7 +376,7 @@ export default function LoginPage() {
           </button>
 
           <DialogFooter className="mt-6">
-            <Button onClick={handleVerifyCode} className="py-2 px-6 text-lg" disabled={isLoadingVerify}>
+            <Button onClick={handleVerifyCode} className="py-2 px-6 text-lg  bg-blue-600 hover:bg-blue-700 transition-colors" disabled={isLoadingVerify}>
 
               {isLoadingVerify ? (
                 <>
