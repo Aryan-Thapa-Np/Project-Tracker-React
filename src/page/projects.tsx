@@ -50,6 +50,50 @@ const formatDateForDisplay = (dateString: string | null | undefined): string => 
   }
 };
 
+// Skeleton Project Card Component
+const SkeletonProjectCard: React.FC = () => {
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 flex flex-col justify-between animate-pulse">
+      <div>
+        <div className="flex justify-between items-start mb-4">
+          <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-16 bg-gray-200 rounded"></div>
+            <div className="h-5 w-12 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-4">
+          <div className="h-4 bg-gray-200 rounded w-1/4 mb-1"></div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/3 mt-1"></div>
+        </div>
+
+        {/* Milestones */}
+        <div className="mb-4">
+          <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+          <ul className="space-y-2">
+            <li className="flex items-center gap-2">
+              <div className="h-4 w-4 bg-gray-200 rounded-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+            </li>
+            <li className="flex items-center gap-2">
+              <div className="h-4 w-4 bg-gray-200 rounded-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+            </li>
+            <li className="flex items-center gap-2">
+              <div className="h-4 w-4 bg-gray-200 rounded-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+    </div>
+  );
+};
+
 const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -61,69 +105,77 @@ const Projects: React.FC = () => {
   const [viewingProject, setViewingProject] = useState<Project | null>(null);
   const [newProject, setNewProject] = useState(emptyNewProject());
   const [removedMilestoneIds, setRemovedMilestoneIds] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true); // New loading state
 
   const fetchProjects = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      if (dateFilter) params.append("date", dateFilter);
+    setLoading(true); // Set loading to true before fetching
+    setTimeout(async() => {
 
-      const response = await fetch(`${apiUrl}/api/users/projects?${params.toString()}`, {
-        credentials: "include",
-      });
 
-      const data = await response.json();
+      try {
+        const params = new URLSearchParams();
+        if (statusFilter !== "all") params.append("status", statusFilter);
+        if (dateFilter) params.append("date", dateFilter);
 
-      if (!data.success) {
-        toast.error(data.error || "Failed to load projects.");
+        const response = await fetch(`${apiUrl}/api/users/projects?${params.toString()}`, {
+          credentials: "include",
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          toast.error(data.error || "Failed to load projects.");
+          setProjects([]);
+          return;
+        }
+
+        const grouped: Record<number, Project> = {};
+
+        (data.projects || data.projectRows || []).forEach((row: Project & { [key: string]: unknown }) => {
+          const pid = Number(row.project_id);
+
+          if (!grouped[pid]) {
+            grouped[pid] = {
+              project_id: pid,
+              project_name: row.project_name || row.project_name,
+              project_status: typeof row.project_status === "string"
+                ? row.project_status
+                : typeof row.status === "string"
+                  ? row.status
+                  : "pending",
+              progress_percentage: Number(row.progress_percentage || 0),
+              project_due_date: typeof row.project_due_date === "string"
+                ? row.project_due_date
+                : typeof row.due_date === "string"
+                  ? row.due_date
+                  : null,
+              milestones: [],
+            };
+          }
+
+          if (row.milestone_id) {
+            grouped[pid].milestones.push({
+              milestone_id: typeof row.milestone_id === "number" ? row.milestone_id : Number(row.milestone_id),
+              milestone_name: typeof row.milestone_name === "string" ? row.milestone_name : "",
+              milestone_completed: !!row.milestone_completed,
+              milestone_due_date: typeof row.milestone_due_date === "string"
+                ? row.milestone_due_date
+                : typeof row.due_date === "string"
+                  ? row.due_date
+                  : null,
+            });
+          }
+        });
+
+        setProjects(Object.values(grouped));
+      } catch (err) {
+        console.error(err);
+        toast.error("Error fetching projects.");
         setProjects([]);
-        return;
+      } finally {
+        setLoading(false); // Set loading to false after fetching
       }
-
-      const grouped: Record<number, Project> = {};
-
-      (data.projects || data.projectRows || []).forEach((row: Project & { [key: string]: unknown }) => {
-        const pid = Number(row.project_id);
-
-        if (!grouped[pid]) {
-          grouped[pid] = {
-            project_id: pid,
-            project_name: row.project_name || row.project_name,
-            project_status: typeof row.project_status === "string"
-              ? row.project_status
-              : typeof row.status === "string"
-                ? row.status
-                : "pending",
-            progress_percentage: Number(row.progress_percentage || 0),
-            project_due_date: typeof row.project_due_date === "string"
-              ? row.project_due_date
-              : typeof row.due_date === "string"
-                ? row.due_date
-                : null,
-            milestones: [],
-          };
-        }
-
-        if (row.milestone_id) {
-          grouped[pid].milestones.push({
-            milestone_id: typeof row.milestone_id === "number" ? row.milestone_id : Number(row.milestone_id),
-            milestone_name: typeof row.milestone_name === "string" ? row.milestone_name : "",
-            milestone_completed: !!row.milestone_completed,
-            milestone_due_date: typeof row.milestone_due_date === "string"
-              ? row.milestone_due_date
-              : typeof row.due_date === "string"
-                ? row.due_date
-                : null,
-          });
-        }
-      });
-
-      setProjects(Object.values(grouped));
-    } catch (err) {
-      console.error(err);
-      toast.error("Error fetching projects.");
-      setProjects([]);
-    }
+    }, 1000);
   };
 
   useEffect(() => {
@@ -174,7 +226,7 @@ const Projects: React.FC = () => {
 
   const openEditModal = (p: Project) => {
     setEditingProject(JSON.parse(JSON.stringify(p)));
-    setRemovedMilestoneIds([]); 
+    setRemovedMilestoneIds([]);
     setShowEditModal(true);
   };
 
@@ -288,7 +340,7 @@ const Projects: React.FC = () => {
             {/* New Project Button */}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center justify-center gap-2 px-4 py-2 text-sm sm:text-base text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer"
+              className="cursor-pointer flex items-center justify-center gap-2 px-4 py-2 text-sm sm:text-base text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer"
             >
               <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="currentColor" viewBox="0 0 20 20">
                 <path
@@ -303,7 +355,12 @@ const Projects: React.FC = () => {
 
           {/* Project Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {projects.length === 0 ? (
+            {loading ? (
+              // Display skeleton cards while loading
+              Array.from({ length: 3 }).map((_, index) => (
+                <SkeletonProjectCard key={index} />
+              ))
+            ) : projects.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center gap-4 p-8 bg-white rounded-xl shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6M3 7h18" />
@@ -312,7 +369,7 @@ const Projects: React.FC = () => {
                   <h4 className="text-lg font-semibold text-gray-800">No projects created yet</h4>
                   <p className="text-sm text-gray-500">Create your first project to track milestones and progress.</p>
                 </div>
-                <button onClick={() => setShowCreateModal(true)} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded">Create Project</button>
+                <button onClick={() => setShowCreateModal(true)} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded cursor-pointer">Create Project</button>
               </div>
             ) : (
               projects.map((project) => (
@@ -325,7 +382,7 @@ const Projects: React.FC = () => {
                       <h3 className="text-lg sm:text-xl font-bold text-gray-900">{escapeMinimal(project.project_name)}</h3>
                       <div className="flex items-center gap-2">
                         <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-800 capitalize">{project.project_status.replace("_", " ")}</span>
-                        <button onClick={() => openEditModal(project)} className="text-sm text-primary hover:underline">Edit</button>
+                        <button onClick={() => openEditModal(project)} className="text-sm text-primary hover:underline cursor-pointer">Edit</button>
                       </div>
                     </div>
 
@@ -371,7 +428,7 @@ const Projects: React.FC = () => {
 
                   <button
                     onClick={() => openViewModal(project)}
-                    className="text-primary hover:underline text-sm font-semibold text-left"
+                    className="text-primary hover:underline text-sm font-semibold text-left cursor-pointer"
                   >
                     View Details
                   </button>
@@ -407,7 +464,7 @@ const Projects: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium">Milestones</h4>
-                    <button onClick={addNewMilestone} className="text-sm text-blue-600">Add</button>
+                    <button onClick={addNewMilestone} className="text-sm text-blue-600 cursor-pointer" >Add</button>
                   </div>
 
                   <div className="space-y-2">
@@ -415,15 +472,15 @@ const Projects: React.FC = () => {
                       <div key={idx} className="flex gap-2 items-center">
                         <input value={m.milestone_name} onChange={(e) => setNewProject((p) => ({ ...p, milestones: p.milestones.map((mm, i) => (i === idx ? { ...mm, milestone_name: e.target.value } : mm)) }))} placeholder="Milestone name" className="flex-1 border rounded px-3 py-2" />
                         <input type="date" value={m.milestone_due_date || ""} onChange={(e) => setNewProject((p) => ({ ...p, milestones: p.milestones.map((mm, i) => (i === idx ? { ...mm, milestone_due_date: e.target.value } : mm)) }))} className="border rounded px-2 py-1" />
-                        <button onClick={() => removeNewMilestone(idx)} className="text-red-500">Remove</button>
+                        <button onClick={() => removeNewMilestone(idx)} className="text-red-500 cursor-pointer">Remove</button>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div className="flex items-center justify-end gap-2 mt-4">
-                  <button onClick={() => setShowCreateModal(false)} className="px-4 py-2 border rounded">Cancel</button>
-                  <button onClick={createProject} className="px-4 py-2 bg-blue-600 text-white rounded">Create</button>
+                  <button onClick={() => setShowCreateModal(false)} className="px-4 py-2 border rounded cursor-pointer">Cancel</button>
+                  <button onClick={createProject} className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer">Create</button>
                 </div>
               </div>
             </div>
@@ -457,7 +514,7 @@ const Projects: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium">Milestones</h4>
-                    <button onClick={addEditMilestone} className="text-sm text-blue-600">Add</button>
+                    <button onClick={addEditMilestone} className="text-sm text-blue-600 cursor-pointer">Add</button>
                   </div>
 
                   <div className="space-y-2">
@@ -474,15 +531,15 @@ const Projects: React.FC = () => {
                           <input type="checkbox" checked={!!m.milestone_completed} onChange={(e) => setEditingProject({ ...editingProject, milestones: editingProject.milestones.map((mm, i) => (i === idx ? { ...mm, milestone_completed: e.target.checked } : mm)) })} />
                           <span className="text-sm">Done</span>
                         </label>
-                        <button onClick={() => removeEditMilestone(idx)} className="text-red-500">Remove</button>
+                        <button onClick={() => removeEditMilestone(idx)} className="text-red-500 cursor-pointer">Remove</button>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div className="flex items-center justify-end gap-2 mt-4">
-                  <button onClick={() => { setShowEditModal(false); setEditingProject(null); setRemovedMilestoneIds([]); }} className="px-4 py-2 border rounded">Cancel</button>
-                  <button onClick={updateProject} className="px-4 py-2 bg-blue-600 text-white rounded">Save</button>
+                  <button onClick={() => { setShowEditModal(false); setEditingProject(null); setRemovedMilestoneIds([]); }} className="cursor-pointer px-4 py-2 border rounded">Cancel</button>
+                  <button onClick={updateProject} className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded">Save</button>
                 </div>
               </div>
             </div>
@@ -500,7 +557,7 @@ const Projects: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -596,13 +653,13 @@ const Projects: React.FC = () => {
                     setShowViewModal(false);
                     openEditModal(viewingProject);
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
                 >
                   Edit Project
                 </button>
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                  className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
                 >
                   Close
                 </button>

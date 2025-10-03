@@ -6,13 +6,14 @@ import { Clipboard, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "react-toastify";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { getCsrfToken } from "../sub-components/csrfToken.tsx";
-import { escapeHTML } from "../sub-components/sanitize.tsx";
 
 interface Task {
+    task_id: number;
     id: number;
-    title: string;
+    task_name: string;
     project_name: string;
-    status: "To Do" | "In Progress" | "Completed";
+    milestone_name: string;
+    status: "todo" | "in_progress" | "completed";
     due_date: string | null;
     priority: "low" | "medium" | "high" | "urgent";
 }
@@ -32,27 +33,39 @@ const priorityClass = (p: Task["priority"]) => {
     }
 };
 
+const statusClass = (s: Task["status"]) => {
+    switch (s) {
+        case "todo":
+            return "bg-gray-100 text-gray-700";
+        case "in_progress":
+            return "bg-yellow-100 text-yellow-700";
+        case "completed":
+            return "bg-green-100 text-green-700";
+        default:
+            return "bg-gray-100 text-gray-700";
+    }
+};
+
 const Task: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(1);
-
+    const [showSkeleton, setShowSkeleton] = useState(true);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-    const [newStatus, setNewStatus] = useState<"To Do" | "In Progress" | "Completed">(
-        "To Do"
-    );
+    const [newStatus, setNewStatus] = useState<Task["status"]>("todo");
 
     const fetchTasks = async (p = 1) => {
         try {
             setLoading(true);
-            const res = await fetch(`${apiUrl}/api/users/getMytask?page=${p}&limit=5`, {
+            const res = await fetch(`${apiUrl}/api/users/getMytask?page=${p}&limit=15`, {
                 credentials: "include",
             });
             const data = await res.json();
 
             if (data.success) {
                 const tasksArr = Array.isArray(data.tasks) ? data.tasks : [];
+
                 setTasks(tasksArr);
 
                 const pagination = data.pagination || {};
@@ -80,6 +93,10 @@ const Task: React.FC = () => {
 
     useEffect(() => {
         fetchTasks(page);
+        const timer = setTimeout(() => {
+            setShowSkeleton(false);
+        }, 1000);
+        return () => clearTimeout(timer);
     }, [page]);
 
     const updateStatus = async () => {
@@ -93,8 +110,8 @@ const Task: React.FC = () => {
                     "x-csrf-token": csrfToken,
                 },
                 body: JSON.stringify({
-                    task_id: selectedTask.id,
-                    status: escapeHTML(newStatus),
+                    task_id: selectedTask.task_id,
+                    status: newStatus,
                 }),
                 credentials: "include",
             });
@@ -112,11 +129,33 @@ const Task: React.FC = () => {
         }
     };
 
+    const SkeletonRow = () => (
+        <tr className="border-b border-gray-200">
+            <td className="px-6 py-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+            </td>
+            <td className="px-6 py-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+            </td>
+            <td className="px-6 py-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-1/4"></div>
+            </td>
+            <td className="px-6 py-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3"></div>
+            </td>
+            <td className="px-6 py-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3"></div>
+            </td>
+            <td className="px-6 py-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-1/6 mx-auto"></div>
+            </td>
+        </tr>
+    );
+
     return (
         <div className="flex w-full min-h-screen bg-gray-100">
             <Sidebar />
             <div className="content-area flex-1 h-screen overflow-y-auto">
-
                 <section className="py-24 px-8 min-h-[85vh]">
                     <div className="p-2 pt-5">
                         <div className="p-1 flex justify-between items-end">
@@ -126,13 +165,30 @@ const Task: React.FC = () => {
                                     Tasks assigned to you across projects — update status as you work.
                                 </p>
                             </div>
-                            <div>
-
-                            </div>
+                            <div></div>
                         </div>
 
                         <div className="bg-white rounded-md shadow-md overflow-x-auto mt-6">
-                            {loading ? (
+                            {showSkeleton ? (
+                                <table className="w-full text-sm text-left text-gray-600">
+                                    <thead className="text-xs uppercase bg-gray-100 text-gray-700">
+                                        <tr>
+                                            <th className="px-6 py-3">Task</th>
+                                            <th className="px-6 py-3">Project</th>
+                                            <th className="px-6 py-3">Milestone</th>
+                                            <th className="px-6 py-3">Priority</th>
+                                            <th className="px-6 py-3">Status</th>
+                                            <th className="px-6 py-3">Due Date</th>
+                                            <th className="px-6 py-3 text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {[...Array(5)].map((_, index) => (
+                                            <SkeletonRow key={`skeleton-row-${index}`} />
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : loading ? (
                                 <div className="flex items-center justify-center py-10">
                                     <div className="w-9 h-9 border-4 border-t-transparent rounded-full animate-spin border-blue-500" />
                                 </div>
@@ -152,6 +208,7 @@ const Task: React.FC = () => {
                                         <tr>
                                             <th className="px-6 py-3">Task</th>
                                             <th className="px-6 py-3">Project</th>
+                                            <th className="px-6 py-3">Milestone</th>
                                             <th className="px-6 py-3">Priority</th>
                                             <th className="px-6 py-3">Status</th>
                                             <th className="px-6 py-3">Due Date</th>
@@ -159,7 +216,9 @@ const Task: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {tasks.map((task) => {
+                                        {tasks.map((task, index) => {
+
+                                            const rowKey = task.id ? `task-${task.id}` : `task-fallback-${index}`;
                                             const due = task.due_date ? new Date(task.due_date) : null;
                                             const dueStr = due && !isNaN(due.getTime())
                                                 ? due.toLocaleDateString(undefined, {
@@ -171,30 +230,28 @@ const Task: React.FC = () => {
 
                                             return (
                                                 <tr
-                                                    key={task.id}
+                                                    key={rowKey}
                                                     className="border-b border-gray-200 hover:bg-gray-50 transition"
                                                 >
                                                     <td className="px-6 py-4 font-medium text-gray-700">
-                                                        {escapeHTML(task.title)}
+                                                        {task.task_name}
                                                     </td>
-                                                    <td className="px-6 py-4">{escapeHTML(task.project_name)}</td>
+                                                    <td className="px-6 py-4">{task.project_name}</td>
+                                                    <td className="px-6 py-4">{task.milestone_name}</td>
                                                     <td className="px-6 py-4">
                                                         <span
                                                             className={`px-2 py-1 rounded-full text-xs font-medium ${priorityClass(
                                                                 task.priority
                                                             )}`}
                                                         >
-                                                            {escapeHTML(task.priority)}
+                                                            {task.priority}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <span
-                                                            className={`px-3 py-1 rounded-full text-xs font-medium ${task.status === "Completed"
-                                                                    ? "bg-green-100 text-green-700"
-                                                                    : task.status === "In Progress"
-                                                                        ? "bg-yellow-100 text-yellow-700"
-                                                                        : "bg-gray-100 text-gray-700"
-                                                                }`}
+                                                            className={`px-3 py-1 rounded-full text-xs font-medium ${statusClass(
+                                                                task.status
+                                                            )}`}
                                                         >
                                                             {task.status}
                                                         </span>
@@ -207,7 +264,7 @@ const Task: React.FC = () => {
                                                             setNewStatus(task.status);
                                                         }}
                                                         role="button"
-                                                        aria-label={`Edit task ${task.title}`}
+                                                        aria-label={`Edit task ${task.task_name}`}
                                                     >
                                                         <FontAwesomeIcon icon={faPenToSquare} />
                                                     </td>
@@ -219,15 +276,13 @@ const Task: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Pagination area: page indicator always visible; buttons shown only when totalPages > 1 */}
                         <div className="flex justify-between items-center mt-6">
-                            {/* Prev button (only when multiple pages) */}
                             <div>
-                                {totalPages > 1 ? (
+                                {totalPages > 1 && !showSkeleton ? (
                                     <button
                                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                                         disabled={page === 1}
-                                        className="inline-flex items-center gap-2 px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+                                        className="cursor-pointer inline-flex items-center gap-2 px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
                                         aria-label="Previous page"
                                     >
                                         <ChevronLeft size={16} />
@@ -238,19 +293,19 @@ const Task: React.FC = () => {
                                 )}
                             </div>
 
-                            {totalPages > 0 ?
+                            {totalPages > 0 && !showSkeleton ? (
                                 <div className="text-sm text-gray-600">
                                     Page <span className="font-medium">{page}</span> /{" "}
                                     <span className="font-medium">{totalPages}</span> pages
-                                </div> : ""}
-
+                                </div>
+                            ) : null}
 
                             <div>
-                                {totalPages > 1 ? (
+                                {totalPages > 1 && !showSkeleton ? (
                                     <button
                                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                         disabled={page === totalPages}
-                                        className="inline-flex items-center gap-2 px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+                                        className="cursor-pointer inline-flex items-center gap-2 px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
                                         aria-label="Next page"
                                     >
                                         <span className="sr-only">Next</span>
@@ -265,43 +320,43 @@ const Task: React.FC = () => {
                 </section>
             </div>
 
-            {/* Modal */}
             {selectedTask && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+                <div className="fixed inset-0 bg-black/40 bg-opacity-40 flex justify-center items-center z-50">
                     <div className="bg-white p-6 rounded shadow-md w-96">
                         <h3 className="text-lg font-bold mb-2">Update Task Status</h3>
                         <p className="text-sm text-gray-500 mb-4">
-                            <span className="font-medium">{escapeHTML(selectedTask.title)}</span>{" "}
-                            — {escapeHTML(selectedTask.project_name)}
+                            <span className="font-medium">{selectedTask.task_name}</span>{" "}
+                            — {selectedTask.project_name}
                         </p>
 
                         <select
                             value={newStatus}
-                            onChange={(e) =>
-                                setNewStatus(e.target.value as "To Do" | "In Progress" | "Completed")
-                            }
+                            onChange={(e) => setNewStatus(e.target.value as Task["status"])}
                             className="border p-2 rounded w-full mb-4"
+                            aria-label="Select task status"
                         >
-                            <option value="To Do">To Do</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Completed">Completed</option>
+                            <option value="todo">To Do</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
                         </select>
 
                         <div className="flex justify-between items-center">
                             <div className="text-sm text-gray-500">
                                 Priority:{" "}
-                                <span className="font-medium capitalize">{escapeHTML(selectedTask.priority)}</span>
+                                <span className="font-medium capitalize">{selectedTask.priority}</span>
                             </div>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setSelectedTask(null)}
-                                    className="px-4 py-2 bg-gray-200 rounded"
+                                    className="cursor-pointer px-4 py-2 bg-gray-200 rounded"
+                                    aria-label="Cancel status update"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={updateStatus}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded"
+                                    className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded"
+                                    aria-label="Save status update"
                                 >
                                     Save
                                 </button>

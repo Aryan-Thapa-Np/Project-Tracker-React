@@ -302,7 +302,7 @@ export const getUsersNamesController = async (req: Request, res: Response) => {
         }
 
 
-        const [rows] = await pool.execute(`select username from users `);
+        const [rows] = await pool.execute(`select username,user_id from users `);
         if (!Array.isArray(rows) || rows.length === 0) {
             return res.status(201).json({
                 success: false,

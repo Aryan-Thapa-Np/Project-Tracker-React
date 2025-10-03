@@ -9,10 +9,9 @@ interface Total {
 }
 
 export const getUserTaskController = async (req: Request, res: Response) => {
-    console.log("yes");
     try {
         const user_id = (req as AuthenticatedRequest).user.id;
-        const { page = "1", limit = "5", status, project_id } = req.query;
+        const { page = "1", limit = "2", status, project_id } = req.query;
 
         if (!user_id) {
             return res.status(400).json({ success: false, error: "user_id required" });
@@ -22,7 +21,8 @@ export const getUserTaskController = async (req: Request, res: Response) => {
         const limitNum = parseInt(limit as string, 10);
         const offset = (pageNum - 1) * limitNum;
 
-        let baseQuery = "SELECT SQL_CALC_FOUND_ROWS * FROM tasks WHERE assigned_to = ?";
+
+        let baseQuery = "SELECT SQL_CALC_FOUND_ROWS *,(SELECT milestone_name FROM milestones WHERE milestone_id = tasks.milestone_id) AS milestone_name,(SELECT project_name FROM projects WHERE project_id = tasks.project_id) AS project_name  FROM tasks WHERE assigned_to = ?";
         const params: (string | number)[] = [user_id];
 
         if (project_id) {
@@ -64,8 +64,7 @@ export const getUserTaskController = async (req: Request, res: Response) => {
 export const createTaskController = async (req: Request, res: Response) => {
     try {
         const user_id = (req as AuthenticatedRequest).user.id;
-        const { project_id, milestone_id, assigned_to, task_name, due_date, status } = req.body;
-
+        const { project_id, milestone_id, assigned_to, task_name, due_date, status = "todo" } = req.body;
 
         if (!user_id || !project_id || !status || !task_name || !assigned_to) {
             return res.status(400).json({ success: false, error: "user_id, project_id, assigned_to, task_name, and status are required" });
@@ -82,9 +81,9 @@ export const createTaskController = async (req: Request, res: Response) => {
 
 
         const [result] = await pool.execute(
-            `INSERT INTO tasks (project_id, milestone_id, assigned_to, task_name, due_date, status, created_by) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [pid, mid, assignee, task_name, due_date || null, status, user_id]
+            `INSERT INTO tasks (project_id, milestone_id, assigned_to, task_name, due_date, status) 
+             VALUES (?, ?, ?, ?, ?, ? )`,
+            [pid, mid, assignee, task_name, due_date || null, status]
         );
 
 
@@ -97,20 +96,26 @@ export const createTaskController = async (req: Request, res: Response) => {
 };
 
 
-
 export const getTeamTasksController = async (req: Request, res: Response) => {
     try {
-        // User must be authenticated
         const user_id = (req as AuthenticatedRequest).user.id;
         if (!user_id) {
             return res.status(401).json({ success: false, error: "Unauthorized" });
         }
 
-        // Query params
         const { project_id, status, assigned_to, due_date } = req.query;
 
-        // Base query
-        let baseQuery = "SELECT * FROM tasks WHERE 1=1";
+        let baseQuery = `
+            SELECT 
+                tasks.*,
+                (SELECT project_name FROM projects WHERE project_id = tasks.project_id) AS project_name,
+                (SELECT profile_pic FROM users WHERE user_id = tasks.assigned_to) AS profile_pic,
+                (SELECT milestone_name FROM milestones WHERE milestone_id = tasks.milestone_id) AS milestone_name,
+                (SELECT username FROM users WHERE user_id = tasks.assigned_to) AS username
+
+            FROM tasks 
+            WHERE 1=1
+        `;
         const params: (string | number)[] = [];
 
         // Filters
@@ -153,6 +158,10 @@ export const getTeamTasksController = async (req: Request, res: Response) => {
     }
 };
 
+interface Milestone {
+    milestone_id: string;
+    project_id: string;
+}
 
 export const updateTaskStatusController = async (req: Request, res: Response) => {
     try {
@@ -163,14 +172,50 @@ export const updateTaskStatusController = async (req: Request, res: Response) =>
             return res.status(400).json({ success: false, error: "task_id & status required" });
         }
 
-        if (!["To Do", "In Progress", "Completed"].includes(status)) {
+        if (!["todo", "in_progress", "completed"].includes(status)) {
             return res.status(400).json({ success: false, error: "Invalid status" });
         }
+        let totalMilestones = 0;
+        let completedCount = 0;
 
+        const [data] = await pool.execute(`select milestone_id,project_id from tasks where task_id =?`, [task_id]);
+        const finalData = (data as Milestone[])[0];
         const [result] = await pool.execute(
-            "UPDATE tasks SET status = ? WHERE id = ? AND assigned_to = ?",
+            "UPDATE tasks SET status = ? WHERE task_id = ? AND assigned_to = ?",
             [status, task_id, user_id]
         );
+
+        if (status === "completed") {
+            const [result2] = await pool.execute(
+                "UPDATE milestones SET completed = true WHERE milestone_id = ? ",
+                [finalData.milestone_id]
+            );
+
+
+            const [countsRows] = await pool.execute(
+                `SELECT 
+         COUNT(*) as total,
+         SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed
+       FROM milestones
+       WHERE project_id = ?`,
+                [finalData.project_id]
+            );
+
+            const counts: { total: number; completed: number } = Array.isArray(countsRows) && countsRows.length > 0
+                ? (countsRows[0] as { total: number; completed: number })
+                : { total: 0, completed: 0 };
+            totalMilestones = Number(counts.total || 0);
+            completedCount = Number(counts.completed || 0);
+
+            const progress_percentage = totalMilestones > 0 ? Math.round((completedCount / totalMilestones) * 100) : 0;
+            await pool.execute(`UPDATE projects SET progress_percentage = ? WHERE project_id = ?`, [progress_percentage, finalData.project_id]);
+
+        } else {
+            const [result3] = await pool.execute(
+                "UPDATE milestones SET completed = false WHERE milestone_id = ? ",
+                [finalData.milestone_id]
+            );
+        }
 
         if (!result || (result as ResultSetHeader).affectedRows === 0) {
             return res.status(404).json({ success: false, error: "Task not found or not yours" });

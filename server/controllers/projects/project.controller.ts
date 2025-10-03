@@ -4,10 +4,10 @@ import type { AuthenticatedRequest } from "../../types/auth.types.ts";
 import type { ResultSetHeader } from "mysql2/promise";
 
 export const getProjectsController = async (req: Request, res: Response) => {
-  try {
-    const { status, date } = req.query;
+    try {
+        const { status, date } = req.query;
 
-    let baseQuery = `
+        let baseQuery = `
       SELECT p.project_id, p.project_name, p.status AS project_status, p.progress_percentage,
              p.due_date AS project_due_date,
              m.milestone_id, m.milestone_name, m.completed AS milestone_completed, m.due_date AS milestone_due_date
@@ -15,39 +15,39 @@ export const getProjectsController = async (req: Request, res: Response) => {
       LEFT JOIN milestones m ON m.project_id = p.project_id
       WHERE 1=1
     `;
-    const params: (string | number)[] = [];
+        const params: (string | number)[] = [];
 
-    if (status && typeof status === "string") {
-      baseQuery += " AND p.status = ?";
-      params.push(status);
+        if (status && typeof status === "string") {
+            baseQuery += " AND p.status = ?";
+            params.push(status);
+        }
+
+        if (date && typeof date === "string") {
+            // Expect date in YYYY-MM-DD or YYYY-MM format
+            if (date.match(/^\d{4}-\d{2}$/)) {
+                // Filter by year and month (e.g., 2025-10)
+                baseQuery += " AND DATE_FORMAT(p.due_date, '%Y-%m') = ?";
+                params.push(date);
+            } else if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                // Filter by exact date
+                baseQuery += " AND DATE(p.due_date) = ?";
+                params.push(date);
+            } else {
+                return res.status(400).json({ success: false, error: "Invalid date format. Use YYYY-MM-DD or YYYY-MM." });
+            }
+        }
+
+        const [rows] = await pool.execute(baseQuery, params);
+
+        if (!Array.isArray(rows) || rows.length === 0) {
+            return res.status(200).json({ success: true, projects: [], message: "No projects found." });
+        }
+
+        res.status(200).json({ success: true, projects: rows });
+    } catch (error) {
+        console.error("getProjects error:", error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
     }
-
-    if (date && typeof date === "string") {
-      // Expect date in YYYY-MM-DD or YYYY-MM format
-      if (date.match(/^\d{4}-\d{2}$/)) {
-        // Filter by year and month (e.g., 2025-10)
-        baseQuery += " AND DATE_FORMAT(p.due_date, '%Y-%m') = ?";
-        params.push(date);
-      } else if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        // Filter by exact date
-        baseQuery += " AND DATE(p.due_date) = ?";
-        params.push(date);
-      } else {
-        return res.status(400).json({ success: false, error: "Invalid date format. Use YYYY-MM-DD or YYYY-MM." });
-      }
-    }
-
-    const [rows] = await pool.execute(baseQuery, params);
-
-    if (!Array.isArray(rows) || rows.length === 0) {
-      return res.status(200).json({ success: true, projects: [], message: "No projects found." });
-    }
-
-    res.status(200).json({ success: true, projects: rows });
-  } catch (error) {
-    console.error("getProjects error:", error);
-    res.status(500).json({ success: false, error: "Internal Server Error" });
-  }
 };
 
 export const updateProjectController = async (req: Request, res: Response) => {
@@ -246,7 +246,7 @@ export const getProjectNamesController = async (req: Request, res: Response) => 
         }
 
 
-        const [rows] = await pool.execute(`select project_name from projects `);
+        const [rows] = await pool.execute(`select project_name,project_id from projects `);
         if (!Array.isArray(rows) || rows.length === 0) {
             return res.status(201).json({
                 success: false,
@@ -258,7 +258,45 @@ export const getProjectNamesController = async (req: Request, res: Response) => 
         res.status(201).json({
             success: true,
             projects: rows,
-            message: "Project created successfully",
+            message: "Success",
+
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};
+
+
+
+export const getMilestoneNames = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+        const project_id = req.params.id;
+
+
+        if (!user_id || !project_id) {
+            return res.status(400).json({
+                success: false,
+                error: "User_id or project_id  are required"
+            });
+        }
+
+
+        const [rows] = await pool.execute(`select milestone_name,milestone_id from milestones where project_id =? `, [project_id]);
+        if (!Array.isArray(rows) || rows.length === 0) {
+            return res.status(201).json({
+                success: false,
+                error: "Milestones not found..",
+
+            });
+        }
+
+        res.status(201).json({
+            success: true,
+            milestones: rows,
+            message: "Success",
 
         });
 

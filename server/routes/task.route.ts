@@ -28,7 +28,7 @@ const router = express.Router();
 
 router.get("/users/getMytask", normalLimiter, authenticateUserMiddleware, getUserTaskController as RequestHandler);
 
-router.post("/users/assignTask", universalLimiter, verifyCsrfTokenMiddleware, authenticateUserMiddleware, checkPermission(["create_task"]), createTaskValidation, createTaskController as RequestHandler);
+router.post("/users/assignTask", universalLimiter, verifyCsrfTokenMiddleware, authenticateUserMiddleware, checkPermission(["create_task"]), createTaskController as RequestHandler);
 
 router.post("/users/updateTaskStatus", normalLimiter, authenticateUserMiddleware, updateTaskStatusController as RequestHandler);
 

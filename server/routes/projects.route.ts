@@ -5,8 +5,8 @@ import {
     createProjectController,
     getProjectsController,
     getProjectNamesController,
-    updateProjectController
-
+    updateProjectController,
+    getMilestoneNames
 } from "../controllers/others.controller.ts";
 import {
     createTaskValidation,
@@ -29,12 +29,13 @@ const router = express.Router();
 
 router.get("/users/projects", normalLimiter, authenticateUserMiddleware, getProjectsController as RequestHandler);
 
-router.post("/users/createProject", verifyCsrfTokenMiddleware, authenticateUserMiddleware,checkPermission(["create_project"]), createProjectController as RequestHandler);
+router.post("/users/createProject", verifyCsrfTokenMiddleware, authenticateUserMiddleware, checkPermission(["create_project"]), createProjectController as RequestHandler);
 
 
 router.get("/users/projectsName", normalLimiter, authenticateUserMiddleware, getProjectNamesController as RequestHandler);
 
-router.put("/users/updateProject", authenticateUserMiddleware,updateProjectController);
+router.put("/users/updateProject", authenticateUserMiddleware, updateProjectController);
+router.get("/users/milestones/:id", normalLimiter, authenticateUserMiddleware, getMilestoneNames as RequestHandler);
 
 
 
