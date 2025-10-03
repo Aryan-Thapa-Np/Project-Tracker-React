@@ -60,41 +60,141 @@ export const getUserTaskController = async (req: Request, res: Response) => {
     }
 };
 
-
 export const createTaskController = async (req: Request, res: Response) => {
     try {
         const user_id = (req as AuthenticatedRequest).user.id;
-        const { project_id, milestone_id, assigned_to, task_name, due_date, status = "todo" } = req.body;
+        const { project_id, milestone_id, assigned_to, task_name, due_date, priority, status = "todo" } = req.body;
 
-        if (!user_id || !project_id || !status || !task_name || !assigned_to) {
-            return res.status(400).json({ success: false, error: "user_id, project_id, assigned_to, task_name, and status are required" });
+        // Validate required fields
+        if (!user_id || !project_id || !assigned_to || !task_name || !status || !priority) {
+            return res.status(400).json({
+                success: false,
+                error: "user_id, project_id, assigned_to, task_name, status, and priority are required"
+            });
         }
 
+        // Validate priority
+        const validPriorities = ['low', 'medium', 'high', 'urgent'];
+        if (!validPriorities.includes(priority.toLowerCase())) {
+            return res.status(400).json({
+                success: false,
+                error: "Priority must be one of: low, medium, high, urgent"
+            });
+        }
 
+        // Convert string IDs to numbers
         const pid = Number(project_id);
         const mid = milestone_id ? Number(milestone_id) : null;
         const assignee = Number(assigned_to);
 
+        // Validate numeric conversions
         if (isNaN(pid) || isNaN(assignee) || (milestone_id && isNaN(mid!))) {
-            return res.status(400).json({ success: false, error: "Invalid numeric value(s)" });
+            return res.status(400).json({
+                success: false,
+                error: "Invalid numeric value(s) for project_id, milestone_id, or assigned_to"
+            });
         }
 
-
+        // Insert task into database
         const [result] = await pool.execute(
-            `INSERT INTO tasks (project_id, milestone_id, assigned_to, task_name, due_date, status) 
-             VALUES (?, ?, ?, ?, ?, ? )`,
-            [pid, mid, assignee, task_name, due_date || null, status]
+            `INSERT INTO tasks (project_id, milestone_id, assigned_to, task_name, due_date, status, priority) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [pid, mid, assignee, task_name, due_date || null, status, priority.toLowerCase()]
         );
 
-
-        res.status(201).json({ success: true, message: "Task created successfully" });
+        res.status(201).json({
+            success: true,
+            message: "Task created successfully"
+        });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, error: "Internal Server Error" });
+        res.status(500).json({
+            success: false,
+            error: "Internal Server Error"
+        });
     }
 };
 
+export const updateTaskController = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+        const { task_id, project_id, milestone_id, assigned_to, task_name, due_date, priority, status } = req.body;
+
+        // Validate required fields
+        if (!user_id || !task_id || !project_id || !assigned_to || !task_name || !status || !priority) {
+            return res.status(400).json({
+                success: false,
+                error: "user_id, task_id, project_id, assigned_to, task_name, status, and priority are required"
+            });
+        }
+
+        // Validate priority
+        const validPriorities = ['low', 'medium', 'high', 'urgent'];
+        if (!validPriorities.includes(priority.toLowerCase())) {
+            return res.status(400).json({
+                success: false,
+                error: "Priority must be one of: low, medium, high, urgent"
+            });
+        }
+
+        // Validate status
+        const validStatuses = ['todo', 'in_progress', 'completed'];
+        if (!validStatuses.includes(status.toLowerCase())) {
+            return res.status(400).json({
+                success: false,
+                error: "Status must be one of: todo, in_progress, completed"
+            });
+        }
+
+        // Convert string IDs to numbers
+        const tid = Number(task_id);
+        const pid = Number(project_id);
+        const mid = milestone_id ? Number(milestone_id) : null;
+        const assignee = Number(assigned_to);
+
+        // Validate numeric conversions
+        if (isNaN(tid) || isNaN(pid) || isNaN(assignee) || (milestone_id && isNaN(mid!))) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid numeric value(s) for task_id, project_id, milestone_id, or assigned_to"
+            });
+        }
+
+        // Check if task exists
+        const [existingTask] = await pool.execute(
+            'SELECT * FROM tasks WHERE task_id = ?',
+            [tid]
+        );
+
+        if (!Array.isArray(existingTask) || existingTask.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: "Task not found"
+            });
+        }
+
+        // Update task in database
+        const [result] = await pool.execute(
+            `UPDATE tasks 
+             SET project_id = ?, milestone_id = ?, assigned_to = ?, task_name = ?, due_date = ?, status = ?, priority = ?
+             WHERE task_id = ?`,
+            [pid, mid, assignee, task_name, due_date || null, status.toLowerCase(), priority.toLowerCase(), tid]
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Task updated successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            error: "Internal Server Error"
+        });
+    }
+};
 
 export const getTeamTasksController = async (req: Request, res: Response) => {
     try {
@@ -222,6 +322,30 @@ export const updateTaskStatusController = async (req: Request, res: Response) =>
         }
 
         return res.status(200).json({ success: true, message: "Task status updated" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};
+
+
+
+export const deleteTaskController = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+        const { task_id } = req.body;
+
+        if (!task_id || !user_id) {
+            return res.status(400).json({ success: false, error: "task_id & user_id required" });
+        }
+
+        const [result] = await pool.execute(`delete from tasks where task_id=? `,[task_id]);
+     
+        if (!result || (result as ResultSetHeader).affectedRows === 0) {
+            return res.status(404).json({ success: false, error: "Failed to delete task." });
+        }
+
+        return res.status(200).json({ success: true, message: "Task was deleted." });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, error: "Internal Server Error" });

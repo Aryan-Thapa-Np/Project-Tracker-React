@@ -36,23 +36,59 @@ function App() {
           </PrivateRoute>
         } />
         <Route path="/tasks" element={
-          <>
+          <PrivateRoute>
             <Header />
             <Task />
-          </>
+               <ToastContainer
+                className="px-5 pt-1 text-sm "
+                position="top-center"
+                autoClose={3000}
+                hideProgressBar={true}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+              />
+          </PrivateRoute>
         } />
 
         <Route path="/projects" element={
-          <>
+          <PrivateRoute>
             <Header />
             <Projects />
-          </>
+               <ToastContainer
+                className="px-5 pt-1 text-sm "
+                position="top-center"
+                autoClose={3000}
+                hideProgressBar={true}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+              />
+          </PrivateRoute>
         } />
         <Route path="/teams" element={
-          <>
+          <PrivateRoute>
             <Header />
             <TeamTasks />
-          </>
+               <ToastContainer
+                className="px-5 pt-1 text-sm "
+                position="top-center"
+                autoClose={3000}
+                hideProgressBar={true}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+              />
+          </PrivateRoute>
         } />
 
 

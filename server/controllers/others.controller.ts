@@ -2,7 +2,9 @@ import {
     getUserTaskController,
     createTaskController,
     updateTaskStatusController,
-    getTeamTasksController
+    getTeamTasksController,
+    updateTaskController,
+    deleteTaskController
 } from "./task/task.controller.ts";
 
 import {
@@ -29,5 +31,7 @@ export {
     updateTaskStatusController,
     getMilestoneNames,
     getTeamTasksController,
+    deleteTaskController,
+    updateTaskController,
     updateProjectController
 }

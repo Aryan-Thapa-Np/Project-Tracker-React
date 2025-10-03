@@ -6,6 +6,8 @@ import { Clipboard, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "react-toastify";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { getCsrfToken } from "../sub-components/csrfToken.tsx";
+import type { User } from "../types/usersFTypes.tsx";
+
 
 interface Task {
     task_id: number;
@@ -45,6 +47,9 @@ const statusClass = (s: Task["status"]) => {
             return "bg-gray-100 text-gray-700";
     }
 };
+
+
+
 
 const Task: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);

@@ -5,7 +5,9 @@ import {
    getUserTaskController,
    createTaskController,
    updateTaskStatusController,
-   getTeamTasksController
+   getTeamTasksController,
+   updateTaskController,
+   deleteTaskController
 } from "../controllers/others.controller.ts";
 import {
    createTaskValidation,
@@ -33,6 +35,9 @@ router.post("/users/assignTask", universalLimiter, verifyCsrfTokenMiddleware, au
 router.post("/users/updateTaskStatus", normalLimiter, authenticateUserMiddleware, updateTaskStatusController as RequestHandler);
 
 router.get("/users/getAllTeamTasks", normalLimiter, authenticateUserMiddleware, getTeamTasksController as RequestHandler);
+router.put("/users/updateTask", normalLimiter, authenticateUserMiddleware,checkPermission(["update_task"]), updateTaskController as RequestHandler);
+
+router.delete("/users/updateTask", normalLimiter, authenticateUserMiddleware,checkPermission(["delete_task"]), deleteTaskController as RequestHandler);
 
 
 export default router;
