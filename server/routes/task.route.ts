@@ -3,7 +3,9 @@ import type { RequestHandler } from "express";
 
 import {
    getUserTaskController,
-   createTaskController
+   createTaskController,
+   updateTaskStatusController,
+   getTeamTasksController
 } from "../controllers/others.controller.ts";
 import {
    createTaskValidation,
@@ -24,11 +26,13 @@ import { authenticateUserMiddleware } from "../middleware/auth.middleware.ts";
 const router = express.Router();
 
 
-router.get("/users/getMytask", normalLimiter, authenticateUserMiddleware, getTaskValidation, getUserTaskController as RequestHandler);
+router.get("/users/getMytask", normalLimiter, authenticateUserMiddleware, getUserTaskController as RequestHandler);
 
-router.post("/users/createtask", universalLimiter, verifyCsrfTokenMiddleware, authenticateUserMiddleware,checkPermission(["create_task"]), createTaskValidation, createTaskController as RequestHandler);
+router.post("/users/assignTask", universalLimiter, verifyCsrfTokenMiddleware, authenticateUserMiddleware, checkPermission(["create_task"]), createTaskValidation, createTaskController as RequestHandler);
 
+router.post("/users/updateTaskStatus", normalLimiter, authenticateUserMiddleware, updateTaskStatusController as RequestHandler);
 
+router.get("/users/getAllTeamTasks", normalLimiter, authenticateUserMiddleware, getTeamTasksController as RequestHandler);
 
 
 export default router;

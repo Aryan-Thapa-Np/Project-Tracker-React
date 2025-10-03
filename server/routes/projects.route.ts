@@ -4,7 +4,8 @@ import type { RequestHandler } from "express";
 import {
     createProjectController,
     getProjectsController,
-    getProjectNamesController
+    getProjectNamesController,
+    updateProjectController
 
 } from "../controllers/others.controller.ts";
 import {
@@ -26,12 +27,15 @@ import { authenticateUserMiddleware } from "../middleware/auth.middleware.ts";
 const router = express.Router();
 
 
-router.get("/users/projects", normalLimiter, authenticateUserMiddleware, getTaskValidation, getProjectsController as RequestHandler);
+router.get("/users/projects", normalLimiter, authenticateUserMiddleware, getProjectsController as RequestHandler);
 
-router.post("/users/createtask", universalLimiter, checkPermission(["create_project"]), verifyCsrfTokenMiddleware, authenticateUserMiddleware, createTaskValidation, createProjectController as RequestHandler);
+router.post("/users/createProject", verifyCsrfTokenMiddleware, authenticateUserMiddleware,checkPermission(["create_project"]), createProjectController as RequestHandler);
 
 
 router.get("/users/projectsName", normalLimiter, authenticateUserMiddleware, getProjectNamesController as RequestHandler);
+
+router.put("/users/updateProject", authenticateUserMiddleware,updateProjectController);
+
 
 
 

@@ -27,7 +27,7 @@ CREATE TABLE projects (
     project_name VARCHAR(150) NOT NULL,
     status ENUM('on_track', 'completed', 'pending') DEFAULT 'pending',
     progress_percentage DECIMAL(5,2) DEFAULT 0.00,
-    due_date DATE,
+   due_date DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -37,7 +37,7 @@ CREATE TABLE milestones (
     project_id INT NOT NULL,
     milestone_name VARCHAR(150) NOT NULL,
     completed BOOLEAN DEFAULT FALSE,
-    due_date DATE,
+   due_date DATETIME NULL,
     FOREIGN KEY (project_id) REFERENCES projects(project_id) ON DELETE CASCADE
 );
 

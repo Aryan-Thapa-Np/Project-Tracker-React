@@ -1,11 +1,14 @@
 import{
     getUserTaskController,
-    createTaskController
+    createTaskController,
+    updateTaskStatusController,
+    getTeamTasksController
 } from "./task/task.controller.ts";
 
 import{
     getProjectsController,
     createProjectController,
+    updateProjectController,
     getProjectNamesController
 } from "./projects/project.controller.ts";
 
@@ -21,5 +24,7 @@ export {
     getProjectsController,
     createProjectController,
     getProjectNamesController,
-    getLogsController
-}
+    getLogsController,
+updateTaskStatusController,
+getTeamTasksController,
+updateProjectController}

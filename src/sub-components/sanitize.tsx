@@ -16,6 +16,12 @@ export const escapeHTML = (value: string) =>
         .replace(/\//g, "&#x2F;")
         .trim();
 
+export const escapeMinimal = (value: string) =>
+    value
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .trim();
+
 export const sanitizeInput = (value: string) =>
     value
         .replace(/&/g, "&amp;")

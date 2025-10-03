@@ -50,6 +50,8 @@ app.use(
 import user from "./routes/auth.route.ts";
 import task from "./routes/task.route.ts";
 import users from "./routes/user.route.ts";
+import projects from "./routes/projects.route.ts";
+
 
 const port: number = parseInt(process.env.PORT || '4000', 10);
 
@@ -57,6 +59,7 @@ const port: number = parseInt(process.env.PORT || '4000', 10);
 app.use("/api", user);
 app.use("/api", task);
 app.use("/api", users);
+app.use("/api", projects);
 
 // Start server
 app.listen(port, () => {

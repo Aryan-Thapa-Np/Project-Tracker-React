@@ -1,261 +1,326 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from "../sub-components/sidebar.tsx";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowUp, faArrowDown, faMinus } from '@fortawesome/free-solid-svg-icons';
-import { CirclePlus } from "lucide-react";
+import { CirclePlus, ClipboardList } from "lucide-react";
+import { toast } from "react-toastify";
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { getCsrfToken } from "../sub-components/csrfToken.tsx";
+import { escapeHTML } from "../sub-components/sanitize.tsx";
 
+interface Task {
+    task_id: number;
+    task_name: string;
+    project_name: string;
+    status: string;
+    priority: string;
+    due_date: string;
+    username: string;
+    profile_pic?: string;
+}
+
+interface Project { project_id: number; project_name: string; }
+interface User { user_id: number; username: string; profile_pic?: string; }
+interface Milestone { milestone_id: number; milestone_name: string; }
 
 const TeamTasks: React.FC = () => {
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
+    const [milestones, setMilestones] = useState<Milestone[]>([]);
+    const [filters, setFilters] = useState({ project: "", status: "", member: "", dueDate: "" });
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [newTask, setNewTask] = useState({ project_id: "", milestone_id: "", user_id: "", task_name: "", due_date: "" });
+
+    useEffect(() => {
+        fetch(`${apiUrl}/api/users/projectsName`, { credentials: "include" })
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setProjects(data);
+                else if (Array.isArray(data.projects)) setProjects(data.projects);
+                else setProjects([]);
+            })
+            .catch(() => toast.error("Failed to fetch projects"));
+
+        fetch(`${apiUrl}/api/users/userNames`, { credentials: "include" })
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setUsers(data);
+                else if (Array.isArray(data.users)) setUsers(data.users);
+                else setUsers([]);
+            })
+            .catch(() => toast.error("Failed to fetch users"));
+    }, []);
+
+    useEffect(() => {
+        const query = new URLSearchParams(filters as Record<string, string>).toString();
+        fetch(`${apiUrl}/api/users/getAllTeamTasks?${query}`, { credentials: "include" })
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setTasks(data);
+                else if (Array.isArray(data.tasks)) setTasks(data.tasks);
+                else setTasks([]);
+            })
+            .catch(() => toast.error("Failed to fetch tasks"));
+    }, [filters]);
+
+    // Fetch milestones when project is selected
+    useEffect(() => {
+        if (newTask.project_id) {
+            fetch(`${apiUrl}/api/users/milestones/${newTask.project_id}`, { credentials: "include" })
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) setMilestones(data);
+                    else if (Array.isArray(data.milestones)) setMilestones(data.milestones);
+                    else setMilestones([]);
+                })
+                .catch(() => {
+                    toast.error("Failed to fetch milestones");
+                    setMilestones([]);
+                });
+        } else {
+            setMilestones([]);
+            setNewTask({ ...newTask, milestone_id: "" });
+        }
+    }, [newTask.project_id]);
+
+    const handleAssignTask = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const res = await fetch(`${apiUrl}/api/users/assignTask`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-Token": await getCsrfToken()
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    project_id: escapeHTML(newTask.project_id),
+                    milestone_id: escapeHTML(newTask.milestone_id),
+                    assigned_to: escapeHTML(newTask.user_id),
+                    task_name: escapeHTML(newTask.task_name),
+                    due_date: escapeHTML(newTask.due_date),
+                })
+            });
+            if (!res.ok) throw new Error("Failed to assign task");
+            toast.success("Task assigned successfully");
+            setModalOpen(false);
+            setNewTask({ project_id: "", milestone_id: "", user_id: "", task_name: "", due_date: "" });
+            // Refresh tasks
+            const query = new URLSearchParams(filters as Record<string, string>).toString();
+            fetch(`${apiUrl}/api/users/getAllTeamTasks?${query}`, { credentials: "include" })
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) setTasks(data);
+                    else if (Array.isArray(data.tasks)) setTasks(data.tasks);
+                    else setTasks([]);
+                });
+        } catch (err) {
+            toast.error(err && typeof err === "object" && "error" in err
+                ? String((err as { error: unknown }).error)
+                : "Error assigning task");
+        }
+    };
+
     return (
-
-        <>
-            <div className="flex w-full min-h-screen bg-gray-100">
-                <Sidebar />
-
-
-                <main className=" flex-1 overflow-y-auto p-8 bg-gray-100 content-area  h-screen ">
-                    <div className="max-w-7xl mx-auto p-2 pt-15">
-                        <header className="mb-8">
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <h1 className="text-4xl font-bold text-gray-900">Team Tasks</h1>
-                                    <p className="text-gray-500 mt-1">
-                                        Manage and track your team's tasks and progress.
-                                    </p>
-                                </div>
-                                <button className="bg-blue-600 cursor-pointer text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors">
-                                    <CirclePlus size={18}/>
-                                    <span>Assign Task</span>
-                                </button>
-                            </div>
-                        </header>
-
-                        <div className="bg-white rounded-sm shadow-sm p-6 mb-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700" htmlFor="project-filter">
-                                        Project
-                                    </label>
-                                    <select
-                                        className="mt-1 block w-full rounded-sm border-gray-300 p-2 outline-0 shadow-sm focus:border-gray-300 focus:ring focus:ring-gray-300 focus:ring-opacity-50"
-                                        id="project-filter"
-                                    >
-                                        <option>All Projects</option>
-                                        <option>Website Redesign</option>
-                                        <option>Mobile App Development</option>
-                                        <option>API Integration</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700" htmlFor="status-filter">
-                                        Status
-                                    </label>
-                                    <select
-                                        className="mt-1 block w-full rounded-sm p-2 outline-0 border-gray-300 shadow-sm focus:border-gray-300 focus:ring focus:ring-gray-300 focus:ring-opacity-50"
-                                        id="status-filter"
-                                    >
-                                        <option>All Statuses</option>
-                                        <option>To Do</option>
-                                        <option>In Progress</option>
-                                        <option>Completed</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700" htmlFor="member-filter">
-                                        Team Member
-                                    </label>
-                                    <select
-                                        className="mt-1 block w-full rounded-sm p-2 outline-0 border-gray-300 shadow-sm focus:border-gray-300 focus:ring focus:ring-gray-300 focus:ring-opacity-50"
-                                        id="member-filter"
-                                    >
-                                        <option>All Members</option>
-                                        <option>Olivia Chen</option>
-                                        <option>Benjamin Carter</option>
-                                        <option>Sophia Rodriguez</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="text-sm font-medium  text-gray-700" htmlFor="due-date-filter">
-                                        Due Date
-                                    </label>
-                                    <input
-                                        className="mt-1 block p-2 outline-0 w-full rounded-sm border-gray-300 shadow-sm focus:border-gray-300 focus:ring focus:ring-gray-300 focus:ring-opacity-50"
-                                        id="due-date-filter"
-                                        type="date"
-                                    />
-                                </div>
-                            </div>
+        <div className="flex w-full min-h-screen bg-gray-100">
+            <Sidebar />
+            <main className="flex-1 overflow-y-auto p-8 bg-gray-100 h-screen">
+                <div className="max-w-7xl mx-auto p-2">
+                    <header className="mb-8 flex justify-between items-center">
+                        <div>
+                            <h1 className="text-4xl font-bold text-gray-900">Team Tasks</h1>
+                            <p className="text-gray-500 mt-1">Manage and track your team's tasks.</p>
                         </div>
+                        <button
+                            onClick={() => setModalOpen(true)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700">
+                            <CirclePlus size={18} />
+                            <span>Assign Task</span>
+                        </button>
+                    </header>
 
-                        <div className="space-y-8">
-                            {/* Olivia Chen */}
-                            <div>
-                                <div className="flex items-center gap-4 mb-4">
-                                    <img
-                                        alt="Olivia Chen"
-                                        className="w-10 h-10 rounded-full"
-                                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-tVNLafuBLNYWFR8-BzVO_5X-w7TQsG9OqCIOrKnP-hNM2o2FAcbavVEZLYYWHfRKAN0apNKAz2MUElPAMb1af_KPA1cMOqe_mPQmokbIQW1yc1C1AvMI5WpQS-fcm-JNYYZJyGYCMtQbl-rURM8XhUe-5kRtPB5QhLIAuI5l3Q12yDBcDxPEf4ocwpnEUiobvX7lMQCZoCX55LzaCpjNYZbPOejOFoSbpn1fmZxd00CZIPvvHvYWCJN-5bdniehSvuKV6eOXP8Y"
-                                    />
-                                    <h2 className="text-2xl font-bold text-gray-900">Olivia Chen</h2>
-                                </div>
-                                <div className="bg-white rounded-sm shadow-sm overflow-x-auto">
-                                    <table className="w-full text-sm text-left text-gray-500">
-                                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3">Task Name</th>
-                                                <th className="px-6 py-3">Project</th>
-                                                <th className="px-6 py-3">Status</th>
-                                                <th className="px-6 py-3">Priority</th>
-                                                <th className="px-6 py-3">Due Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr className="bg-white border-b border-gray-200">
-                                                <th className="px-6 py-4 font-medium text-gray-700" scope="row">
-                                                    Finalize UI mockups
-                                                </th>
-                                                <td className="px-6 py-4">Website Redesign</td>
-                                                <td className="px-6 py-4">
-                                                    <span className="status-badge text-nowrap  bg-yellow-100 text-yellow-700">In Progress</span>
-                                                </td>
-                                                <td className="px-6 py-4 flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-sm priority-high">
-                                                        <FontAwesomeIcon icon={faArrowUp} />
-                                                    </span>{" "}
-                                                    High
-                                                </td>
-                                                <td className="px-6 py-4">July 28, 2024</td>
-                                            </tr>
-                                            <tr className="bg-white">
-                                                <th className="px-6 py-4 font-medium text-gray-700" scope="row">
-                                                    Create user flow diagrams
-                                                </th>
-                                                <td className="px-6 py-4">Mobile App Development</td>
-                                                <td className="px-6 py-4">
-                                                    <span className="status-badge  text-nowrap bg-gray-100 text-gray-700">To Do</span>
-                                                </td>
-                                                <td className="px-6 py-4 flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-sm priority-medium">
-                                                        <FontAwesomeIcon icon={faMinus} />
-                                                    </span>{" "}
-                                                    Medium
-                                                </td>
-                                                <td className="px-6 py-4">August 05, 2024</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            {/* Benjamin Carter */}
-                            <div>
-                                <div className="flex items-center gap-4 mb-4">
-                                    <img
-                                        alt="Benjamin Carter"
-                                        className="w-10 h-10 rounded-full"
-                                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaVsY-rcqxjT7EASjLcTI2WBTzVpm_cnvBq8HK5D2Qzg0qTYKy3b4DCalS2qfS00tHpH8YujZm7vdzXHdaGyuCfnQiXg1jFZ12FLXdLPpGv5lXB7TfNEvVAhZRSbNhpLFr_fxn3QMUk692CQGy6brTyTmVhIbbzrybHv_eOHNhzW7mbEYnTNY2IOpA6RfVcOi6pzSC3BdxnzfqQJDbrallIDSZFjRBSQfTYrO1Us5kNd2CgJhwwR3Ma2i-24GEy_P1cYZ59EQG_Cg"
-                                    />
-                                    <h2 className="text-2xl font-bold text-gray-900">Benjamin Carter</h2>
-                                </div>
-                                <div className="bg-white rounded-sm shadow-sm overflow-x-auto">
-                                    <table className="w-full text-sm text-left text-gray-500">
-                                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3">Task Name</th>
-                                                <th className="px-6 py-3">Project</th>
-                                                <th className="px-6 py-3">Status</th>
-                                                <th className="px-6 py-3">Priority</th>
-                                                <th className="px-6 py-3">Due Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr className="bg-white border-b border-gray-200">
-                                                <th className="px-6 py-4 font-medium text-gray-700" scope="row">
-                                                    Develop REST API endpoints
-                                                </th>
-                                                <td className="px-6 py-4">API Integration</td>
-                                                <td className="px-6 py-4">
-                                                    <span className="status-badge text-nowrap bg-green-100 text-green-700">Completed</span>
-                                                </td>
-                                                <td className="px-6 py-4 flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-sm priority-high">
-                                                        <FontAwesomeIcon icon={faArrowUp} />
-                                                    </span>{" "}
-                                                    High
-                                                </td>
-                                                <td className="px-6 py-4">July 22, 2024</td>
-                                            </tr>
-                                            <tr className="bg-white">
-                                                <th className="px-6 py-4 font-medium text-gray-700" scope="row">
-                                                    Optimize database queries
-                                                </th>
-                                                <td className="px-6 py-4">Backend Optimization</td>
-                                                <td className="px-6 py-4">
-                                                    <span className="status-badge text-nowrap  bg-yellow-100 text-yellow-700">In Progress</span>
-                                                </td>
-                                                <td className="px-6 py-4 flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-sm priority-low">
-                                                        <FontAwesomeIcon icon={faArrowDown} />
-                                                    </span>{" "}
-                                                    Low
-                                                </td>
-                                                <td className="px-6 py-4">August 10, 2024</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            {/* Sophia Rodriguez */}
-                            <div>
-                                <div className="flex items-center gap-4 mb-4">
-                                    <img
-                                        alt="Sophia Rodriguez"
-                                        className="w-10 h-10 rounded-full"
-                                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmdSDv7gj2R1wObWyaxqf05U3dFtAPXIs5hWy-UpyFem34HIOfw4dIgDcr__w0VH6hyZE3hae0XgwxtRTGg_0OPMzYea9G4rKLqDv_a2R18i4v7qAWAfXDKfZCXuL5Jpyx0OYEhF14deIBHJzgpbO4tBVd5ZCtigZ9ETP3YoaNoJjZ0s4ahycyarVhT1Z7qt9dg1uyuVZK1az3whrZm40Zcd_c5hbh-KglnsBfQ2o3sJ5VCzgiapbc5wd68IpEGtgDDITW_J1xNh8"
-                                    />
-                                    <h2 className="text-2xl font-bold text-gray-700">Sophia Rodriguez</h2>
-                                </div>
-                                <div className="bg-white rounded-sm  shadow-sm overflow-x-auto">
-                                    <table className="w-full text-sm text-left text-gray-500 ">
-                                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3">Task Name</th>
-                                                <th className="px-6 py-3">Project</th>
-                                                <th className="px-6 py-3">Status</th>
-                                                <th className="px-6 py-3">Priority</th>
-                                                <th className="px-6 py-3">Due Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr className="bg-white border-b border-gray-200">
-                                                <th className="px-6 py-4  font-medium text-gray-700" scope="row">
-                                                    Plan social media campaign
-                                                </th>
-                                                <td className="px-6 py-4">Marketing Campaign</td>
-                                                <td className="px-6 py-4">
-                                                    <span className="status-badge  bg-gray-100 text-nowrap text-gray-700">To Do</span>
-                                                </td>
-                                                <td className="px-6 py-4 flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-sm priority-medium">
-                                                        <FontAwesomeIcon icon={faMinus} />
-                                                    </span>{" "}
-                                                    Medium
-                                                </td>
-                                                <td className="px-6 py-4">August 01, 2024</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                    <div className="bg-white rounded-sm shadow-sm p-6 mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">Project</label>
+                            <select onChange={e => setFilters({ ...filters, project: e.target.value })} className="mt-1 block w-full rounded-sm border-gray-300 p-2">
+                                <option value="">All Projects</option>
+                                {projects.map((p, idx) => (
+                                    <option key={p.project_id ?? `filter-project-${idx}`} value={p.project_id}>
+                                        {p.project_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">Status</label>
+                            <select onChange={e => setFilters({ ...filters, status: e.target.value })} className="mt-1 block w-full rounded-sm border-gray-300 p-2">
+                                <option value="">All Statuses</option>
+                                <option value="todo">To Do</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">Team Member</label>
+                            <select onChange={e => setFilters({ ...filters, member: e.target.value })} className="mt-1 block w-full rounded-sm border-gray-300 p-2">
+                                <option value="">All Members</option>
+                                {users.map((u, idx) => (
+                                    <option key={u.user_id ?? `filter-user-${idx}`} value={u.user_id}>
+                                        {u.username}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">Due Date</label>
+                            <input type="date" onChange={e => setFilters({ ...filters, dueDate: e.target.value })} className="mt-1 block w-full p-2 rounded-sm border-gray-300" />
                         </div>
                     </div>
-                </main>
-            </div>
-        </>
+
+                    <div className="space-y-8">
+                        {tasks.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm">
+                                <ClipboardList size={64} className="text-gray-300 mb-4" />
+                                <h3 className="text-xl font-semibold text-gray-700 mb-2">No tasks created yet</h3>
+                                <p className="text-gray-500 mb-6">Get started by assigning a task to your team</p>
+                                <button
+                                    onClick={() => setModalOpen(true)}
+                                    className="bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700">
+                                    <CirclePlus size={18} />
+                                    <span>Assign First Task</span>
+                                </button>
+                            </div>
+                        ) : (
+                            tasks.map(task => (
+                                <div key={task.task_id} className="bg-white shadow-sm rounded p-4">
+                                    <div className="flex items-center gap-4 mb-2">
+                                        <img src={task.profile_pic || "/default-avatar.png"} className="w-10 h-10 rounded-full" alt={task.username} />
+                                        <h2 className="text-xl font-bold">{task.username}</h2>
+                                    </div>
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="bg-gray-50 text-gray-600 text-xs">
+                                                <th className="px-3 py-2">Task</th>
+                                                <th className="px-3 py-2">Project</th>
+                                                <th className="px-3 py-2">Status</th>
+                                                <th className="px-3 py-2">Priority</th>
+                                                <th className="px-3 py-2">Due</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td className="px-3 py-2">{task.task_name}</td>
+                                                <td className="px-3 py-2">{task.project_name}</td>
+                                                <td className="px-3 py-2">{task.status}</td>
+                                                <td className="px-3 py-2">{task.priority}</td>
+                                                <td className="px-3 py-2">{task.due_date}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            </main>
+
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+                        <h2 className="text-xl font-bold mb-4">Assign Task</h2>
+                        <form onSubmit={handleAssignTask} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
+                                <select 
+                                    required 
+                                    value={newTask.project_id}
+                                    onChange={e => setNewTask({ ...newTask, project_id: e.target.value, milestone_id: "" })} 
+                                    className="w-full p-2 border rounded">
+                                    <option value="">Select Project</option>
+                                    {projects.map((p, idx) => (
+                                        <option key={p.project_id ?? `project-${idx}`} value={p.project_id}>
+                                            {p.project_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Milestone</label>
+                                <select 
+                                    required 
+                                    value={newTask.milestone_id}
+                                    onChange={e => setNewTask({ ...newTask, milestone_id: e.target.value })} 
+                                    className="w-full p-2 border rounded"
+                                    disabled={!newTask.project_id}>
+                                    <option value="">Select Milestone</option>
+                                    {milestones.map((m, idx) => (
+                                        <option key={m.milestone_id ?? `milestone-${idx}`} value={m.milestone_id}>
+                                            {m.milestone_name}
+                                        </option>
+                                    ))}
+                                </select>
+                                {!newTask.project_id && (
+                                    <p className="text-xs text-gray-500 mt-1">Select a project first</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
+                                <select 
+                                    required 
+                                    value={newTask.user_id}
+                                    onChange={e => setNewTask({ ...newTask, user_id: e.target.value })} 
+                                    className="w-full p-2 border rounded">
+                                    <option value="">Select Team Member</option>
+                                    {users.map((u, idx) => (
+                                        <option key={u.user_id ?? `user-${idx}`} value={u.user_id}>
+                                            {u.username}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Task Name</label>
+                                <input 
+                                    required 
+                                    placeholder="Enter task name" 
+                                    value={newTask.task_name}
+                                    className="w-full p-2 border rounded" 
+                                    onChange={e => setNewTask({ ...newTask, task_name: e.target.value })} />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                                <input 
+                                    type="date" 
+                                    required 
+                                    value={newTask.due_date}
+                                    className="w-full p-2 border rounded" 
+                                    onChange={e => setNewTask({ ...newTask, due_date: e.target.value })} />
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                                <button 
+                                    type="button" 
+                                    onClick={() => {
+                                        setModalOpen(false);
+                                        setNewTask({ project_id: "", milestone_id: "", user_id: "", task_name: "", due_date: "" });
+                                    }} 
+                                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                    Assign Task
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 
