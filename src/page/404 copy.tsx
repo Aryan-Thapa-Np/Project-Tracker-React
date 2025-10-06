@@ -12,8 +12,8 @@ const PageNotFound: React.FC = () => {
         <h1 className="text-4xl font-extrabold text-gray-800 mb-4">404</h1>
         <h2 className="text-2xl font-semibold text-gray-700 mb-4">Page Not Found</h2>
         <p className="text-gray-500 mb-8">
-          Oops! The page you are looking for doesn’t exist or has been moved.  
-          Check the URL or return to the dashboard.
+          Oops! we are currently facing issues with our server plese try again later.  
+          If you are the owner of this page, check the server logs to figure out the cause.
         </p>
         <button
           onClick={() => navigate("/")}
