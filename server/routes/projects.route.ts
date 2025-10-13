@@ -6,7 +6,8 @@ import {
     getProjectsController,
     getProjectNamesController,
     updateProjectController,
-    getMilestoneNames
+    getMilestoneNames,
+    getSimpleProjectsController
 } from "../controllers/others.controller.ts";
 import {
     createTaskValidation,
@@ -26,7 +27,7 @@ import { authenticateUserMiddleware } from "../middleware/auth.middleware.ts";
 
 const router = express.Router();
 
-
+//Fetch all projects.
 router.get("/users/projects", normalLimiter, authenticateUserMiddleware, getProjectsController as RequestHandler);
 
 router.post("/users/createProject", verifyCsrfTokenMiddleware, authenticateUserMiddleware, checkPermission(["create_project"]), createProjectController as RequestHandler);
@@ -37,6 +38,7 @@ router.get("/users/projectsName", normalLimiter, authenticateUserMiddleware, get
 router.put("/users/updateProject", authenticateUserMiddleware, updateProjectController);
 router.get("/users/milestones/:id", normalLimiter, authenticateUserMiddleware, getMilestoneNames as RequestHandler);
 
+router.get("/users/Getprojects", normalLimiter, authenticateUserMiddleware, getSimpleProjectsController as RequestHandler);
 
 
 

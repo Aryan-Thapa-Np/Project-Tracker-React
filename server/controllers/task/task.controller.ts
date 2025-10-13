@@ -11,7 +11,7 @@ interface Total {
 export const getUserTaskController = async (req: Request, res: Response) => {
     try {
         const user_id = (req as AuthenticatedRequest).user.id;
-        const { page = "1", limit = "2", status, project_id } = req.query;
+        const { page = "1", limit = "5", status, project_id } = req.query;
 
         if (!user_id) {
             return res.status(400).json({ success: false, error: "user_id required" });
@@ -339,8 +339,8 @@ export const deleteTaskController = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, error: "task_id & user_id required" });
         }
 
-        const [result] = await pool.execute(`delete from tasks where task_id=? `,[task_id]);
-     
+        const [result] = await pool.execute(`delete from tasks where task_id=? `, [task_id]);
+
         if (!result || (result as ResultSetHeader).affectedRows === 0) {
             return res.status(404).json({ success: false, error: "Failed to delete task." });
         }
@@ -351,3 +351,43 @@ export const deleteTaskController = async (req: Request, res: Response) => {
         res.status(500).json({ success: false, error: "Internal Server Error" });
     }
 };
+
+
+
+
+
+export const getTeamProgressController = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+
+
+        if (!user_id) {
+            return res.status(400).json({ success: false, error: "user_id required" });
+        }
+
+        const [result] = await pool.execute(`SELECT 
+                        t.assigned_to,
+                        u.username,
+                        u.profile_pic,
+                        ROUND(SUM(t.status = 'completed') / COUNT(*) * 100, 2) AS progress_percentage
+                    FROM tasks t
+                    JOIN users u ON u.user_id = t.assigned_to
+                    WHERE t.assigned_to = ?
+                    GROUP BY t.assigned_to;
+;
+                        `, [user_id]);
+
+        if (!result || (result as ResultSetHeader).affectedRows === 0) {
+            return res.status(404).json({ success: false, error: "Failed to fetch team progress." });
+        }
+
+        return res.status(200).json({ success: true, progress: result, message: "Success" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};
+
+
+
+

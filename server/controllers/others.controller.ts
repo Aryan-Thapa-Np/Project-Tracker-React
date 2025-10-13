@@ -4,7 +4,8 @@ import {
     updateTaskStatusController,
     getTeamTasksController,
     updateTaskController,
-    deleteTaskController
+    deleteTaskController,
+    getTeamProgressController
 } from "./task/task.controller.ts";
 
 import {
@@ -13,6 +14,7 @@ import {
     updateProjectController,
     getProjectNamesController,
     getMilestoneNames,
+    getSimpleProjectsController,
 } from "./projects/project.controller.ts";
 
 import {
@@ -33,5 +35,7 @@ export {
     getTeamTasksController,
     deleteTaskController,
     updateTaskController,
+    getSimpleProjectsController,
+    getTeamProgressController,
     updateProjectController
 }

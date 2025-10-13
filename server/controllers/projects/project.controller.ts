@@ -306,3 +306,48 @@ export const getMilestoneNames = async (req: Request, res: Response) => {
     }
 };
 
+export const getSimpleProjectsController = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+
+        if (!user_id) {
+            return res.status(404).json({
+                success: false,
+                error: "unauthorized",
+
+            });
+        }
+
+        const limit = 5;
+        const [rows] = await pool.execute(`
+        SELECT * 
+        FROM projects 
+        WHERE status != ?
+        ORDER BY due_date ASC 
+        LIMIT ?
+        `, ["completed", limit]);
+
+
+
+        if (!Array.isArray(rows) || rows.length === 0) {
+            return res.status(201).json({
+                success: false,
+                error: "projects not found..",
+
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            projects: rows,
+            message: "Success",
+
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};
+
+
