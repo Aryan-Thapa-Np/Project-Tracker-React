@@ -9,12 +9,14 @@ import {
     AlertTriangle,
     Eye,
     Trash2,
+    Plus,
     X,
 } from "lucide-react";
 import { toast } from "react-toastify";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { getCsrfToken } from "../sub-components/csrfToken.tsx";
 import { escapeHTML } from "../sub-components/sanitize.tsx";
+import type { User } from "../types/usersFTypes.tsx";
 
 interface Task {
     task_id: number;
@@ -32,7 +34,6 @@ interface Task {
 }
 
 interface Project { project_id: number; project_name: string; }
-interface User { user_id: number; username: string; profile_pic?: string; }
 interface Milestone { milestone_id: number; milestone_name: string; }
 
 /* -------------------------------------------------------------------------- */
@@ -56,11 +57,11 @@ const FilterControls: React.FC<{
     return (
         <div className="bg-white rounded-sm shadow-sm p-6 mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-                <label className="text-sm font-medium text-gray-700">Project</label>
+                <label className="text-sm  font-medium text-gray-700">Project</label>
                 <select
                     value={filters.project}
                     onChange={(e) => handleFilterChange("project", e.target.value)}
-                    className="mt-1 block w-full rounded-sm border-gray-300 p-2"
+                    className="mt-1 block w-full rounded-sm outline-1 border-gray-300 p-2"
                 >
                     <option value="">All Projects</option>
                     {projects.map((p) => (
@@ -75,7 +76,7 @@ const FilterControls: React.FC<{
                 <select
                     value={filters.status}
                     onChange={(e) => handleFilterChange("status", e.target.value)}
-                    className="mt-1 block w-full rounded-sm border-gray-300 p-2"
+                    className="mt-1 outline-1 block w-full rounded-sm border-gray-300 p-2"
                 >
                     <option value="">All Statuses</option>
                     <option value="todo">To Do</option>
@@ -88,7 +89,7 @@ const FilterControls: React.FC<{
                 <select
                     value={filters.member}
                     onChange={(e) => handleFilterChange("member", e.target.value)}
-                    className="mt-1 block w-full rounded-sm border-gray-300 p-2"
+                    className="mt-1 outline-1 block w-full rounded-sm border-gray-300 p-2"
                 >
                     <option value="">All Members</option>
                     {users.map((u) => (
@@ -104,7 +105,7 @@ const FilterControls: React.FC<{
                     type="date"
                     value={filters.dueDate}
                     onChange={(e) => handleFilterChange("dueDate", e.target.value)}
-                    className="mt-1 block w-full p-2 rounded-sm border-gray-300"
+                    className="mt-1 outline-1 block w-full p-2 rounded-sm border-gray-300"
                 />
             </div>
         </div>
@@ -181,7 +182,7 @@ const ViewTaskModal: React.FC<{
                 <div className="mt-8 flex justify-end">
                     <button
                         onClick={() => setModalOpen(false)}
-                        className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors cursor-pointer"
+                        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
                     >
                         Close
                     </button>
@@ -218,14 +219,14 @@ const DeleteTaskModal: React.FC<{
                 <div className="flex justify-end gap-3">
                     <button
                         onClick={() => setModalOpen(false)}
-                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors cursor-pointer"
+                        className="px-4 py-2 bg-gray-300 text-gray-800  rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleConfirmDelete}
                         disabled={isLoading}
-                        className="px-4 py-2 bg-red-600 cursor-pointer text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 transition-colors flex items-center gap-2"
+                        className="px-4 py-2 bg-red-600 cursor-pointer text-white rounded-sm hover:bg-red-700 disabled:bg-red-400 transition-colors flex items-center gap-2"
                     >
                         {isLoading && (
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -304,15 +305,15 @@ const TaskList: React.FC<{
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr className="border-t">
+                                <tr className="border-t ">
                                     <td className="px-4 py-3 font-normal" title={task.task_name}>
-                                        {truncateText(task.task_name, 25)}
+                                        {truncateText(task.task_name, 100)}
                                     </td>
                                     <td className="px-4 py-3 font-normal" title={task.project_name}>
-                                        {truncateText(task.project_name, 25)}
+                                        {truncateText(task.project_name, 50)}
                                     </td>
                                     <td className="px-4 py-3 font-normal" title={task.milestone_name}>
-                                        {truncateText(task.milestone_name, 25)}
+                                        {truncateText(task.milestone_name, 50)}
                                     </td>
                                     <td>
                                         <span
@@ -328,10 +329,10 @@ const TaskList: React.FC<{
                                         {truncateText(task.priority, 25)}
                                     </td>
                                     <td className="px-4 py-3">{formatDate(task.due_date)}</td>
-                                    <td className="px-4 py-3 flex gap-2">
+                                    <td className="px-4 py-3 flex gap-2 items-center">
                                         <button
                                             onClick={() => handleView(task)}
-                                            className="text-green-600 hover:text-green-800 cursor-pointer"
+                                            className="text-blue-600 hover:text-blue-800 cursor-pointer"
                                             title="View"
                                         >
                                             <Eye size={18} />
@@ -537,14 +538,14 @@ const AssignTaskModal: React.FC<{
                         <button
                             type="button"
                             onClick={handleCancel}
-                            className="px-4 py-2 bg-gray-300 rounded cursor-pointer hover:bg-gray-400"
+                            className="px-4 py-2 bg-gray-300 text-gray-800 rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="px-4 py-2 bg-blue-600 text-white cursor-pointer rounded hover:bg-blue-700 disabled:bg-blue-400 flex items-center gap-2"
+                            className="flex items-center justify-center cursor-pointer rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
                         >
                             {isLoading && (
                                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -756,7 +757,7 @@ const EditTaskModal: React.FC<{
                         <button
                             type="button"
                             onClick={handleCancel}
-                            className="px-4 py-2 bg-gray-300 cursor-pointer rounded hover:bg-gray-400"
+                            className="px-4 py-2 bg-gray-300 text-gray-800 rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
                         >
                             Cancel
                         </button>
@@ -777,10 +778,17 @@ const EditTaskModal: React.FC<{
     );
 };
 
+
+interface TeamProps {
+    user?: User | null;
+}
+
+
+
 /* -------------------------------------------------------------------------- */
 /*                               MAIN COMPONENT                               */
 /* -------------------------------------------------------------------------- */
-const TeamTasks: React.FC = () => {
+const TeamTasks: React.FC<TeamProps> = ({user}) => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
     const [users, setUsers] = useState<User[]>([]);
@@ -875,13 +883,21 @@ const TeamTasks: React.FC = () => {
             .then((r) => r.json())
             .then((data) => {
                 if (mounted) {
-                    const arr = Array.isArray(data) ? data : data.tasks || [];
-                    setTasks(arr);
+                    setTimeout(() => {
+                        const arr = Array.isArray(data) ? data : data.tasks || [];
+                        setTasks(arr);
+                        
+                    }, 1000);
                 }
             })
             .catch(() => toast.error("Failed to load tasks"))
             .finally(() => {
-                if (mounted) setIsLoading(false);
+                if (mounted) {
+                    setTimeout(() => {
+                        
+                        setIsLoading(false);
+                    }, 1000);
+                }
             });
 
         return () => {
@@ -965,7 +981,10 @@ const TeamTasks: React.FC = () => {
                     { credentials: "include" }
                 );
                 const data = await fresh.json();
-                setTasks(Array.isArray(data) ? data : data.tasks || []);
+                setTimeout(() => {
+                    
+                    setTasks(Array.isArray(data) ? data : data.tasks || []);
+                }, 1000);
             } catch (err) {
                 toast.error(err && typeof err === "object" && "error" in err
                     ? String((err as { error: unknown }).error)
@@ -1158,12 +1177,12 @@ const TeamTasks: React.FC = () => {
 
     return (
         <div className="flex w-full min-h-screen bg-gray-100">
-            <Sidebar />
+            <Sidebar user={user}/>
             <main className="flex-1 overflow-y-auto p-8 bg-gray-100 h-screen">
                 <div className="max-w-7xl mx-auto">
                     <header className="mb-8 mt-15 flex justify-between items-center">
                         <div>
-                            <h1 className="text-4xl font-bold text-gray-900">Team Tasks</h1>
+                            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Team Tasks</h1>
                             <p className="text-gray-500 mt-1">
                                 Manage and track your team's tasks.
                             </p>
@@ -1171,9 +1190,9 @@ const TeamTasks: React.FC = () => {
                         <button
                             id="assign-task-btn"
                             onClick={() => setAssignOpen(true)}
-                            className="bg-blue-600 text-white px-4 py-2 cursor-pointer rounded-lg flex items-center gap-2 hover:bg-blue-700"
+                            className="flex items-center justify-center cursor-pointer rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
                         >
-                            <CirclePlus size={18} />
+                            <Plus size={18}/>
                             Assign Task
                         </button>
                     </header>

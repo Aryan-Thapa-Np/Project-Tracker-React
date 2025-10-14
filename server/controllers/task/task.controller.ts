@@ -365,17 +365,16 @@ export const getTeamProgressController = async (req: Request, res: Response) => 
             return res.status(400).json({ success: false, error: "user_id required" });
         }
 
-        const [result] = await pool.execute(`SELECT 
-                        t.assigned_to,
-                        u.username,
-                        u.profile_pic,
-                        ROUND(SUM(t.status = 'completed') / COUNT(*) * 100, 2) AS progress_percentage
-                    FROM tasks t
-                    JOIN users u ON u.user_id = t.assigned_to
-                    WHERE t.assigned_to = ?
-                    GROUP BY t.assigned_to;
-;
-                        `, [user_id]);
+        const [result] = await pool.execute(`
+                SELECT 
+                    t.assigned_to,
+                    u.username,
+                    u.profile_pic,
+                    ROUND(SUM(t.status = 'completed') / COUNT(*) * 100, 2) AS progress_percentage
+                FROM tasks t
+                JOIN users u ON u.user_id = t.assigned_to
+                GROUP BY t.assigned_to
+            `);
 
         if (!result || (result as ResultSetHeader).affectedRows === 0) {
             return res.status(404).json({ success: false, error: "Failed to fetch team progress." });

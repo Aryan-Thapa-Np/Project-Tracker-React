@@ -3,22 +3,23 @@ import Sidebar from "../sub-components/sidebar.tsx";
 import { getCsrfToken } from '../sub-components/csrfToken.tsx';
 import { sanitizeInput } from "../sub-components/sanitize.tsx";
 import { toast } from "react-toastify";
+import type { User } from "../types/usersFTypes.tsx";
+import {
+    Plus,
+    
+} from "lucide-react";
 
 
-interface User {
-    user_id: number;
-    username: string;
-    email: string;
-    role: string;
-    status: string;
-    status_expire: string | null;
-    email_verified: boolean;
+interface UsersProps {
+    user?: User | null;
 }
+
+
 
 const roles = ["admin", "project_manager", "team_member", "team_memberPlus", "team_memberSuper"];
 const statuses = ["active", "locked", "banned", "inactive"];
 
-const UserManagement: React.FC = () => {
+const UserManagement: React.FC<UsersProps> = ({user}) => {
     const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -159,19 +160,20 @@ const UserManagement: React.FC = () => {
 
     return (
         <div className="flex w-full min-h-screen bg-gray-100">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto p-2 bg-gray-100 content-area h-screen">
-                <div className="mx-auto max-w-7xl px-2 py-8 sm:px-6 lg:px-8">
+            <Sidebar user={user}/>
+            <main className="flex-1 overflow-y-auto  p-8  bg-gray-100 content-area h-screen">
+                <div className="mx-auto max-w-7xl ">
                     {/* Header */}
-                    <div className="mb-8 pt-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                    <div className="mb-8 mt-15  flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                         <div>
                             <h1 className="text-3xl font-bold tracking-tight text-gray-900">User Management</h1>
                             <p className="mt-1 text-sm text-gray-500">Manage user accounts, roles, and project assignments.</p>
                         </div>
                         <button
                             onClick={() => setShowCreateModal(true)}
-                            className="flex items-center justify-center cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+                            className="flex items-center justify-center cursor-pointer rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
                         >
+                            <Plus size={18}/>
                             Add New User
                         </button>
                     </div>
@@ -235,7 +237,7 @@ const UserManagement: React.FC = () => {
                                         </td>
                                         <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                                             <button
-                                                className="text-blue-600 hover:text-blue-800"
+                                                className="cursor-pointer text-blue-600 hover:text-blue-800"
                                                 onClick={() => { setEditUser(user); setShowEditModal(true); }}
                                             >
                                                 Edit
@@ -252,8 +254,8 @@ const UserManagement: React.FC = () => {
                         <p className="text-sm text-gray-500">Page {page} of {totalPages}</p>
                         {totalPages > 1 && (
                             <div className="flex gap-2">
-                                <button disabled={page === 1} onClick={() => setPage(page - 1)} className="px-3 py-1 rounded border bg-white hover:bg-gray-50">Prev</button>
-                                <button disabled={page === totalPages} onClick={() => setPage(page + 1)} className="px-3 py-1 rounded border bg-white hover:bg-gray-50">Next</button>
+                                <button disabled={page === 1} onClick={() => setPage(page - 1)} className="px-3 py-1 rounded border bg-white hover:bg-gray-50 cursor-pointer">Prev</button>
+                                <button disabled={page === totalPages} onClick={() => setPage(page + 1)} className="px-3 py-1 rounded border bg-white hover:bg-gray-50 cursor-pointer">Next</button>
                             </div>
                         )}
                     </div>
@@ -271,7 +273,7 @@ const UserManagement: React.FC = () => {
                                         {roles.map(r => <option key={r} value={r}>{r.replace("_", " ")}</option>)}
                                     </select>
                                     <div className="flex justify-end gap-2 mt-2">
-                                        <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 rounded border bg-gray-200 hover:bg-gray-300">Cancel</button>
+                                        <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 rounded border bg-gray-200 hover:bg-gray-300 cursor-pointer">Cancel</button>
                                         <button type="submit" className="px-4 py-2 cursor-pointer rounded bg-blue-600 text-white hover:bg-blue-700">Create</button>
                                     </div>
                                 </form>
@@ -301,7 +303,7 @@ const UserManagement: React.FC = () => {
                                         <option value="false">No</option>
                                     </select>
                                     <div className="flex justify-end gap-2 mt-2">
-                                        <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 rounded border bg-gray-200 hover:bg-gray-300">Cancel</button>
+                                        <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 rounded border bg-gray-200 hover:bg-gray-300 cursor-pointer">Cancel</button>
                                         <button type="submit" className="px-4 py-2 rounded bg-blue-600 cursor-pointer text-white hover:bg-blue-700">Update</button>
                                     </div>
                                 </form>

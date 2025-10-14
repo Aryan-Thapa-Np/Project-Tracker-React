@@ -4,12 +4,22 @@ import { toast } from "react-toastify";
 import { escapeMinimal } from "../sub-components/sanitize";
 import { getCsrfToken } from "../sub-components/csrfToken.tsx";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import type { User } from "../types/usersFTypes.tsx";
+
+import {
+    Plus,
+    
+} from "lucide-react";
 
 interface Milestone {
   milestone_id?: number;
   milestone_name: string;
   milestone_completed?: boolean;
   milestone_due_date?: string | null;
+}
+
+interface ProjectsProps {
+  user?: User | null;
 }
 
 interface Project {
@@ -94,7 +104,8 @@ const SkeletonProjectCard: React.FC = () => {
   );
 };
 
-const Projects: React.FC = () => {
+//MAIN FUNCTION----
+const Projects: React.FC<ProjectsProps> = ({user}) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
@@ -105,10 +116,10 @@ const Projects: React.FC = () => {
   const [viewingProject, setViewingProject] = useState<Project | null>(null);
   const [newProject, setNewProject] = useState(emptyNewProject());
   const [removedMilestoneIds, setRemovedMilestoneIds] = useState<number[]>([]);
-  const [loading, setLoading] = useState(true); // New loading state
+  const [loading, setLoading] = useState(true); 
 
-  const fetchProjects = async () => {
-    setLoading(true); // Set loading to true before fetching
+  const fetchProjects= async () => {
+    setLoading(true); 
     setTimeout(async() => {
 
 
@@ -301,11 +312,11 @@ const Projects: React.FC = () => {
 
   return (
     <div className="flex flex-col md:flex-row w-full min-h-screen bg-gray-100">
-      <Sidebar />
-      <main className="p-4 sm:p-6 content-area flex-1 overflow-y-auto">
+      <Sidebar user={user}/>
+      <main className="p-8  sm:mb-8 mt-15  content-area flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
-          <header className="mb-6 sm:mb-8 pt-10 sm:pt-20 text-center sm:text-left">
-            <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">Projects</h1>
+          <header className=" text-center sm:text-left">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Projects</h1>
             <p className="text-gray-500 mt-1 text-sm sm:text-base">Manage your projects, track progress, and collaborate with your team.</p>
           </header>
 
@@ -340,15 +351,9 @@ const Projects: React.FC = () => {
             {/* New Project Button */}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="cursor-pointer flex items-center justify-center gap-2 px-4 py-2 text-sm sm:text-base text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer"
+              className=" flex items-center justify-center cursor-pointer rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
             >
-              <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  clipRule="evenodd"
-                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                  fillRule="evenodd"
-                />
-              </svg>
+              <Plus size={18}/>
               <span>Create Project</span>
             </button>
           </div>
@@ -464,7 +469,7 @@ const Projects: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium">Milestones</h4>
-                    <button onClick={addNewMilestone} className="text-sm text-blue-600 cursor-pointer" >Add</button>
+                    <button onClick={addNewMilestone} className="text-sm text-blue-600 cursor-pointer hover:underline transition-all" >Add</button>
                   </div>
 
                   <div className="space-y-2">
@@ -472,15 +477,15 @@ const Projects: React.FC = () => {
                       <div key={idx} className="flex gap-2 items-center">
                         <input value={m.milestone_name} onChange={(e) => setNewProject((p) => ({ ...p, milestones: p.milestones.map((mm, i) => (i === idx ? { ...mm, milestone_name: e.target.value } : mm)) }))} placeholder="Milestone name" className="flex-1 border rounded px-3 py-2" />
                         <input type="date" value={m.milestone_due_date || ""} onChange={(e) => setNewProject((p) => ({ ...p, milestones: p.milestones.map((mm, i) => (i === idx ? { ...mm, milestone_due_date: e.target.value } : mm)) }))} className="border rounded px-2 py-1" />
-                        <button onClick={() => removeNewMilestone(idx)} className="text-red-500 cursor-pointer">Remove</button>
+                        <button onClick={() => removeNewMilestone(idx)} className="text-red-500 hover:underline cursor-pointer">Remove</button>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div className="flex items-center justify-end gap-2 mt-4">
-                  <button onClick={() => setShowCreateModal(false)} className="px-4 py-2 border rounded cursor-pointer">Cancel</button>
-                  <button onClick={createProject} className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer">Create</button>
+                  <button onClick={() => setShowCreateModal(false)} className="px-4 py-2 rounded border bg-gray-200 hover:bg-gray-300 cursor-pointer">Cancel</button>
+                  <button onClick={createProject} className="flex items-center justify-center cursor-pointer rounded bg-blue-600 px-4 py-2  font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors">Create</button>
                 </div>
               </div>
             </div>

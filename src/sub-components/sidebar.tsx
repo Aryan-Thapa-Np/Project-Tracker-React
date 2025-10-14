@@ -8,7 +8,6 @@ import { toast } from "react-toastify";
 import { getCsrfToken } from '../sub-components/csrfToken.tsx';
 
 
-
 interface SidebarProps {
   user?: User | null;
 }
@@ -16,10 +15,8 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ user }) => {
   const location = useLocation();
-
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(true);
-
 
   const getActiveClass = (path: string) =>
     location.pathname === path ? 'bg-black/5 text-[#1173d4]' : 'hover:text-gray-600 hover:bg-black/5';
@@ -32,6 +29,11 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
     window.addEventListener('toggleSidebar', handleToggle);
     return () => window.removeEventListener('toggleSidebar', handleToggle);
   }, []);
+
+
+
+
+
 
 
   useEffect(() => {
@@ -122,9 +124,24 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
             </Link>
           </li>
 
-   
+          {user?.isAllowed ? (<>
 
-          <CheckPermSide>
+            <li className={`  cursor-pointer p-2 rounded-sm ${getActiveClass('/users')}`} style={{ "--timer": "0.3s" } as React.CSSProperties}>
+              <Link to="/users" className="flex items-center space-x-2">
+
+                <UserCog size={20} />
+                <span>Users</span>
+              </Link>
+            </li>
+
+            <li className={`  cursor-pointer p-2 rounded-sm ${getActiveClass('/logs')}`} style={{ "--timer": "0.8s" } as React.CSSProperties}>
+              <Link to="/logs" className="flex items-center space-x-2">
+                <Clock9 size={20} />
+                <span>Logs</span>
+              </Link>
+            </li>
+          </>) : (<CheckPermSide>
+
             <li className={`opp  cursor-pointer p-2 rounded-sm ${getActiveClass('/users')}`} style={{ "--timer": "0.3s" } as React.CSSProperties}>
               <Link to="/users" className="flex items-center space-x-2">
 
@@ -139,7 +156,13 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
                 <span>Logs</span>
               </Link>
             </li>
-          </CheckPermSide>
+          </CheckPermSide>)}
+
+
+
+
+
+
 
 
 

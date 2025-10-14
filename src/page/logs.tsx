@@ -3,6 +3,11 @@ import Sidebar from "../sub-components/sidebar.tsx";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { toast } from "react-toastify";
 import { getCsrfToken } from '../sub-components/csrfToken.tsx';
+import type { User } from "../types/usersFTypes.tsx";
+
+interface LogsProps {
+  user?: User | null;
+}
 
 
 
@@ -14,7 +19,7 @@ interface Log {
   created_at: string;
 }
 
-const LogsPage: React.FC = () => {
+const LogsPage: React.FC<LogsProps> = ({ user }) => {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,11 +84,23 @@ const LogsPage: React.FC = () => {
     fetchLogs();
   }, [fetchLogs]);
 
+  const formatDate = (iso: string) => {
+    return new Date(iso).toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+
+
   return (
     <div className="flex flex-col md:flex-row w-full min-h-screen bg-gray-50">
-      <Sidebar />
+      <Sidebar user={user} />
 
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 mt-15 mb-8">
         <h1 className="text-3xl font-bold mb-6 text-gray-900">Database Logs</h1>
 
         {/* Filters */}
@@ -155,7 +172,7 @@ const LogsPage: React.FC = () => {
                     <td className="px-6 py-4">{log.user_id}</td>
                     <td className="px-6 py-4 font-medium text-gray-800">{log.username}</td>
                     <td className="px-6 py-4">{log.action}</td>
-                    <td className="px-6 py-4">{new Date(log.created_at).toLocaleString()}</td>
+                    <td className="px-6 py-4">{formatDate(log.created_at)}</td>
                   </tr>
                 ))}
                 {logs.length === 0 && (

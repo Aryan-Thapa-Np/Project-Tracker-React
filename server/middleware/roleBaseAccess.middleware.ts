@@ -37,3 +37,25 @@ export const checkPermission = (requiredPermissions: string[]) => {
         }
     };
 };
+
+
+export const checkPermissionForPage = (requiredPermissions: string[]) => {
+    return (req: Request) => {
+        try {
+            const userRole = (req as AuthenticatedRequest).user.role;
+
+            const rolePermission = rolesPermissions[userRole] || [];
+
+            const hasPermission = requiredPermissions.every(p => rolePermission.includes(p));
+
+            if (!hasPermission) {
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+    };
+};

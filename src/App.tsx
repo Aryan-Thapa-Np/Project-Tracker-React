@@ -16,6 +16,7 @@ import LogsPage from "./page/logs.tsx";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import CheckPerm from "./sub-components/checkPerm.tsx";
 import PageNotFound from "./page/404.tsx";
+import InternalServerError from "./page/500.tsx";
 
 import InsufficientPermissionPage from "./page/permisiion.tsx";
 
@@ -39,18 +40,18 @@ function App() {
           <PrivateRoute>
             <Header />
             <Task />
-               <ToastContainer
-                className="px-5 pt-1 text-sm "
-                position="top-center"
-                autoClose={3000}
-                hideProgressBar={true}
-                newestOnTop={true}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-              />
+            <ToastContainer
+              className="px-5 pt-1 text-sm "
+              position="top-center"
+              autoClose={3000}
+              hideProgressBar={true}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
           </PrivateRoute>
         } />
 
@@ -58,59 +59,58 @@ function App() {
           <PrivateRoute>
             <Header />
             <Projects />
-               <ToastContainer
-                className="px-5 pt-1 text-sm "
-                position="top-center"
-                autoClose={3000}
-                hideProgressBar={true}
-                newestOnTop={true}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-              />
+            <ToastContainer
+              className="px-5 pt-1 text-sm "
+              position="top-center"
+              autoClose={3000}
+              hideProgressBar={true}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
           </PrivateRoute>
         } />
         <Route path="/teams" element={
           <PrivateRoute>
             <Header />
             <TeamTasks />
-               <ToastContainer
-                className="px-5 pt-1 text-sm "
-                position="top-center"
-                autoClose={3000}
-                hideProgressBar={true}
-                newestOnTop={true}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-              />
+            <ToastContainer
+              className="px-5 pt-1 text-sm "
+              position="top-center"
+              autoClose={3000}
+              hideProgressBar={true}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
           </PrivateRoute>
         } />
 
 
         <Route path="/users" element={
-          <CheckPerm>
-            <PrivateRoute>
-              <Header />
-              <UserManagement />
-              <ToastContainer
-                className="px-5 pt-1 text-sm "
-                position="top-center"
-                autoClose={3000}
-                hideProgressBar={true}
-                newestOnTop={true}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-              />
-            </PrivateRoute>
-          </CheckPerm>
+          <PrivateRoute>
+            <Header />
+            <UserManagement />
+            <ToastContainer
+              className="px-5 pt-1 text-sm "
+              position="top-center"
+              autoClose={3000}
+              hideProgressBar={true}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
+
+          </PrivateRoute>
         } />
 
         <Route path="/settings" element={
@@ -134,24 +134,23 @@ function App() {
 
 
         <Route path="/logs" element={
-          <CheckPerm>
-            <PrivateRoute>
-              <Header />
-              <LogsPage />
-              <ToastContainer
-                className="px-5 pt-1 text-sm "
-                position="top-center"
-                autoClose={3000}
-                hideProgressBar={true}
-                newestOnTop={true}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-              />
-            </PrivateRoute>
-          </CheckPerm>
+          <PrivateRoute>
+            <Header />
+            <LogsPage />
+            <ToastContainer
+              className="px-5 pt-1 text-sm "
+              position="top-center"
+              autoClose={3000}
+              hideProgressBar={true}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
+
+          </PrivateRoute>
 
         } />
 
@@ -205,6 +204,10 @@ function App() {
         <Route path="/InsufficientPermission" element={
 
           <InsufficientPermissionPage />
+        } />
+        <Route path="/InternalServerError" element={
+
+          <InternalServerError />
         } />
 
         <Route path="*" element={

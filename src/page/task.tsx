@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../sub-components/sidebar.tsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
-import { Clipboard, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clipboard, ChevronLeft, ChevronRight,SquarePen } from "lucide-react";
 import { toast } from "react-toastify";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { getCsrfToken } from "../sub-components/csrfToken.tsx";
 import type { User } from "../types/usersFTypes.tsx";
+
 
 
 interface Task {
@@ -48,10 +49,13 @@ const statusClass = (s: Task["status"]) => {
     }
 };
 
+interface TaskProps {
+    user?: User | null;
+}
 
 
+const Task: React.FC<TaskProps> = ({user}) => {
 
-const Task: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState<number>(1);
@@ -159,13 +163,13 @@ const Task: React.FC = () => {
 
     return (
         <div className="flex w-full min-h-screen bg-gray-100">
-            <Sidebar />
-            <div className="content-area flex-1 h-screen overflow-y-auto">
-                <section className="py-24 px-8 min-h-[85vh]">
-                    <div className="p-2 pt-5">
+            <Sidebar user={user}/>
+            <div className="content-area flex-1 p-8 h-screen overflow-y-auto">
+                <section className="mb-8 mt-15 min-h-[85vh]">
+                    <div >
                         <div className="p-1 flex justify-between items-end">
                             <div>
-                                <h2 className="text-3xl font-bold text-gray-900 mb-1">My Tasks</h2>
+                                <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-1">My Tasks</h1>
                                 <p className="text-sm text-gray-500">
                                     Tasks assigned to you across projects — update status as you work.
                                 </p>
@@ -238,11 +242,11 @@ const Task: React.FC = () => {
                                                     key={rowKey}
                                                     className="border-b border-gray-200 hover:bg-gray-50 transition"
                                                 >
-                                                    <td className="px-6 py-4 font-medium text-gray-700">
+                                                    <td className="px-6 py-4 font-medium text-gray-600">
                                                         {task.task_name}
                                                     </td>
                                                     <td className="px-6 py-4">{task.project_name}</td>
-                                                    <td className="px-6 py-4">{task.milestone_name}</td>
+                                                    <td className="px-6 py-4 text-gray-500">{task.milestone_name}</td>
                                                     <td className="px-6 py-4">
                                                         <span
                                                             className={`px-2 py-1 rounded-full text-xs font-medium ${priorityClass(
@@ -271,7 +275,8 @@ const Task: React.FC = () => {
                                                         role="button"
                                                         aria-label={`Edit task ${task.task_name}`}
                                                     >
-                                                        <FontAwesomeIcon icon={faPenToSquare} />
+                                                        <SquarePen size={18}/>
+
                                                     </td>
                                                 </tr>
                                             );
@@ -353,14 +358,14 @@ const Task: React.FC = () => {
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setSelectedTask(null)}
-                                    className="cursor-pointer px-4 py-2 bg-gray-200 rounded"
+                                    className="px-4 py-2 rounded border bg-gray-200 hover:bg-gray-300 cursor-pointer"
                                     aria-label="Cancel status update"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={updateStatus}
-                                    className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded"
+                                    className="flex items-center justify-center cursor-pointer rounded bg-blue-600 px-4 py-2  font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
                                     aria-label="Save status update"
                                 >
                                     Save
