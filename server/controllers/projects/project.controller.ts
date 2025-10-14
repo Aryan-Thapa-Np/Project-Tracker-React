@@ -351,3 +351,37 @@ export const getSimpleProjectsController = async (req: Request, res: Response) =
 };
 
 
+export const deleteProjectController = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+        const {project_id} = req.body;
+
+
+        if (!user_id || !project_id) {
+            return res.status(400).json({
+                success: false,
+                error: "User_id or project_id  are required"
+            });
+        }
+
+
+        const [rows] = await pool.execute(`delete from projects where project_id=? `, [project_id]);
+        if (!rows|| (rows as ResultSetHeader).affectedRows === 0) {
+            return res.status(201).json({
+                success: false,
+                error: "Project not found..",
+
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Success",
+
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};

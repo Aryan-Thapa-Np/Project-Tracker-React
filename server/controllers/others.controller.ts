@@ -15,6 +15,7 @@ import {
     getProjectNamesController,
     getMilestoneNames,
     getSimpleProjectsController,
+    deleteProjectController,
 } from "./projects/project.controller.ts";
 
 import {
@@ -37,5 +38,6 @@ export {
     updateTaskController,
     getSimpleProjectsController,
     getTeamProgressController,
-    updateProjectController
+    updateProjectController,
+    deleteProjectController
 }

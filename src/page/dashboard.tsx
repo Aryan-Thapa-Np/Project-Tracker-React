@@ -5,7 +5,7 @@ import type { User } from "../types/usersFTypes.tsx";
 import { getCsrfToken } from '../sub-components/csrfToken.tsx';
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { toast } from "react-toastify";
-import { CalendarClock, MessageCircleWarning } from "lucide-react";
+import { CalendarClock, MessageCircleWarning, Search } from "lucide-react";
 
 interface DashboardProps {
     user?: User | null;
@@ -38,7 +38,7 @@ interface TeamProgress {
 
 const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     const [tasks, setTasks] = useState<Task[] | null>(null);
-    const [projects, setProjects] = useState<Projects[] | null>(null);
+    const [projects, setProjects] = useState<Projects[] | null>([]);
     const [teamProgress, setProgress] = useState<TeamProgress[] | null>(null);
     const [isLoadingTasks, setIsLoadingTasks] = useState(true);
     const [isLoadingProjects, setIsLoadingProjects] = useState(true);
@@ -102,8 +102,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 });
 
                 const data = await res.json();
+                console.log(data);
 
                 if (!res.ok || data.success === false) {
+                    setIsLoadingProjects(false);
+
                     const msg = data.error || "Failed to fetch projects";
                     return toast.error(msg);
                 }
@@ -196,25 +199,29 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                                 </thead>
                                 <tbody>
                                     {isLoadingTasks ? (
-                                        <tr className="animate-pulse">
-                                            <td className="px-4 sm:px-6 py-4">
-                                                <div className="h-4 bg-gray-200 rounded"></div>
-                                            </td>
-                                            <td className="px-4 sm:px-6 py-4">
-                                                <div className="h-4 bg-gray-200 rounded"></div>
-                                            </td>
-                                            <td className="px-4 sm:px-6 py-4">
-                                                <div className="h-4 bg-gray-200 rounded"></div>
-                                            </td>
-                                            <td className="px-4 sm:px-6 py-4">
-                                                <div className="h-4 bg-gray-200 rounded"></div>
-                                            </td>
-                                        </tr>
+                                        [...Array(3)].map((_, i) => (
+                                            <tr key={i} className="animate-pulse">
+                                                <td className="px-4 sm:px-6 py-4">
+                                                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                </td>
+                                                <td className="px-4 sm:px-6 py-4">
+                                                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                                                </td>
+                                                <td className="px-4 sm:px-6 py-4">
+                                                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                                </td>
+                                                <td className="px-4 sm:px-6 py-4">
+                                                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                                                </td>
+                                            </tr>
+                                        ))
                                     ) : tasks && tasks.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="px-4 sm:px-6 py-4 text-center flex justify-center items-center gap-2 text-gray-500">
-                                                <MessageCircleWarning size={28} />
-                                                <span>Not Available</span>
+                                            <td colSpan={4} className="px-4 sm:px-6 py-4">
+                                                <div className="flex justify-center items-center gap-2 text-gray-500">
+                                                    <MessageCircleWarning size={28} />
+                                                    <span>Not Available</span>
+                                                </div>
                                             </td>
                                         </tr>
                                     ) : (
@@ -246,7 +253,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                     <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Team Progress */}
                         <div className="p-4 sm:p-6 bg-white rounded-md shadow">
-                            <h1 className="text-gray-800 font-bold text-xl sm:text-2xl mb-6 underline underline-offset-8">Team Progress</h1>
+                            <h1 className="text-gray-800 font-bold text-xl sm:text-2xl mb-6 ">Team Progress</h1>
                             {isLoadingTeamProgress ? (
                                 [...Array(3)].map((_, i) => (
                                     <div key={i} className="mb-4 animate-pulse">
@@ -263,7 +270,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                                     </div>
                                 ))
                             ) : teamProgress && teamProgress.length === 0 ? (
-                                <div className="text-center text-gray-500">  <MessageCircleWarning size={28} /> Not Available</div>
+                                <div className="flex justify-center items-center gap-2 text-gray-500 h-40">
+                                    <MessageCircleWarning size={28} />
+                                    <span>Not Available</span>
+                                </div>
                             ) : (
                                 teamProgress?.map((member, i) => (
                                     <div key={i} className="mb-5">
@@ -275,13 +285,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                                             />
                                             <p className="text-sm font-medium text-gray-700">{member.username}</p>
                                         </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                                        <div className="relative w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                                             <div
                                                 style={{ width: `${member.progress_percentage}%` }}
-                                                className={`${parseInt(member.progress_percentage) > 40 ? `bg-green-500` : `bg-yellow-400`} h-4 flex items-center justify-center text-white text-xs font-semibold`}
+                                                className={`${parseInt(member.progress_percentage) > 40 ? `bg-green-500` : `bg-yellow-400`
+                                                    } relative h-4 flex items-center justify-center text-white text-xs font-semibold text-center`}
                                             >
-                                                {member.progress_percentage}%
                                             </div>
+                                            <span className={`${parseInt(member.progress_percentage) > 0? `text-white font-semibold` :"text-black font-semibold" } text-sm absolute top-[1px] left-1/2 transform -translate-x-1/2 -translate-y-1`}>
+                                              {Math.floor(Number(member.progress_percentage))}%
+                                            </span>
                                         </div>
                                     </div>
                                 ))
@@ -290,7 +303,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
                         {/* Upcoming Deadlines */}
                         <div className="p-4 sm:p-6 bg-white rounded-md shadow">
-                            <h1 className="text-gray-800 font-bold text-xl sm:text-2xl mb-6 underline underline-offset-8">Upcoming Deadlines</h1>
+                            <h1 className="text-gray-800 font-bold text-xl sm:text-2xl mb-6 ">Upcoming Deadlines</h1>
                             <ul className="space-y-4 text-gray-700 text-sm">
                                 {isLoadingProjects ? (
                                     [...Array(3)].map((_, i) => (
@@ -308,7 +321,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                                         </div>
                                     ))
                                 ) : projects && projects.length === 0 ? (
-                                    <li className="text-center text-gray-500"><MessageCircleWarning size={28} />Not Available</li>
+                                    <li className="flex justify-center items-center gap-2 text-gray-500 h-40">
+                                        <MessageCircleWarning size={28} />
+                                        <span>Not Available</span>
+                                    </li>
                                 ) : (
                                     projects?.map((deadline, i) => (
                                         <li key={i} className="p-3">

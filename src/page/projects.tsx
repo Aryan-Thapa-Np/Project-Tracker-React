@@ -5,10 +5,13 @@ import { escapeMinimal } from "../sub-components/sanitize";
 import { getCsrfToken } from "../sub-components/csrfToken.tsx";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import type { User } from "../types/usersFTypes.tsx";
+import { escapeHTML } from "../sub-components/sanitize.tsx";
+
 
 import {
-    Plus,
-    
+  Plus,
+  Trash,
+  X
 } from "lucide-react";
 
 interface Milestone {
@@ -60,6 +63,55 @@ const formatDateForDisplay = (dateString: string | null | undefined): string => 
   }
 };
 
+
+
+/* -------------------------------------------------------------------------- */
+/*                              DELETE TASK MODAL                             */
+/* -------------------------------------------------------------------------- */
+const DeleteTaskModal: React.FC<{
+  showDeleteModal: boolean;
+  setDeleteModal: React.Dispatch<React.SetStateAction<boolean>>;
+  handleConfirmDelete: () => Promise<void>;
+  isLoading: boolean;
+}> = ({ showDeleteModal, setDeleteModal, handleConfirmDelete, isLoading }) => {
+  if (!showDeleteModal) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">Confirm Deletion</h2>
+          <button
+            onClick={() => setDeleteModal(false)}
+            className="text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <p className="text-gray-600 mb-6">Are you sure you want to delete this Project? This action cannot be undone.</p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setDeleteModal(false)}
+            className="px-4 py-2 bg-gray-300 text-gray-800  rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirmDelete}
+            disabled={isLoading}
+            className="px-4 py-2 bg-red-600 cursor-pointer text-white rounded-sm hover:bg-red-700 disabled:bg-red-400 transition-colors flex items-center gap-2"
+          >
+            {isLoading && (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            {isLoading ? "Deleting..." : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Skeleton Project Card Component
 const SkeletonProjectCard: React.FC = () => {
   return (
@@ -105,22 +157,27 @@ const SkeletonProjectCard: React.FC = () => {
 };
 
 //MAIN FUNCTION----
-const Projects: React.FC<ProjectsProps> = ({user}) => {
+const Projects: React.FC<ProjectsProps> = ({ user }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setDeleteModal] = useState(false);
+  const [projectId, setProjectId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+
   const [showViewModal, setShowViewModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [viewingProject, setViewingProject] = useState<Project | null>(null);
   const [newProject, setNewProject] = useState(emptyNewProject());
   const [removedMilestoneIds, setRemovedMilestoneIds] = useState<number[]>([]);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
 
-  const fetchProjects= async () => {
-    setLoading(true); 
-    setTimeout(async() => {
+  const fetchProjects = async () => {
+    setLoading(true);
+    setTimeout(async () => {
 
 
       try {
@@ -221,6 +278,7 @@ const Projects: React.FC<ProjectsProps> = ({user}) => {
       const data = await res.json();
 
       if (!data.success) {
+        setShowCreateModal(false);
         toast.error(data.error || "Failed to create project.");
         return;
       }
@@ -245,6 +303,63 @@ const Projects: React.FC<ProjectsProps> = ({user}) => {
     setViewingProject(p);
     setShowViewModal(true);
   };
+
+  const showDeleteProjectModal = (p: number) => {
+    setShowEditModal(false);
+    setDeleteModal(true);
+
+    setProjectId(p);
+  }
+
+
+
+  const handleDeleteTask = async () => {
+
+    if (!projectId) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/users/deleteProject`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": await getCsrfToken(),
+        },
+        credentials: "include",
+        body: JSON.stringify({ project_id: escapeHTML(String(projectId)) }),
+      });
+
+      let msg;
+      const data2 = await res.json();
+
+      if (data2.success === false && data2.error) {
+
+        setProjectId(null);
+        msg = data2.error;
+        toast.error(msg || "Failed to Project task.");
+
+        return
+      }
+
+      if (!res.ok) {
+
+        setProjectId(null);
+        toast.error("Failed to delete project.");
+        return
+      }
+
+      toast.success("Project deleted");
+      await fetchProjects();
+    } catch (error) {
+
+      toast.error("Something went wrong.");
+    } finally {
+      setIsLoading(false);
+      setDeleteModal(false);
+    }
+  }
+
+
+
 
   const updateProject = async () => {
     if (!editingProject) return;
@@ -287,7 +402,6 @@ const Projects: React.FC<ProjectsProps> = ({user}) => {
     }
   };
 
-  // Small helpers to manage milestones in create/edit forms
   const addNewMilestone = () => {
     setNewProject((prev) => ({ ...prev, milestones: [...prev.milestones, { milestone_name: "", milestone_completed: false, milestone_due_date: "" }] }));
   };
@@ -312,12 +426,12 @@ const Projects: React.FC<ProjectsProps> = ({user}) => {
 
   return (
     <div className="flex flex-col md:flex-row w-full min-h-screen bg-gray-100">
-      <Sidebar user={user}/>
+      <Sidebar user={user} />
       <main className="p-8  sm:mb-8 mt-15  content-area flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
           <header className=" text-center sm:text-left">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Projects</h1>
-            <p className="text-gray-500 mt-1 text-sm sm:text-base">Manage your projects, track progress, and collaborate with your team.</p>
+            <p className="text-gray-500 mt-1 mb-1 text-sm sm:text-base">Manage your projects, track progress, and collaborate with your team.</p>
           </header>
 
           {/* Filters */}
@@ -353,7 +467,7 @@ const Projects: React.FC<ProjectsProps> = ({user}) => {
               onClick={() => setShowCreateModal(true)}
               className=" flex items-center justify-center cursor-pointer rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
             >
-              <Plus size={18}/>
+              <Plus size={18} />
               <span>Create Project</span>
             </button>
           </div>
@@ -443,6 +557,14 @@ const Projects: React.FC<ProjectsProps> = ({user}) => {
           </div>
         </div>
 
+        {/* Delete Modal */}
+        <DeleteTaskModal
+          showDeleteModal={showDeleteModal}
+          setDeleteModal={setDeleteModal}
+          handleConfirmDelete={handleDeleteTask}
+          isLoading={isLoading}
+        />
+
         {/* Create Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -496,7 +618,14 @@ const Projects: React.FC<ProjectsProps> = ({user}) => {
         {showEditModal && editingProject && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
             <div className="bg-white rounded-lg max-w-2xl w-full p-6 shadow-lg max-h-[90vh] overflow-y-auto">
-              <h3 className="text-xl font-semibold mb-4">Edit Project</h3>
+              <span className="flex justify-between items-center ">
+                <h3 className="text-xl font-semibold mb-4">Edit Project</h3>
+                <button onClick={() => showDeleteProjectModal(editingProject.project_id)}>
+                  <Trash size={28} className="cursor-pointer rounded-full text-red-600 p-1 hover:bg-red-200" />
+
+                </button>
+
+              </span>
 
               <div className="space-y-3">
                 <input value={editingProject.project_name} onChange={(e) => setEditingProject({ ...editingProject, project_name: e.target.value })} placeholder="Project name" className="w-full border rounded px-3 py-2" />
@@ -519,7 +648,7 @@ const Projects: React.FC<ProjectsProps> = ({user}) => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium">Milestones</h4>
-                    <button onClick={addEditMilestone} className="text-sm text-blue-600 cursor-pointer">Add</button>
+                    <button onClick={addEditMilestone} className="text-sm text-blue-600 cursor-pointer hover:underline">Add</button>
                   </div>
 
                   <div className="space-y-2">
@@ -536,7 +665,8 @@ const Projects: React.FC<ProjectsProps> = ({user}) => {
                           <input type="checkbox" checked={!!m.milestone_completed} onChange={(e) => setEditingProject({ ...editingProject, milestones: editingProject.milestones.map((mm, i) => (i === idx ? { ...mm, milestone_completed: e.target.checked } : mm)) })} />
                           <span className="text-sm">Done</span>
                         </label>
-                        <button onClick={() => removeEditMilestone(idx)} className="text-red-500 cursor-pointer">Remove</button>
+                        <button onClick={() => removeEditMilestone(idx)} className="text-red-500 cursor-pointer">                <Trash size={28} className="cursor-pointer rounded-full text-red-600 p-1 hover:bg-red-200" />
+                        </button>
                       </div>
                     ))}
                   </div>

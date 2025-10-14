@@ -7,7 +7,8 @@ import {
     getProjectNamesController,
     updateProjectController,
     getMilestoneNames,
-    getSimpleProjectsController
+    getSimpleProjectsController,
+    deleteProjectController
 } from "../controllers/others.controller.ts";
 import {
     createTaskValidation,
@@ -40,6 +41,7 @@ router.get("/users/milestones/:id", normalLimiter, authenticateUserMiddleware, g
 
 router.get("/users/Getprojects", normalLimiter, authenticateUserMiddleware, getSimpleProjectsController as RequestHandler);
 
+router.delete("/users/deleteProject",normalLimiter, authenticateUserMiddleware, checkPermission(["delete_project"]), deleteProjectController as RequestHandler)
 
 
 export default router;

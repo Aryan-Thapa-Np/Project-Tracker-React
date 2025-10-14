@@ -249,8 +249,9 @@ const TaskList: React.FC<{
     formatDate: (d: string) => string;
     handleEdit: (t: Task) => void;
     handleView: (t: Task) => void;
+    isloading: boolean;
     handleOpenDeleteModal: (taskId: number) => void;
-}> = ({ tasks, getPriorityIcon, getStatusBgColor, formatDate, handleEdit, handleView, handleOpenDeleteModal }) => {
+}> = ({ tasks, getPriorityIcon, getStatusBgColor, formatDate, handleEdit, handleView,isloading, handleOpenDeleteModal }) => {
     const truncateText = (text: string, maxLength: number) => {
         if (text.length > maxLength) {
             return text.substring(0, maxLength - 3) + '...';
@@ -258,7 +259,97 @@ const TaskList: React.FC<{
         return text;
     };
 
-    if (tasks.length === 0) {
+
+    if (tasks.length !== 0 && !isloading) {
+
+        return (
+            <div className="space-y-8">
+                {tasks.map((task) => (
+                    <div key={task.task_id} className="bg-white shadow-sm rounded p-4">
+                        <div className="flex items-center gap-4 mb-4">
+                            <img
+                                src={task.profile_pic || "/image.png"}
+                                alt={`${task.username}'s avatar`}
+                                className="w-10 h-10 rounded-full"
+                            />
+                            <h2 className="text-xl font-bold">{task.username}</h2>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr className="bg-gray-50 text-gray-600 text-xs uppercase">
+                                        <th className="px-4 py-3 text-left">Task</th>
+                                        <th className="px-4 py-3 text-left">Project</th>
+                                        <th className="px-4 py-3 text-left">Milestone</th>
+                                        <th className="px-4 py-3 text-left">Status</th>
+                                        <th className="px-4 py-3 text-left">Priority</th>
+                                        <th className="px-4 py-3 text-left">Due</th>
+                                        <th className="px-4 py-3 text-left">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr className="border-t ">
+                                        <td className="px-4 py-3 font-normal" title={task.task_name}>
+                                            {truncateText(task.task_name, 100)}
+                                        </td>
+                                        <td className="px-4 py-3 font-normal" title={task.project_name}>
+                                            {truncateText(task.project_name, 50)}
+                                        </td>
+                                        <td className="px-4 py-3 font-normal" title={task.milestone_name}>
+                                            {truncateText(task.milestone_name, 50)}
+                                        </td>
+                                        <td>
+                                            <span
+                                                className={`px-3 py-1 rounded-full ${getStatusBgColor(
+                                                    task.status
+                                                )}`}
+                                            >
+                                                {truncateText(task.status.replace("_", " "), 25)}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 flex items-center gap-2">
+                                            {getPriorityIcon(task.priority)}
+                                            {truncateText(task.priority, 25)}
+                                        </td>
+                                        <td className="px-4 py-3">{formatDate(task.due_date)}</td>
+                                        <td className="px-4 py-3 flex gap-2 items-center">
+                                            <button
+                                                onClick={() => handleView(task)}
+                                                className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                                                title="View"
+                                            >
+                                                <Eye size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleEdit(task)}
+                                                className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                                                title="Edit"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleOpenDeleteModal(task.task_id)}
+                                                className="text-red-600 hover:text-red-800 cursor-pointer"
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+
+    if (tasks.length === 0 ) {
+
+
+
         return (
             <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm">
                 <ClipboardList size={64} className="text-gray-300 mb-4" />
@@ -277,89 +368,11 @@ const TaskList: React.FC<{
                 </button>
             </div>
         );
+
     }
 
-    return (
-        <div className="space-y-8">
-            {tasks.map((task) => (
-                <div key={task.task_id} className="bg-white shadow-sm rounded p-4">
-                    <div className="flex items-center gap-4 mb-4">
-                        <img
-                            src={task.profile_pic || "/default-avatar.png"}
-                            alt={`${task.username}'s avatar`}
-                            className="w-10 h-10 rounded-full"
-                        />
-                        <h2 className="text-xl font-bold">{task.username}</h2>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm border-collapse">
-                            <thead>
-                                <tr className="bg-gray-50 text-gray-600 text-xs uppercase">
-                                    <th className="px-4 py-3 text-left">Task</th>
-                                    <th className="px-4 py-3 text-left">Project</th>
-                                    <th className="px-4 py-3 text-left">Milestone</th>
-                                    <th className="px-4 py-3 text-left">Status</th>
-                                    <th className="px-4 py-3 text-left">Priority</th>
-                                    <th className="px-4 py-3 text-left">Due</th>
-                                    <th className="px-4 py-3 text-left">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr className="border-t ">
-                                    <td className="px-4 py-3 font-normal" title={task.task_name}>
-                                        {truncateText(task.task_name, 100)}
-                                    </td>
-                                    <td className="px-4 py-3 font-normal" title={task.project_name}>
-                                        {truncateText(task.project_name, 50)}
-                                    </td>
-                                    <td className="px-4 py-3 font-normal" title={task.milestone_name}>
-                                        {truncateText(task.milestone_name, 50)}
-                                    </td>
-                                    <td>
-                                        <span
-                                            className={`px-3 py-1 rounded-full ${getStatusBgColor(
-                                                task.status
-                                            )}`}
-                                        >
-                                            {truncateText(task.status.replace("_", " "), 25)}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 flex items-center gap-2">
-                                        {getPriorityIcon(task.priority)}
-                                        {truncateText(task.priority, 25)}
-                                    </td>
-                                    <td className="px-4 py-3">{formatDate(task.due_date)}</td>
-                                    <td className="px-4 py-3 flex gap-2 items-center">
-                                        <button
-                                            onClick={() => handleView(task)}
-                                            className="text-blue-600 hover:text-blue-800 cursor-pointer"
-                                            title="View"
-                                        >
-                                            <Eye size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleEdit(task)}
-                                            className="text-blue-600 hover:text-blue-800 cursor-pointer"
-                                            title="Edit"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleOpenDeleteModal(task.task_id)}
-                                            className="text-red-600 hover:text-red-800 cursor-pointer"
-                                            title="Delete"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
+
+
 };
 
 /* -------------------------------------------------------------------------- */
@@ -402,162 +415,162 @@ const AssignTaskModal: React.FC<{
     handleAssignTask,
     isLoading,
 }) => {
-    const handleCancel = useCallback(() => {
-        setModalOpen(false);
-        setNewTask({
-            project_id: "",
-            milestone_id: "",
-            user_id: "",
-            task_name: "",
-            due_date: "",
-            priority: "",
-        });
-    }, [setModalOpen, setNewTask]);
+        const handleCancel = useCallback(() => {
+            setModalOpen(false);
+            setNewTask({
+                project_id: "",
+                milestone_id: "",
+                user_id: "",
+                task_name: "",
+                due_date: "",
+                priority: "",
+            });
+        }, [setModalOpen, setNewTask]);
 
-    if (!isModalOpen) return null;
+        if (!isModalOpen) return null;
 
-    return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
-                <h2 className="text-xl font-bold mb-4">Assign Task</h2>
-                <form onSubmit={handleAssignTask} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Project
-                        </label>
-                        <select
-                            required
-                            value={newTask.project_id}
-                            onChange={(e) =>
-                                setNewTask({ ...newTask, project_id: e.target.value, milestone_id: "" })
-                            }
-                            className="w-full p-2 border rounded"
-                        >
-                            <option value="">Select Project</option>
-                            {projects.map((p) => (
-                                <option key={p.project_id} value={p.project_id}>
-                                    {p.project_name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Milestone
-                        </label>
-                        <select
-                            required
-                            value={newTask.milestone_id}
-                            onChange={(e) =>
-                                setNewTask({ ...newTask, milestone_id: e.target.value })
-                            }
-                            disabled={!newTask.project_id}
-                            className="w-full p-2 border rounded"
-                        >
-                            <option value="">Select Milestone</option>
-                            {milestones.map((m) => (
-                                <option key={m.milestone_id} value={m.milestone_id}>
-                                    {m.milestone_name}
-                                </option>
-                            ))}
-                        </select>
-                        {!newTask.project_id && (
-                            <p className="text-xs text-gray-500 mt-1">
-                                Select a project first
-                            </p>
-                        )}
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Assign To
-                        </label>
-                        <select
-                            required
-                            value={newTask.user_id}
-                            onChange={(e) =>
-                                setNewTask({ ...newTask, user_id: e.target.value })
-                            }
-                            className="w-full p-2 border rounded"
-                        >
-                            <option value="">Select Team Member</option>
-                            {users.map((u) => (
-                                <option key={u.user_id} value={u.user_id}>
-                                    {u.username}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Task Name
-                        </label>
-                        <input
-                            required
-                            placeholder="Enter task name"
-                            value={newTask.task_name}
-                            onChange={(e) =>
-                                setNewTask({ ...newTask, task_name: e.target.value })
-                            }
-                            className="w-full p-2 border rounded"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Due Date
-                        </label>
-                        <input
-                            type="date"
-                            required
-                            value={newTask.due_date}
-                            onChange={(e) =>
-                                setNewTask({ ...newTask, due_date: e.target.value })
-                            }
-                            className="w-full p-2 border rounded"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Priority
-                        </label>
-                        <select
-                            required
-                            value={newTask.priority}
-                            onChange={(e) =>
-                                setNewTask({ ...newTask, priority: e.target.value })
-                            }
-                            className="w-full p-2 border rounded"
-                        >
-                            <option value="">Select Priority</option>
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
-                        </select>
-                    </div>
-                    <div className="flex justify-end gap-2 pt-2">
-                        <button
-                            type="button"
-                            onClick={handleCancel}
-                            className="px-4 py-2 bg-gray-300 text-gray-800 rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="flex items-center justify-center cursor-pointer rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
-                        >
-                            {isLoading && (
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        return (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+                    <h2 className="text-xl font-bold mb-4">Assign Task</h2>
+                    <form onSubmit={handleAssignTask} className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Project
+                            </label>
+                            <select
+                                required
+                                value={newTask.project_id}
+                                onChange={(e) =>
+                                    setNewTask({ ...newTask, project_id: e.target.value, milestone_id: "" })
+                                }
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value="">Select Project</option>
+                                {projects.map((p) => (
+                                    <option key={p.project_id} value={p.project_id}>
+                                        {p.project_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Milestone
+                            </label>
+                            <select
+                                required
+                                value={newTask.milestone_id}
+                                onChange={(e) =>
+                                    setNewTask({ ...newTask, milestone_id: e.target.value })
+                                }
+                                disabled={!newTask.project_id}
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value="">Select Milestone</option>
+                                {milestones.map((m) => (
+                                    <option key={m.milestone_id} value={m.milestone_id}>
+                                        {m.milestone_name}
+                                    </option>
+                                ))}
+                            </select>
+                            {!newTask.project_id && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Select a project first
+                                </p>
                             )}
-                            {isLoading ? "Assigning..." : "Assign Task"}
-                        </button>
-                    </div>
-                </form>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Assign To
+                            </label>
+                            <select
+                                required
+                                value={newTask.user_id}
+                                onChange={(e) =>
+                                    setNewTask({ ...newTask, user_id: e.target.value })
+                                }
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value="">Select Team Member</option>
+                                {users.map((u) => (
+                                    <option key={u.user_id} value={u.user_id}>
+                                        {u.username}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Task Name
+                            </label>
+                            <input
+                                required
+                                placeholder="Enter task name"
+                                value={newTask.task_name}
+                                onChange={(e) =>
+                                    setNewTask({ ...newTask, task_name: e.target.value })
+                                }
+                                className="w-full p-2 border rounded"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Due Date
+                            </label>
+                            <input
+                                type="date"
+                                required
+                                value={newTask.due_date}
+                                onChange={(e) =>
+                                    setNewTask({ ...newTask, due_date: e.target.value })
+                                }
+                                className="w-full p-2 border rounded"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Priority
+                            </label>
+                            <select
+                                required
+                                value={newTask.priority}
+                                onChange={(e) =>
+                                    setNewTask({ ...newTask, priority: e.target.value })
+                                }
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value="">Select Priority</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2">
+                            <button
+                                type="button"
+                                onClick={handleCancel}
+                                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="flex items-center justify-center cursor-pointer rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+                            >
+                                {isLoading && (
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                )}
+                                {isLoading ? "Assigning..." : "Assign Task"}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
-    );
-};
+        );
+    };
 
 /* -------------------------------------------------------------------------- */
 /*                              EDIT TASK MODAL                               */
@@ -603,180 +616,180 @@ const EditTaskModal: React.FC<{
     handleUpdateTask,
     isLoading,
 }) => {
-    const handleCancel = useCallback(() => {
-        setModalOpen(false);
-        setEditTask({
-            task_id: "",
-            project_id: "",
-            milestone_id: "",
-            user_id: "",
-            task_name: "",
-            due_date: "",
-            priority: "",
-            status: "",
-        });
-    }, [setModalOpen, setEditTask]);
+        const handleCancel = useCallback(() => {
+            setModalOpen(false);
+            setEditTask({
+                task_id: "",
+                project_id: "",
+                milestone_id: "",
+                user_id: "",
+                task_name: "",
+                due_date: "",
+                priority: "",
+                status: "",
+            });
+        }, [setModalOpen, setEditTask]);
 
-    if (!isModalOpen) return null;
+        if (!isModalOpen) return null;
 
-    return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
-                <h2 className="text-xl font-bold mb-4">Edit Task</h2>
-                <form onSubmit={handleUpdateTask} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Project
-                        </label>
-                        <select
-                            required
-                            value={editTask.project_id}
-                            onChange={(e) =>
-                                setEditTask({
-                                    ...editTask,
-                                    project_id: e.target.value,
-                                    milestone_id: "",
-                                })
-                            }
-                            className="w-full p-2 border rounded"
-                        >
-                            <option value="">Select Project</option>
-                            {projects.map((p) => (
-                                <option key={p.project_id} value={p.project_id}>
-                                    {p.project_name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Milestone
-                        </label>
-                        <select
-                            required
-                            value={editTask.milestone_id}
-                            onChange={(e) =>
-                                setEditTask({ ...editTask, milestone_id: e.target.value })
-                            }
-                            disabled={!editTask.project_id}
-                            className="w-full p-2 border rounded"
-                        >
-                            <option value="">Select Milestone</option>
-                            {milestones.map((m) => (
-                                <option key={m.milestone_id} value={m.milestone_id}>
-                                    {m.milestone_name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Assign To
-                        </label>
-                        <select
-                            required
-                            value={editTask.user_id}
-                            onChange={(e) =>
-                                setEditTask({ ...editTask, user_id: e.target.value })
-                            }
-                            className="w-full p-2 border rounded"
-                        >
-                            <option value="">Select Team Member</option>
-                            {users.map((u) => (
-                                <option key={u.user_id} value={u.user_id}>
-                                    {u.username}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Task Name
-                        </label>
-                        <input
-                            required
-                            value={editTask.task_name}
-                            onChange={(e) =>
-                                setEditTask({ ...editTask, task_name: e.target.value })
-                            }
-                            className="w-full p-2 border rounded"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Due Date
-                        </label>
-                        <input
-                            type="date"
-                            required
-                            value={editTask.due_date}
-                            onChange={(e) =>
-                                setEditTask({ ...editTask, due_date: e.target.value })
-                            }
-                            className="w-full p-2 border rounded"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Priority
-                        </label>
-                        <select
-                            required
-                            value={editTask.priority}
-                            onChange={(e) =>
-                                setEditTask({ ...editTask, priority: e.target.value })
-                            }
-                            className="w-full p-2 border rounded"
-                        >
-                            <option value="">Select Priority</option>
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Status
-                        </label>
-                        <select
-                            required
-                            value={editTask.status}
-                            onChange={(e) =>
-                                setEditTask({ ...editTask, status: e.target.value })
-                            }
-                            className="w-full p-2 border rounded"
-                        >
-                            <option value="">Select Status</option>
-                            <option value="todo">To Do</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                        </select>
-                    </div>
-                    <div className="flex justify-end gap-2 pt-2">
-                        <button
-                            type="button"
-                            onClick={handleCancel}
-                            className="px-4 py-2 bg-gray-300 text-gray-800 rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="px-4 py-2 cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400 flex items-center gap-2"
-                        >
-                            {isLoading && (
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            )}
-                            {isLoading ? "Updating..." : "Update Task"}
-                        </button>
-                    </div>
-                </form>
+        return (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+                    <h2 className="text-xl font-bold mb-4">Edit Task</h2>
+                    <form onSubmit={handleUpdateTask} className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Project
+                            </label>
+                            <select
+                                required
+                                value={editTask.project_id}
+                                onChange={(e) =>
+                                    setEditTask({
+                                        ...editTask,
+                                        project_id: e.target.value,
+                                        milestone_id: "",
+                                    })
+                                }
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value="">Select Project</option>
+                                {projects.map((p) => (
+                                    <option key={p.project_id} value={p.project_id}>
+                                        {p.project_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Milestone
+                            </label>
+                            <select
+                                required
+                                value={editTask.milestone_id}
+                                onChange={(e) =>
+                                    setEditTask({ ...editTask, milestone_id: e.target.value })
+                                }
+                                disabled={!editTask.project_id}
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value="">Select Milestone</option>
+                                {milestones.map((m) => (
+                                    <option key={m.milestone_id} value={m.milestone_id}>
+                                        {m.milestone_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Assign To
+                            </label>
+                            <select
+                                required
+                                value={editTask.user_id}
+                                onChange={(e) =>
+                                    setEditTask({ ...editTask, user_id: e.target.value })
+                                }
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value="">Select Team Member</option>
+                                {users.map((u) => (
+                                    <option key={u.user_id} value={u.user_id}>
+                                        {u.username}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Task Name
+                            </label>
+                            <input
+                                required
+                                value={editTask.task_name}
+                                onChange={(e) =>
+                                    setEditTask({ ...editTask, task_name: e.target.value })
+                                }
+                                className="w-full p-2 border rounded"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Due Date
+                            </label>
+                            <input
+                                type="date"
+                                required
+                                value={editTask.due_date}
+                                onChange={(e) =>
+                                    setEditTask({ ...editTask, due_date: e.target.value })
+                                }
+                                className="w-full p-2 border rounded"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Priority
+                            </label>
+                            <select
+                                required
+                                value={editTask.priority}
+                                onChange={(e) =>
+                                    setEditTask({ ...editTask, priority: e.target.value })
+                                }
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value="">Select Priority</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Status
+                            </label>
+                            <select
+                                required
+                                value={editTask.status}
+                                onChange={(e) =>
+                                    setEditTask({ ...editTask, status: e.target.value })
+                                }
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value="">Select Status</option>
+                                <option value="todo">To Do</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2">
+                            <button
+                                type="button"
+                                onClick={handleCancel}
+                                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="px-4 py-2 cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400 flex items-center gap-2"
+                            >
+                                {isLoading && (
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                )}
+                                {isLoading ? "Updating..." : "Update Task"}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
-    );
-};
+        );
+    };
 
 
 interface TeamProps {
@@ -788,7 +801,7 @@ interface TeamProps {
 /* -------------------------------------------------------------------------- */
 /*                               MAIN COMPONENT                               */
 /* -------------------------------------------------------------------------- */
-const TeamTasks: React.FC<TeamProps> = ({user}) => {
+const TeamTasks: React.FC<TeamProps> = ({ user }) => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
     const [users, setUsers] = useState<User[]>([]);
@@ -805,6 +818,7 @@ const TeamTasks: React.FC<TeamProps> = ({user}) => {
     const [isDeleteOpen, setDeleteOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [selectedTaskIdForDelete, setSelectedTaskIdForDelete] = useState<number | null>(null);
+
     const [newTask, setNewTask] = useState({
         project_id: "",
         milestone_id: "",
@@ -886,7 +900,7 @@ const TeamTasks: React.FC<TeamProps> = ({user}) => {
                     setTimeout(() => {
                         const arr = Array.isArray(data) ? data : data.tasks || [];
                         setTasks(arr);
-                        
+
                     }, 1000);
                 }
             })
@@ -894,7 +908,7 @@ const TeamTasks: React.FC<TeamProps> = ({user}) => {
             .finally(() => {
                 if (mounted) {
                     setTimeout(() => {
-                        
+
                         setIsLoading(false);
                     }, 1000);
                 }
@@ -982,7 +996,7 @@ const TeamTasks: React.FC<TeamProps> = ({user}) => {
                 );
                 const data = await fresh.json();
                 setTimeout(() => {
-                    
+
                     setTasks(Array.isArray(data) ? data : data.tasks || []);
                 }, 1000);
             } catch (err) {
@@ -1019,8 +1033,26 @@ const TeamTasks: React.FC<TeamProps> = ({user}) => {
                         status: escapeHTML(editTask.status),
                     }),
                 });
+                let msg;
+                const data2 = await res.json();
+                if (data2.success === false && data2.error) {
 
-                if (!res.ok) throw new Error("Update failed");
+                    setIsLoading(false);
+
+                    msg = data2.error;
+                    setEditOpen(false);
+                    toast.error(msg || "Failed to update task.");
+                    return
+
+
+                }
+                if (!res.ok) {
+                    setIsLoading(false);
+                    setEditOpen(false);
+                    toast.error("Failed to update task.");
+                    return
+                }
+
                 toast.success("Task updated");
                 setEditOpen(false);
                 setEditTask({
@@ -1072,7 +1104,25 @@ const TeamTasks: React.FC<TeamProps> = ({user}) => {
                     body: JSON.stringify({ task_id: escapeHTML(String(selectedTaskIdForDelete)) }),
                 });
 
-                if (!res.ok) throw new Error("Delete failed");
+                let msg;
+                const data2 = await res.json();
+
+                if (data2.success === false && data2.error) {
+                    setDeleteOpen(false);
+                    setSelectedTaskIdForDelete(null);
+                    msg = data2.error;
+                    toast.error(msg || "Failed to delete task.");
+
+                    return
+                }
+
+                if (!res.ok) {
+                    setIsLoading(false);
+                    setDeleteOpen(false);
+                    setSelectedTaskIdForDelete(null);
+                    toast.error("Failed to delete task.");
+                    return
+                }
                 toast.success("Task deleted");
                 setDeleteOpen(false);
                 setSelectedTaskIdForDelete(null);
@@ -1177,7 +1227,7 @@ const TeamTasks: React.FC<TeamProps> = ({user}) => {
 
     return (
         <div className="flex w-full min-h-screen bg-gray-100">
-            <Sidebar user={user}/>
+            <Sidebar user={user} />
             <main className="flex-1 overflow-y-auto p-8 bg-gray-100 h-screen">
                 <div className="max-w-7xl mx-auto">
                     <header className="mb-8 mt-15 flex justify-between items-center">
@@ -1192,7 +1242,7 @@ const TeamTasks: React.FC<TeamProps> = ({user}) => {
                             onClick={() => setAssignOpen(true)}
                             className="flex items-center justify-center cursor-pointer rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
                         >
-                            <Plus size={18}/>
+                            <Plus size={18} />
                             Assign Task
                         </button>
                     </header>
@@ -1262,6 +1312,7 @@ const TeamTasks: React.FC<TeamProps> = ({user}) => {
                             formatDate={formatDate}
                             handleEdit={handleEdit}
                             handleView={handleView}
+                            isloading={isLoading}
                             handleOpenDeleteModal={handleOpenDeleteModal}
                         />
                     )}

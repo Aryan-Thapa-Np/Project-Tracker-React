@@ -60,10 +60,10 @@ const LogsPage: React.FC<LogsProps> = ({ user }) => {
       });
       let msg: string;
       const data = await res.json();
-      if (!res.ok && data.success === false) {
+      if (!res.ok || data.success === false) {
 
         msg = data.error;
-        return toast.error(msg);
+        return toast.error(msg||"Failed to fetch logs.");
       }
 
       setLogs(data);
