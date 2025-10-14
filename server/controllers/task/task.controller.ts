@@ -182,6 +182,56 @@ export const updateTaskController = async (req: Request, res: Response) => {
             [pid, mid, assignee, task_name, due_date || null, status.toLowerCase(), priority.toLowerCase(), tid]
         );
 
+
+
+
+
+        let totalMilestones = 0;
+        let completedCount = 0;
+
+        const [data] = await pool.execute(`select milestone_id,project_id from tasks where task_id =?`, [tid]);
+        const finalData = (data as Milestone[])[0];
+
+
+        if (status.toLowerCase() === "completed") {
+            const [result2] = await pool.execute(
+                "UPDATE milestones SET completed = true WHERE milestone_id = ? ",
+                [finalData.milestone_id]
+            );
+        } else {
+            const [result3] = await pool.execute(
+                "UPDATE milestones SET completed = false WHERE milestone_id = ? ",
+                [finalData.milestone_id]
+            );
+        }
+
+
+        const [countsRows] = await pool.execute(
+            `SELECT 
+         COUNT(*) as total,
+         SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed
+       FROM milestones
+       WHERE project_id = ?`,
+            [finalData.project_id]
+        );
+
+        const counts: { total: number; completed: number } = Array.isArray(countsRows) && countsRows.length > 0
+            ? (countsRows[0] as { total: number; completed: number })
+            : { total: 0, completed: 0 };
+        totalMilestones = Number(counts.total || 0);
+        completedCount = Number(counts.completed || 0);
+
+        const progress_percentage = totalMilestones > 0 ? Math.round((completedCount / totalMilestones) * 100) : 0;
+        await pool.execute(`UPDATE projects SET progress_percentage = ? WHERE project_id = ?`, [progress_percentage, finalData.project_id]);
+
+
+
+
+
+
+
+
+
         res.status(200).json({
             success: true,
             message: "Task updated successfully"
@@ -290,32 +340,35 @@ export const updateTaskStatusController = async (req: Request, res: Response) =>
                 "UPDATE milestones SET completed = true WHERE milestone_id = ? ",
                 [finalData.milestone_id]
             );
-
-
-            const [countsRows] = await pool.execute(
-                `SELECT 
-         COUNT(*) as total,
-         SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed
-       FROM milestones
-       WHERE project_id = ?`,
-                [finalData.project_id]
-            );
-
-            const counts: { total: number; completed: number } = Array.isArray(countsRows) && countsRows.length > 0
-                ? (countsRows[0] as { total: number; completed: number })
-                : { total: 0, completed: 0 };
-            totalMilestones = Number(counts.total || 0);
-            completedCount = Number(counts.completed || 0);
-
-            const progress_percentage = totalMilestones > 0 ? Math.round((completedCount / totalMilestones) * 100) : 0;
-            await pool.execute(`UPDATE projects SET progress_percentage = ? WHERE project_id = ?`, [progress_percentage, finalData.project_id]);
-
         } else {
             const [result3] = await pool.execute(
                 "UPDATE milestones SET completed = false WHERE milestone_id = ? ",
                 [finalData.milestone_id]
             );
         }
+
+
+        const [countsRows] = await pool.execute(
+            `SELECT 
+         COUNT(*) as total,
+         SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed
+       FROM milestones
+       WHERE project_id = ?`,
+            [finalData.project_id]
+        );
+
+        const counts: { total: number; completed: number } = Array.isArray(countsRows) && countsRows.length > 0
+            ? (countsRows[0] as { total: number; completed: number })
+            : { total: 0, completed: 0 };
+        totalMilestones = Number(counts.total || 0);
+        completedCount = Number(counts.completed || 0);
+
+        const progress_percentage = totalMilestones > 0 ? Math.round((completedCount / totalMilestones) * 100) : 0;
+        await pool.execute(`UPDATE projects SET progress_percentage = ? WHERE project_id = ?`, [progress_percentage, finalData.project_id]);
+
+
+
+
 
         if (!result || (result as ResultSetHeader).affectedRows === 0) {
             return res.status(404).json({ success: false, error: "Task not found or not yours" });

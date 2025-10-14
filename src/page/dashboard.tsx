@@ -102,7 +102,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 });
 
                 const data = await res.json();
-                console.log(data);
 
                 if (!res.ok || data.success === false) {
                     setIsLoadingProjects(false);
@@ -279,7 +278,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                                     <div key={i} className="mb-5">
                                         <div className="flex items-center gap-3 mb-2">
                                             <img
-                                                src={member.profile_pic}
+                                                src={member.profile_pic?member.profile_pic:"/image.png"}
                                                 alt={member.username}
                                                 className="w-8 h-8 rounded-full object-cover border"
                                             />
@@ -292,7 +291,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                                                     } relative h-4 flex items-center justify-center text-white text-xs font-semibold text-center`}
                                             >
                                             </div>
-                                            <span className={`${parseInt(member.progress_percentage) > 0? `text-white font-semibold` :"text-black font-semibold" } text-sm absolute top-[1px] left-1/2 transform -translate-x-1/2 -translate-y-1`}>
+                                            <span className={`${parseInt(member.progress_percentage) > 0? `text-white font-semibold  drop-shadow-black drop-shadow-sm ` :"text-black font-semibold" } text-xs absolute top-[3px] left-1/2 transform -translate-x-1/2 -translate-y-1`}>
                                               {Math.floor(Number(member.progress_percentage))}%
                                             </span>
                                         </div>
@@ -335,13 +334,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                                                 </span>
                                                 <span className="text-gray-500 font-semibold">{formatDate(deadline.due_date)}</span>
                                             </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                                            <div className="relative w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                                                 <div
-                                                    className="bg-green-500 h-4 flex items-center justify-center text-white text-xs font-semibold"
+                                                    className={`${parseInt(deadline.progress_percentage) > 40 ? `bg-green-500` : `bg-yellow-400`} h-4 flex items-center justify-center text-white text-xs font-semibold`}
                                                     style={{ width: `${deadline.progress_percentage}%` }}
                                                 >
-                                                    {deadline.progress_percentage}%
                                                 </div>
+                                                <span className={`${parseInt(deadline.progress_percentage) > 0? `text-white font-semibold drop-shadow-black drop-shadow-sm ` :"text-black font-semibold" }  text-xs absolute  top-[3px] left-1/2 transform -translate-x-1/2 -translate-y-1`}>
+                                              {Math.floor(Number(deadline.progress_percentage))}%
+                                            </span>
                                             </div>
                                         </li>
                                     ))

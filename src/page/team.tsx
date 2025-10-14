@@ -871,7 +871,11 @@ const TeamTasks: React.FC<TeamProps> = ({ user }) => {
                 })
                 .catch(() => toast.error("Failed to load users")),
         ]).finally(() => {
-            if (mounted) setIsLoading(false);
+            if (mounted) {
+                setTimeout(() => {
+                     setIsLoading(false);
+                }, 1000);
+               }
         });
 
         return () => {
@@ -1009,6 +1013,8 @@ const TeamTasks: React.FC<TeamProps> = ({ user }) => {
         },
         [newTask, filters]
     );
+
+    
 
     const handleUpdateTask = useCallback(
         async (e: React.FormEvent) => {
