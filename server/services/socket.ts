@@ -8,10 +8,11 @@ export const initNotificationSocket = (serverIo: Server) => {
 };
 
 // Emit a notification to everyone
-export const emitNotification = (data: { message: string; count?: number }) => {
+export const emitNotification = ( count?: number ) => {
   if (!io) {
     console.warn("Socket.IO not initialized yet!");
     return;
   }
-  io.emit("notification", data);
+  console.log("yesss");
+  io.emit("notification", count);
 };

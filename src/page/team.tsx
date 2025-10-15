@@ -127,12 +127,12 @@ const ViewTaskModal: React.FC<{
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-2xl">
+            <div className="bg-white rounded-sm shadow-2xl p-8 w-full max-w-2xl">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-semibold text-gray-800">Task Details</h2>
                     <button
                         onClick={() => setModalOpen(false)}
-                        className="text-gray-500 hover:text-gray-700 transition-colors"
+                        className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
                     >
                         <X size={24} />
                     </button>
@@ -182,7 +182,7 @@ const ViewTaskModal: React.FC<{
                 <div className="mt-8 flex justify-end">
                     <button
                         onClick={() => setModalOpen(false)}
-                        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
+                        className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
                     >
                         Close
                     </button>
@@ -205,12 +205,12 @@ const DeleteTaskModal: React.FC<{
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+            <div className="bg-white rounded-sm shadow-2xl p-6 w-full max-w-md">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold text-gray-800">Confirm Deletion</h2>
                     <button
                         onClick={() => setModalOpen(false)}
-                        className="text-gray-500 hover:text-gray-700 transition-colors"
+                        className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
                     >
                         <X size={20} />
                     </button>
@@ -219,7 +219,7 @@ const DeleteTaskModal: React.FC<{
                 <div className="flex justify-end gap-3">
                     <button
                         onClick={() => setModalOpen(false)}
-                        className="px-4 py-2 bg-gray-300 text-gray-800  rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
+                        className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
                     >
                         Cancel
                     </button>
@@ -431,7 +431,7 @@ const AssignTaskModal: React.FC<{
 
         return (
             <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+                <div className="bg-white rounded-sm p-6 w-full max-w-md shadow-lg">
                     <h2 className="text-xl font-bold mb-4">Assign Task</h2>
                     <form onSubmit={handleAssignTask} className="space-y-4">
                         <div>
@@ -551,7 +551,7 @@ const AssignTaskModal: React.FC<{
                             <button
                                 type="button"
                                 onClick={handleCancel}
-                                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
+                                className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
                             >
                                 Cancel
                             </button>
@@ -634,7 +634,7 @@ const EditTaskModal: React.FC<{
 
         return (
             <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+                <div className="bg-white rounded-sm p-6 w-full max-w-md shadow-lg">
                     <h2 className="text-xl font-bold mb-4">Edit Task</h2>
                     <form onSubmit={handleUpdateTask} className="space-y-4">
                         <div>
@@ -770,7 +770,7 @@ const EditTaskModal: React.FC<{
                             <button
                                 type="button"
                                 onClick={handleCancel}
-                                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
+                                className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
                             >
                                 Cancel
                             </button>

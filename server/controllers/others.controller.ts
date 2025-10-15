@@ -21,6 +21,13 @@ import {
 import {
     getLogsController
 } from "./logs/logs.Controller.ts";
+import {
+    getNotificationsController,
+    markAsReadController,
+    markAllAsReadController,
+    deleteNotificationController
+
+} from "./notifications/notification.controller.ts";
 
 
 
@@ -39,5 +46,10 @@ export {
     getSimpleProjectsController,
     getTeamProgressController,
     updateProjectController,
-    deleteProjectController
+    deleteProjectController,
+    getNotificationsController,
+    markAsReadController,
+    markAllAsReadController,
+    deleteNotificationController
+
 }

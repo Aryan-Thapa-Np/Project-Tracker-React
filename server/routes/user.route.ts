@@ -8,16 +8,30 @@ import {
     getUsersNamesController,
     updateUserController
 } from "../controllers/user.controller.ts";
+
+import {
+    getNotificationsController,
+    markAsReadController,
+    markAllAsReadController,
+    deleteNotificationController
+} from "../controllers/others.controller.ts";
 import {
     createUserValidation,
     getUsersValidation,
     updateUsersValidation,
-    updateUserSelfValidation
+    updateUserSelfValidation,
+    getNotificationsValidator,
+    markAsReadValidator,
+    deleteNotificationValidator
 } from "../middleware/validator.ts";
 import {
     universalLimiter,
     normalLimiter
 } from "../middleware/ratelimit.ts";
+
+
+
+
 
 import {
     checkPermission
@@ -39,6 +53,14 @@ router.post("/users/updateusersData", verifyCsrfTokenMiddleware, authenticateUse
 
 
 router.get("/users/userNames", normalLimiter, authenticateUserMiddleware, getUsersNamesController as RequestHandler);
+
+
+
+router.get("/users/getnotifications", normalLimiter, getNotificationsValidator, authenticateUserMiddleware, getNotificationsController as RequestHandler)
+router.patch("/users/markasread/:id", normalLimiter,verifyCsrfTokenMiddleware, markAsReadValidator, authenticateUserMiddleware, markAsReadController as RequestHandler)
+router.patch("/users/markallasread", normalLimiter,verifyCsrfTokenMiddleware, authenticateUserMiddleware, markAllAsReadController as RequestHandler)
+router.delete("/users/deletenotification/:id", normalLimiter,verifyCsrfTokenMiddleware, deleteNotificationValidator, authenticateUserMiddleware, deleteNotificationController as RequestHandler)
+
 
 
 

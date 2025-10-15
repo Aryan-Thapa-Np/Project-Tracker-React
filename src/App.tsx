@@ -30,7 +30,18 @@ function App() {
 
             <Header />
             <Dashboard />
-
+            <ToastContainer
+              className="px-5 pt-1 text-sm "
+              position="top-center"
+              autoClose={3000}
+              hideProgressBar={true}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
 
           </PrivateRoute>
         } />
@@ -153,10 +164,22 @@ function App() {
         } />
 
         <Route path="/notifications" element={
-          <>
+          <PrivateRoute>
             <Header />
             <Notifications />
-          </>
+            <ToastContainer
+              className="px-5 pt-1 text-sm "
+              position="top-center"
+              autoClose={3000}
+              hideProgressBar={true}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
+          </PrivateRoute>
         } />
         <Route path="/resetPassword" element={
           <>

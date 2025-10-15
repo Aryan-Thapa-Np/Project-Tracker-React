@@ -1,7 +1,7 @@
 import pool from '../../database/db.ts';
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import type { QueryError } from "mysql2";
+import type { QueryError, ResultSetHeader } from "mysql2";
 import type { AuthenticatedRequest } from "../../types/auth.types.ts";
 import path from "path";
 import type { MulterRequest } from "../../types/multerTypes.ts";
@@ -9,9 +9,9 @@ import fs from "fs";
 import { insertLog } from "../../services/logger.ts";
 import { pushNotifications } from "../../services/notifiaction.ts";
 import type { User } from "../../types/usersTypes.ts";
+import { sanitizeInput } from "../../utils/sanitize.ts";
 
 import { validRoles } from "../../middleware/valiRoles.ts";
-
 
 export const getUsersController = async (req: Request, res: Response) => {
     try {
@@ -40,7 +40,7 @@ export const getUsersController = async (req: Request, res: Response) => {
         if (search && typeof search === "string") {
             baseQuery += " AND (username LIKE ? OR email LIKE ?)";
             const searchValue = `%${search}%`;
-            params.push(searchValue, searchValue);
+            params.push(searchValue, sanitizeInput(searchValue));
         }
 
         if (role && typeof role === "string") {
@@ -92,6 +92,10 @@ export const updateUserController = async (req: Request, res: Response) => {
     try {
         const { user_id, status, status_expire, role, email_verified } = req.body;
         const user_role = (req as AuthenticatedRequest).user.role;
+        const user_id2 = (req as AuthenticatedRequest).user.id;
+
+        const username2 = (req as AuthenticatedRequest).user.username;
+
         if (!user_id) {
             return res.status(400).json({ success: false, error: "user_id is required" });
         }
@@ -108,9 +112,9 @@ export const updateUserController = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, error: "Invalid role" });
         }
 
-        const [rows] = await pool.execute(`select role from users where user_id =?`, [user_id]);
+        const [rows] = await pool.execute(`select role,username from users where user_id =?`, [user_id]);
         const user = (rows as User[])[0];
-    
+
 
         if (user.role === "admin") {
             if (user_role !== "admin") {
@@ -162,6 +166,8 @@ export const updateUserController = async (req: Request, res: Response) => {
 
         const [result] = await pool.execute(query, params);
 
+        insertLog(user_id2, username2, 8, `Username : ${user.username} with Id : ${user_id}`);
+        await pushNotifications("user", user_id, ` Profile was updated successfully by ${username2}`, "none", user_role, req, res);
         res.status(200).json({ success: true, message: "User updated successfully" });
 
     } catch (error) {
@@ -180,6 +186,7 @@ export const updateUserSelfController = async (req: Request, res: Response) => {
         const role = (req as AuthenticatedRequest).user.role;
 
 
+
         if (!user_id) {
             return res.status(400).json({ success: false, error: "user_id is required" });
         }
@@ -189,12 +196,12 @@ export const updateUserSelfController = async (req: Request, res: Response) => {
 
         if (username) {
             updates.push("username = ?");
-            params.push(username);
+            params.push(sanitizeInput(username));
         }
 
         if (email) {
 
-            const [rows] = await pool.execute(`select username,email from users where email =?`, [email]);
+            const [rows] = await pool.execute(`select username, email from users where email =? `, [email]);
             if (!Array.isArray(rows) || rows.length !== 0) {
                 return res.status(401).json({ success: false, error: 'Email already in use.' });
             }
@@ -224,7 +231,7 @@ export const updateUserSelfController = async (req: Request, res: Response) => {
                 }
             }
 
-            const profilePicPath = `${process.env.VITE_BACKEND_URL || "http://localhost:4000"}/user/${user_id}/${multerReq.file.filename}`;
+            const profilePicPath = `${process.env.VITE_BACKEND_URL || "http://localhost:4000"} / user / ${user_id} / ${multerReq.file.filename}`;
             updates.push("profile_pic = ?");
             params.push(profilePicPath);
         }
@@ -235,12 +242,11 @@ export const updateUserSelfController = async (req: Request, res: Response) => {
 
         params.push(user_id);
 
-        const query = `UPDATE users SET ${updates.join(", ")} WHERE user_id = ?`;
+        const query = `UPDATE users SET ${updates.join(", ")} WHERE user_id = ? `;
         await pool.execute(query, params);
 
-        insertLog(user_id, username2, 8);
+        insertLog(user_id, username2, 8, "User");
         await pushNotifications("user", user_id, "Profile updated successfully", "none", role, req, res);
-
         return res.status(200).json({ success: true, message: "Profile updated successfully" });
     } catch (error) {
         console.error("Update user error:", error);
@@ -251,24 +257,32 @@ export const updateUserSelfController = async (req: Request, res: Response) => {
 export const createUserController = async (req: Request, res: Response) => {
     try {
         const { username, email, password, role } = req.body;
+        const username2 = (req as AuthenticatedRequest).user.username;
+        const user_id = (req as AuthenticatedRequest).user.id;
+
+        const user_role = (req as AuthenticatedRequest).user.role;
 
         if (!username || !email || !password) {
             return res.status(400).json({ success: false, error: "username, email, and password are required" });
         }
 
         // Optional: validate role
-        const validRoles = ["admin", "project_manager", "team_member"];
-        const userRole = role && validRoles.includes(role) ? role : "team_member";
+        const validRoles2 = validRoles;
+        const userRole = role && validRoles2.includes(role) ? role : "team_member";
 
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Insert user
-        const [result] = await pool.execute(
-            `INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
-            [username, email, hashedPassword, userRole]
+        const [result] = await pool.execute<ResultSetHeader>(
+            `INSERT INTO users(username, email, password, role) VALUES(?, ?, ?, ?)`,
+            [sanitizeInput(username), email, hashedPassword, userRole]
         );
 
+        const id = result.insertId;
+
+        insertLog(user_id, username2, 9, `Username : ${username} with Id : ${id}`);
+        await pushNotifications("user", user_id, `Username : ${username} with Id : ${id} was created successfully`, "none", user_role, req, res);
         res.status(201).json({ success: true, message: "User created successfully" });
 
     } catch (error) {
@@ -302,7 +316,7 @@ export const getUsersNamesController = async (req: Request, res: Response) => {
         }
 
 
-        const [rows] = await pool.execute(`select username,user_id from users `);
+        const [rows] = await pool.execute(`select username, user_id from users`);
         if (!Array.isArray(rows) || rows.length === 0) {
             return res.status(201).json({
                 success: false,

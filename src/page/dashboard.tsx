@@ -5,7 +5,7 @@ import type { User } from "../types/usersFTypes.tsx";
 import { getCsrfToken } from '../sub-components/csrfToken.tsx';
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { toast } from "react-toastify";
-import { CalendarClock, MessageCircleWarning, Search } from "lucide-react";
+import { CalendarClock, MessageCircleWarning } from "lucide-react";
 
 interface DashboardProps {
     user?: User | null;

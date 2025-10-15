@@ -142,7 +142,7 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
 
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="mt-4 flex items-center gap-2 cursor-pointer px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+                            className="mt-4 flex items-center gap-2 cursor-pointer px-5 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
                         >
                             Update Profile
                         </button>
@@ -207,14 +207,14 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
                         <div className="flex justify-end gap-3 mt-6">
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="px-4 py-2 bg-gray-200 rounded-sm cursor-pointer hover:bg-gray-300 transition"
+                                className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleUpdate}
                                 disabled={loading}
-                                className="px-4 py-2 bg-blue-600 text-white cursor-pointer rounded-sm hover:bg-blue-700 shadow transition disabled:opacity-50"
+                                className="px-4 py-2 bg-blue-600 text-white cursor-pointer rounded hover:bg-blue-700 shadow transition disabled:opacity-50"
                             >
                                 {loading ? "Updating..." : "Save Changes"}
                             </button>

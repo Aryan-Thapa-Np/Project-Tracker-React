@@ -263,7 +263,7 @@ const UserManagement: React.FC<UsersProps> = ({user}) => {
                     {/* Create Modal */}
                     {showCreateModal && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                            <div className="bg-white rounded-sm p-6 w-full max-w-md">
                                 <h2 className="text-xl font-semibold mb-4">Create New User</h2>
                                 <form onSubmit={handleCreateUser} className="flex flex-col gap-4">
                                     <input type="text" placeholder="Username" required className="border rounded px-3 py-2" value={newUser.username} onChange={e => setNewUser({ ...newUser, username: sanitizeInput(e.target.value) })} />
@@ -273,7 +273,7 @@ const UserManagement: React.FC<UsersProps> = ({user}) => {
                                         {roles.map(r => <option key={r} value={r}>{r.replace("_", " ")}</option>)}
                                     </select>
                                     <div className="flex justify-end gap-2 mt-2">
-                                        <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 rounded border bg-gray-200 hover:bg-gray-300 cursor-pointer">Cancel</button>
+                                        <button type="button" onClick={() => setShowCreateModal(false)} className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                                         <button type="submit" className="px-4 py-2 cursor-pointer rounded bg-blue-600 text-white hover:bg-blue-700">Create</button>
                                     </div>
                                 </form>
@@ -284,7 +284,7 @@ const UserManagement: React.FC<UsersProps> = ({user}) => {
                     {/* Edit Modal */}
                     {showEditModal && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                            <div className="bg-white rounded-sm p-6 w-full max-w-md">
                                 <h2 className="text-xl font-semibold mb-4">Edit User</h2>
                                 <form onSubmit={handleUpdateUser} className="flex flex-col gap-4">
                                     <input type="text" placeholder="Username" disabled className="border rounded px-3 py-2" value={editUser.username} />
@@ -303,7 +303,7 @@ const UserManagement: React.FC<UsersProps> = ({user}) => {
                                         <option value="false">No</option>
                                     </select>
                                     <div className="flex justify-end gap-2 mt-2">
-                                        <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 rounded border bg-gray-200 hover:bg-gray-300 cursor-pointer">Cancel</button>
+                                        <button type="button" onClick={() => setShowEditModal(false)} className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                                         <button type="submit" className="px-4 py-2 rounded bg-blue-600 cursor-pointer text-white hover:bg-blue-700">Update</button>
                                     </div>
                                 </form>

@@ -9,5 +9,6 @@ export interface AuthenticatedRequest extends Request {
         role: string;
         profile_pic: string;
         username:string;
+        notification_count:number;
     };
 }

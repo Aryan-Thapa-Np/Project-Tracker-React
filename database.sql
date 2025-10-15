@@ -62,7 +62,7 @@ CREATE TABLE notifications (
     type ENUM('Task', 'Deadline', 'user', 'new_member', 'Document_update', 'announcement') NOT NULL,
     title VARCHAR(255) NOT NULL,
     project VARCHAR(255) DEFAULT 'none',
-    icon_class VARCHAR(100) NOT NULL DEFAULT 'faBell',
+    icon_class VARCHAR(100) NOT NULL DEFAULT 'Bell',
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../sub-components/sidebar.tsx";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+
 import { Clipboard, ChevronLeft, ChevronRight,SquarePen } from "lucide-react";
 import { toast } from "react-toastify";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
@@ -358,7 +357,7 @@ const Task: React.FC<TaskProps> = ({user}) => {
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setSelectedTask(null)}
-                                    className="px-4 py-2 rounded border bg-gray-200 hover:bg-gray-300 cursor-pointer"
+                                    className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
                                     aria-label="Cancel status update"
                                 >
                                     Cancel

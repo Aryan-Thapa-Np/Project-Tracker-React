@@ -568,7 +568,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
         {/* Create Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="bg-white rounded-lg max-w-2xl w-full p-6 shadow-lg max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-sm max-w-2xl w-full p-6 shadow-lg max-h-[90vh] overflow-y-auto">
               <h3 className="text-xl font-semibold mb-4">Create Project</h3>
               <div className="space-y-3">
                 <input
@@ -606,7 +606,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                 </div>
 
                 <div className="flex items-center justify-end gap-2 mt-4">
-                  <button onClick={() => setShowCreateModal(false)} className="px-4 py-2 rounded border bg-gray-200 hover:bg-gray-300 cursor-pointer">Cancel</button>
+                  <button onClick={() => setShowCreateModal(false)} className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                   <button onClick={createProject} className="flex items-center justify-center cursor-pointer rounded bg-blue-600 px-4 py-2  font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors">Create</button>
                 </div>
               </div>
@@ -617,7 +617,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
         {/* Edit Modal */}
         {showEditModal && editingProject && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="bg-white rounded-lg max-w-2xl w-full p-6 shadow-lg max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-sm max-w-2xl w-full p-6 shadow-lg max-h-[90vh] overflow-y-auto">
               <span className="flex justify-between items-center ">
                 <h3 className="text-xl font-semibold mb-4">Edit Project</h3>
                 <button onClick={() => showDeleteProjectModal(editingProject.project_id)}>
@@ -673,7 +673,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                 </div>
 
                 <div className="flex items-center justify-end gap-2 mt-4">
-                  <button onClick={() => { setShowEditModal(false); setEditingProject(null); setRemovedMilestoneIds([]); }} className="cursor-pointer px-4 py-2 border rounded">Cancel</button>
+                  <button onClick={() => { setShowEditModal(false); setEditingProject(null); setRemovedMilestoneIds([]); }} className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                   <button onClick={updateProject} className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded">Save</button>
                 </div>
               </div>
@@ -684,7 +684,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
         {/* View Details Modal */}
         {showViewModal && viewingProject && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="bg-white rounded-lg max-w-3xl w-full p-6 shadow-lg max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-sm max-w-3xl w-full p-6 shadow-lg max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900">{escapeMinimal(viewingProject.project_name)}</h3>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { User } from "../types/usersFTypes.tsx";
 import { Link } from 'react-router-dom';
 import {
@@ -34,6 +34,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
     const [hamburgerChange, setHamburgerChange] = useState<boolean>(false);
+    const [notiCount, setNoticount] = useState<number | undefined>(0);
 
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => {
@@ -49,16 +50,32 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
 
 
     useEffect(() => {
+        setNoticount(user?.notification_count);
+
+
+    }, [user?.notification_count]);
+
+
+    const updateBadge = useCallback((data: number) => {
+        setNoticount(data !== undefined ? data : user?.notification_count);
+    }, [user?.notification_count]);
+
+
+    useEffect(() => {
         const socket = getSocket();
 
-        socket.on("notification", (msg: string) => {
-            console.log("Notification:", msg);
+        socket.on("notification", (count: number) => {
+            console.log("running");
+            updateBadge(Number(count));
+          
         });
 
         return () => {
             socket.off("notification");
         };
     }, []);
+
+
 
 
     const toggleSidebar = () => {
@@ -68,7 +85,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
     };
 
     const changeToggle = () => setHamburgerChange(false);
-    
+
     useEffect(() => {
         window.addEventListener('toggleIcon', changeToggle);
         return () => window.removeEventListener('toggleIcon', changeToggle);
@@ -141,8 +158,9 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                 <div className="headerIcons relative p-[5px]">
                     <Link to="/notifications">
                         <Bell size={18} className="text-[17px] text-gray-600 cursor-pointer" />
-                        <span className="absolute top-[-5px] right-[-5px] bg-red-500 pr-[6px] pl-[6px] rounded-full text-white text-[12px]">
-                            {user?.notification_count || ""}
+                        <span id='countvalueall' className="absolute top-[-5px] right-[-5px] bg-red-500 pr-[6px] pl-[6px] rounded-full text-white text-[12px]">
+                            {notiCount === 0 ? "" : notiCount}
+
                         </span>
                     </Link>
                 </div>

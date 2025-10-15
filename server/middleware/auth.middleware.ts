@@ -5,6 +5,10 @@ import type { AuthenticatedRequest } from "../types/auth.types.ts";
 import type { User } from "../types/usersTypes.ts";
 
 
+interface Noti {
+  notification_count: number;
+}
+
 export const authenticateUserMiddleware = async (
   req: Request,
   res: Response,
@@ -38,11 +42,16 @@ export const authenticateUserMiddleware = async (
           return res.status(401).json({ success: false, error: "Invalid token" });
         }
 
+        const [rows2] = await pool.execute("SELECT count(*) as notification_count FROM notifications WHERE user_id = ? AND is_read = false", [
+          decoded.id,
+        ]);
+
 
 
         const user = (rows as User[])[0];
-   
-        (req as AuthenticatedRequest).user = { id: user.user_id, email: user.email, role: user.role, profile_pic: user.profile_pic, username: user.username };
+        const noti = (rows2 as Noti[])[0];
+
+        (req as AuthenticatedRequest).user = { id: user.user_id, email: user.email, role: user.role, profile_pic: user.profile_pic, username: user.username, notification_count: noti.notification_count };
         return next();
       }
     }
@@ -60,9 +69,14 @@ export const authenticateUserMiddleware = async (
       if (!Array.isArray(rows) || rows.length === 0) {
         return res.status(401).json({ success: false, error: "Invalid token" });
       }
+      const [rows2] = await pool.execute("SELECT count(*) as notification_count FROM notifications WHERE user_id = ? AND is_read = false", [
+        decoded.id,
+      ]);
 
       const user = (rows as User[])[0];
-      (req as AuthenticatedRequest).user = { id: user.user_id, email: user.email, role: user.role, profile_pic: user.profile_pic, username: user.username };
+      const noti = (rows2 as Noti[])[0];
+      (req as AuthenticatedRequest).user = { id: user.user_id, email: user.email, role: user.role, profile_pic: user.profile_pic, username: user.username, notification_count: noti.notification_count };
+
 
       const token = jwt.sign(
         { id: user.user_id, email: user.email },

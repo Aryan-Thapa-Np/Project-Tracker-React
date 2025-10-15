@@ -1,4 +1,4 @@
-import { body, query, validationResult } from "express-validator";
+import { body, query, param, validationResult } from "express-validator";
 import type { Request, Response, NextFunction } from 'express';
 
 const validationresults = (req: Request, res: Response, next: NextFunction) => {
@@ -378,6 +378,40 @@ const logsFiltersValidation = [
 ];
 
 
+
+const getNotificationsValidator = [
+    query("type")
+        .optional()
+        .trim()
+        .isIn(["all", "unread"])
+        .withMessage("Type must be either 'all' or 'unread'."),
+    query("search")
+        .optional()
+        .isString()
+        .trim(),
+
+    validationresults,
+];
+
+const markAsReadValidator = [
+    param("id")
+        .notEmpty()
+        .withMessage("Notification ID is required.")
+        .isNumeric()
+        .withMessage("Notification ID must be a Number."),
+    validationresults,
+];
+
+const deleteNotificationValidator = [
+    param("id")
+        .notEmpty()
+        .withMessage("Notification ID is required.")
+        .isNumeric()
+        .withMessage("Notification ID must be an Number."),
+    validationresults,
+];
+
+
 export {
 
     loginValidation,
@@ -396,5 +430,8 @@ export {
     getProjectsValidation,
     getTeamTasksValidation,
     updateUsersValidation,
-    logsFiltersValidation
+    logsFiltersValidation,
+    getNotificationsValidator,
+    markAsReadValidator,
+    deleteNotificationValidator
 };

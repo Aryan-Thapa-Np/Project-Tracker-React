@@ -9,14 +9,15 @@ const actions: string[] = [
     "status was updated to 'In Progress'", //5
     "status was updated to 'Completed'", //6
     "A password reset was performed", //7
-    "User profile information was updated",  //8
-]; 
+    "profile information was updated",  //8
+    "Was Created successfully",  //9
+];
 
 export const insertLog = async (
     userId: number,
     username: string,
     actionIndex: number,
-    more:string = ""
+    more: string = ""
 ): Promise<void> => {
     try {
         // Validate inputs
@@ -27,7 +28,7 @@ export const insertLog = async (
             throw new Error(`Invalid action index: ${actionIndex}`);
         }
 
-        const action = more +" " + actions[actionIndex];
+        const action = more + " " + actions[actionIndex];
 
         const query = `
       INSERT INTO logs (user_id, username, action)
