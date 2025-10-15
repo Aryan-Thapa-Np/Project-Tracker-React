@@ -12,6 +12,7 @@ import {
     faCheckCircle 
 } from '@fortawesome/free-solid-svg-icons';
 
+
 const Notifications:React.FC = ()=>{
     const notifications = [
         { icon: faFileAlt, title: "New task assigned: 'Prepare presentation slides'", project: "Project Alpha", time: "2h ago" },

@@ -12,12 +12,13 @@ import {
     House,
     Settings,
 } from "lucide-react";
-import {sanitizeInput } from "../sub-components/sanitize.tsx";
+import { sanitizeInput } from "../sub-components/sanitize.tsx";
 
 interface HeaderProps {
     user?: User | null;
 }
 
+import { getSocket } from "../lib/sockets.ts";
 
 const info = [
     { symbol: House, title: "Dashboard", link: "/" },
@@ -32,7 +33,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
     const [isFocused, setIsFocused] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
-    const [hamburgerChange, setHamburgerChange] = useState<boolean>(true);
+    const [hamburgerChange, setHamburgerChange] = useState<boolean>(false);
 
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => {
@@ -46,11 +47,33 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
         return () => window.removeEventListener("keydown", handleKey);
     }, []);
 
+
+    useEffect(() => {
+        const socket = getSocket();
+
+        socket.on("notification", (msg: string) => {
+            console.log("Notification:", msg);
+        });
+
+        return () => {
+            socket.off("notification");
+        };
+    }, []);
+
+
     const toggleSidebar = () => {
         setHamburgerChange(prev => !prev);
         const event = new CustomEvent('toggleSidebar', { bubbles: true });
         window.dispatchEvent(event);
     };
+
+    const changeToggle = () => setHamburgerChange(false);
+    
+    useEffect(() => {
+        window.addEventListener('toggleIcon', changeToggle);
+        return () => window.removeEventListener('toggleIcon', changeToggle);
+    }, []);
+
 
     const SideIcon = hamburgerChange ? X : Menu;
 
@@ -78,8 +101,8 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(sanitizeInput(e.target.value))}
                         onFocus={() => setIsFocused(true)}
-                        onBlur={()=> setIsFocused(false)}
-                        
+                        onBlur={() => setIsFocused(false)}
+
                     />
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                     {!isFocused && (
@@ -92,17 +115,17 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                     {isFocused && filteredInfo.length > 0 && (
                         <div
                             className="absolute p-2 text-gray-600 rounded-md top-10 left-0 bg-gray-50 shadow-md w-full max-h-60 overflow-auto z-50"
-                            onMouseDown={(e) => e.preventDefault()} 
+                            onMouseDown={(e) => e.preventDefault()}
                         >
                             <ul>
                                 {filteredInfo.map((item, i) => {
                                     const Icon = item.symbol;
                                     return (
-                                        <li key={i} onClick={()=>searchInputRef.current?.blur()} className='py-1 px-2 hover:bg-gray-300 rounded cursor-pointer'>
+                                        <li key={i} onClick={() => searchInputRef.current?.blur()} className='py-1 px-2 hover:bg-gray-300 rounded cursor-pointer'>
                                             <Link
                                                 to={item.link}
                                                 className="flex items-center gap-2 w-full"
-                                                onClick={() => setIsFocused(false)} 
+                                                onClick={() => setIsFocused(false)}
                                             >
                                                 <Icon size={18} /> {item.title}
                                             </Link>

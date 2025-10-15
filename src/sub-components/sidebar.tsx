@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import type { User } from "../types/usersFTypes.tsx";
 import { Users, Bell, UserCog, ArrowRightToLine, FolderClock, ClipboardCheck, House, Settings, Clock9 } from "lucide-react";
@@ -6,6 +6,7 @@ import { CheckPermSide } from "../sub-components/checkPerm.tsx";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { toast } from "react-toastify";
 import { getCsrfToken } from '../sub-components/csrfToken.tsx';
+import { getSocket } from "../lib/sockets.ts";
 
 
 interface SidebarProps {
@@ -13,23 +14,58 @@ interface SidebarProps {
 }
 
 
+
+
 const Sidebar: React.FC<SidebarProps> = ({ user }) => {
   const location = useLocation();
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const [notiCount, setNoticount] = useState<number | undefined>(0);
+
 
   const getActiveClass = (path: string) =>
     location.pathname === path ? 'bg-black/5 text-[#1173d4]' : 'hover:text-gray-600 hover:bg-black/5';
 
   useEffect(() => {
+
     const handleToggle = () => {
       setIsOpen((prev) => !prev);
     };
+
+    const toggleIcon = () => {
+
+      const event = new CustomEvent('toggleIcon', { bubbles: true });
+      window.dispatchEvent(event);
+    };
+    toggleIcon();
 
     window.addEventListener('toggleSidebar', handleToggle);
     return () => window.removeEventListener('toggleSidebar', handleToggle);
   }, []);
 
+
+  useEffect(() => {
+    setNoticount(user?.notification_count);
+
+
+  }, [user?.notification_count]);
+
+
+  const updateBadge = useCallback((data: number) => {
+    setNoticount(data !== undefined ? data : user?.notification_count);
+  }, [user?.notification_count]);
+
+  useEffect(() => {
+    const socket = getSocket();
+
+    socket.on("notification", (data: { count: number | string }) => {
+      updateBadge(Number(data.count));
+    });
+
+    return () => {
+      socket.off("notification");
+    };
+  }, [updateBadge]);
 
 
 
@@ -119,7 +155,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
               <Bell size={20} />
               <span>Notifications</span>
               <span className="absolute top-[-5px] right-[-5px] cursor-pointer bg-red-500 pr-[6px] pl-[6px] rounded-full text-white text-[12px]">
-                {user?.notification_count || ""}
+                {notiCount}
               </span>
             </Link>
           </li>

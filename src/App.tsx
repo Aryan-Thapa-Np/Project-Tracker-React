@@ -1,6 +1,6 @@
 
 import Header from './sub-components/header.tsx';
-import Dashboard from './page/dashboard.tsx';
+import Dashboard from './page/dashboard';
 import Task from './page/task.tsx';
 import Projects from './page/projects.tsx';
 import TeamTasks from './page/team.tsx';
@@ -14,12 +14,10 @@ import PasswordResetPage from "./page/passwordReset.tsx";
 import SettingsPage from "./page/settings.tsx";
 import LogsPage from "./page/logs.tsx";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import CheckPerm from "./sub-components/checkPerm.tsx";
 import PageNotFound from "./page/404.tsx";
 import InternalServerError from "./page/500.tsx";
 
 import InsufficientPermissionPage from "./page/permisiion.tsx";
-
 
 import './App.css'
 
