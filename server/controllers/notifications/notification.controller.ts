@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import pool from '../../database/db.ts';
 
 import type { AuthenticatedRequest } from "../../types/auth.types.ts";
-import type { ResultSetHeader,RowDataPacket } from 'mysql2/promise';
+import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { sanitizeInput } from "../../utils/sanitize.ts";
 
 
@@ -44,8 +44,8 @@ export const getNotificationsController = async (req: Request, res: Response) =>
 
     // Execute queries
     const [rows] = await pool.query(query, queryParams);
-    const [countResult] = await pool.query<RowDataPacket[]>(countQuery, countParams); 
-    const total = countResult[0].total; 
+    const [countResult] = await pool.query<RowDataPacket[]>(countQuery, countParams);
+    const total = countResult[0].total;
     const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
@@ -134,5 +134,31 @@ export const deleteNotificationController = async (req: Request, res: Response) 
   } catch (error) {
     console.error("Error deleting notification:", error);
     res.status(500).json({ success: false, error: "Internal server error." });
+  }
+};
+
+
+
+interface Notification{
+  notiCount: string;
+}
+export const getNotificationCountController = async (req: Request, res: Response) => {
+  try {
+    const user_id = (req as AuthenticatedRequest).user.id;
+
+
+    if (!user_id) {
+      return res.status(400).json({ success: false, error: 'User ID Missing.' });
+    }
+
+    const [rows] = await pool.execute(`select count(*) as notiCount from notifications where user_id =? and is_read = false`, [user_id]);
+    const notifications = (rows as Notification[])[0];
+    res.status(200).json({
+      success: true,
+      notiCount: notifications.notiCount || 0,
+    });
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 };

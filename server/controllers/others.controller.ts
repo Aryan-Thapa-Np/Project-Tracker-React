@@ -25,7 +25,8 @@ import {
     getNotificationsController,
     markAsReadController,
     markAllAsReadController,
-    deleteNotificationController
+    deleteNotificationController,
+    getNotificationCountController
 
 } from "./notifications/notification.controller.ts";
 
@@ -50,6 +51,7 @@ export {
     getNotificationsController,
     markAsReadController,
     markAllAsReadController,
-    deleteNotificationController
+    deleteNotificationController,
+    getNotificationCountController
 
 }

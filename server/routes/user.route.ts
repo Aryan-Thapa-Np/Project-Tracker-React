@@ -13,7 +13,8 @@ import {
     getNotificationsController,
     markAsReadController,
     markAllAsReadController,
-    deleteNotificationController
+    deleteNotificationController,
+    getNotificationCountController
 } from "../controllers/others.controller.ts";
 import {
     createUserValidation,
@@ -61,6 +62,7 @@ router.patch("/users/markasread/:id", normalLimiter,verifyCsrfTokenMiddleware, m
 router.patch("/users/markallasread", normalLimiter,verifyCsrfTokenMiddleware, authenticateUserMiddleware, markAllAsReadController as RequestHandler)
 router.delete("/users/deletenotification/:id", normalLimiter,verifyCsrfTokenMiddleware, deleteNotificationValidator, authenticateUserMiddleware, deleteNotificationController as RequestHandler)
 
+router.get("/users/getnotificationsCount", normalLimiter, authenticateUserMiddleware, getNotificationCountController as RequestHandler)
 
 
 

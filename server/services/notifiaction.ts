@@ -3,7 +3,7 @@ import type { Request, Response } from 'express';
 import type { User } from "../types/usersTypes.ts";
 import type { AuthenticatedRequest } from "../types/auth.types.ts";
 import { emitNotification } from "./socket.ts";
-
+import { validRoles } from "..//middleware/valiRoles.ts";
 // Notification configuration using switch-case
 function getNotificationConfig(type: string, titleName: string, project: string = "none") {
     switch (type) {
@@ -67,11 +67,11 @@ export const pushNotifications = async (
     titleName: string,
     project: string = "none",
     role: string,
+    reason: string = "normal",
     req: Request,
     res: Response
 ) => {
     try {
-        const noticount = (req as AuthenticatedRequest).user.notification_count;
 
         if (!user_id || !titleName || !type) {
             return res.status(400).json({ success: false, error: "type, user_id & titleName required." });
@@ -80,7 +80,7 @@ export const pushNotifications = async (
         const config = getNotificationConfig(type, titleName, project);
 
         // Special case: ANNOUNCEMENT
-        if (type === "announcement") {
+        if (reason === "announcement") {
             // Only admins and project managers allowed
             if (role !== "admin" && role !== "project_manager") {
                 return res.status(403).json({ success: false, error: "Not authorized to push announcements." });
@@ -108,6 +108,34 @@ export const pushNotifications = async (
             return res.status(201).json({ success: true, message: "Announcement sent to all users." });
         }
 
+        if (type === "allUsers") {
+            if (!validRoles.includes(role)) {
+                return res.status(403).json({ success: false, error: "Not authorized to push Notifications." });
+            }
+
+            // Fetch all users
+            const [users] = await pool.execute("SELECT user_id FROM users");
+
+            // Insert for each user
+            const query = `
+                INSERT INTO notifications (user_id, type, title, project, icon_class)
+                VALUES (?, ?, ?, ?, ?)
+            `;
+
+            for (const u of users as User[]) {
+                await pool.execute(query, [
+                    u.user_id,
+                    type,
+                    config.title,
+                    config.project ?? "none",
+                    config.icon_class
+                ]);
+            }
+
+            return res.status(201).json({ success: true, message: "Notifications sent to all users." });
+        }
+
+
         // Normal notification
         const query = `
             INSERT INTO notifications (user_id, type, title, project, icon_class)
@@ -123,9 +151,7 @@ export const pushNotifications = async (
         ]);
 
         try {
-            const val: number = Number(noticount + 1);
-            console.log("emmmm",val);
-            emitNotification(val);
+            emitNotification("updateNotifications");
 
         } catch (error) {
             console.error(error);
