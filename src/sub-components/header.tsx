@@ -65,7 +65,6 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
         const socket = getSocket();
 
         socket.on("notification", (count: number) => {
-            console.log("running");
             updateBadge(Number(count));
           
         });
