@@ -52,7 +52,7 @@ export const emitNotificationToUser = (userId: number, noticount: number) => {
 };
 
 // Emit a global notification
-export const emitNotification = (message: string) => {
+export const emitNotification = (noticount: number) => {
   if (!io) return console.warn("Socket.IO not initialized yet!");
-  io.emit("notification", { message });
+  io.emit("notification", { noticount });
 };

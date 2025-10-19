@@ -39,7 +39,7 @@ export const emailVerifyController = async (req: Request, res: Response) => {
             { expiresIn: '1d' }
         );
 
-        await insertLog(user.user_id, user.username, 1)
+         insertLog(user.user_id, user.username, 1)
 
 
         res.cookie('act', token, {
@@ -91,6 +91,8 @@ export const resendEmailController = async (req: Request, res: Response) => {
         const code: number = Math.floor(100000 + Math.random() * 900000);
         await pool.execute(`update users set otp_code =?,otp_code_type=?,code_expire=? where email=?`, [code, "email_verification", expire_code, email])
         await emailVerificationService(email, code.toString());
+
+    
 
         res.status(200).json({ success: true, message: "Verification code resent successfully." });
 

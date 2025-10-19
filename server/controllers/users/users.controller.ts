@@ -94,6 +94,7 @@ export const updateUserController = async (req: Request, res: Response) => {
         const { user_id, status, status_expire, role, email_verified } = req.body;
         const user_role = (req as AuthenticatedRequest).user.role;
         const user_id2 = (req as AuthenticatedRequest).user.id;
+        const noticount = (req as AuthenticatedRequest).user.notification_count;
 
         const username2 = (req as AuthenticatedRequest).user.username;
 
@@ -153,6 +154,7 @@ export const updateUserController = async (req: Request, res: Response) => {
             params.push(role);
         }
 
+
         if (typeof email_verified === "boolean") {
             updates.push("email_verified = ?");
             params.push(email_verified);
@@ -169,6 +171,8 @@ export const updateUserController = async (req: Request, res: Response) => {
 
         insertLog(user_id2, username2, 8, `Username : ${user.username} with Id : ${user_id}`);
         await pushNotifications("user", user_id, ` Profile was updated successfully by ${username2}`, "none", user_role, "normal", req, res);
+        emitNotificationToUser(user_id, noticount + 1);
+
         res.status(200).json({ success: true, message: "User updated successfully" });
 
     } catch (error) {
@@ -235,7 +239,7 @@ export const updateUserSelfController = async (req: Request, res: Response) => {
                 }
             }
 
-            const profilePicPath = `${process.env.VITE_BACKEND_URL || "http://localhost:4000"} / user / ${user_id} / ${multerReq.file.filename}`;
+            const profilePicPath = `${process.env.VITE_BACKEND_URL || "http://localhost:4000"}/user/${user_id}/${multerReq.file.filename}`;
             updates.push("profile_pic = ?");
             params.push(profilePicPath);
         }
@@ -248,10 +252,13 @@ export const updateUserSelfController = async (req: Request, res: Response) => {
 
         const query = `UPDATE users SET ${updates.join(", ")} WHERE user_id = ? `;
         await pool.execute(query, params);
+
         insertLog(user_id, username2, 8, "User");
+
         await pushNotifications("user", user_id, "Profile updated successfully", "none", role, "normal", req, res);
-        console.log(`Sending current: ${noticount}`);
+
         emitNotificationToUser(user_id, noticount + 1);
+
         return res.status(200).json({ success: true, message: "Profile updated successfully" });
     } catch (error) {
         console.error("Update user error:", error);
@@ -266,6 +273,8 @@ export const createUserController = async (req: Request, res: Response) => {
         const user_id = (req as AuthenticatedRequest).user.id;
 
         const user_role = (req as AuthenticatedRequest).user.role;
+        const noticount = (req as AuthenticatedRequest).user.notification_count;
+
 
         if (!username || !email || !password) {
             return res.status(400).json({ success: false, error: "username, email, and password are required" });
@@ -286,8 +295,10 @@ export const createUserController = async (req: Request, res: Response) => {
 
         const id = result.insertId;
 
-        insertLog(user_id, username2, 9, `Username : ${username} with Id : ${id}`);
-        await pushNotifications("user", user_id, `Username : ${username} with Id : ${id} was created successfully`, "none", user_role, "normal", req, res);
+        insertLog(user_id, username2, 10, `Username : ${username} with Id : ${id} was created successfully`);
+
+        await pushNotifications("new_member", user_id, `${username}`, "none", user_role, "allUsers", req, res);
+
         res.status(201).json({ success: true, message: "User created successfully" });
 
     } catch (error) {

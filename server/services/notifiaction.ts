@@ -2,47 +2,48 @@ import pool from '../database/db.ts';
 import type { Request, Response } from 'express';
 import type { User } from "../types/usersTypes.ts";
 import { validRoles } from "..//middleware/valiRoles.ts";
+import { emitNotificationToUser } from "./socket.ts";
 // Notification configuration using switch-case
 function getNotificationConfig(type: string, titleName: string, project: string = "none") {
     switch (type) {
         case 'Task':
             return {
                 icon_class: 'ClipboardCheck',
-                title: `New task assigned: ${titleName}`,
+                title: `${titleName}`,
                 project: `${project}`,
 
             };
         case 'project':
             return {
                 icon_class: 'FolderKanban',
-                title: `${titleName} : New Project Was Created `,
+                title: `${titleName}`,
                 project: `${project}`,
 
             };
 
         case 'Deadline':
             return {
-                icon_class: 'Clock',
+                icon_class: 'clock',
                 title: `Deadline approaching for: ${titleName}`,
                 project: `${project}`
 
             };
         case 'user':
             return {
-                icon_class: 'Users',
+                icon_class: 'users',
                 title: `${titleName}`
 
             };
         case 'new_member':
             return {
-                icon_class: 'User',
+                icon_class: 'user',
                 title: `New member: ${titleName} joined the team.`,
                 project: `${project}`
 
             };
         case 'Document_update':
             return {
-                icon_class: 'FileCheck',
+                icon_class: 'file',
                 title: `Document updated: ${titleName}`,
                 project: `${project}`
 
@@ -57,6 +58,10 @@ function getNotificationConfig(type: string, titleName: string, project: string 
     }
 }
 
+
+interface Noti {
+    noticount: number;
+}
 
 
 export const pushNotifications = async (
@@ -106,7 +111,7 @@ export const pushNotifications = async (
             return res.status(201).json({ success: true, message: "Announcement sent to all users." });
         }
 
-        if (type === "allUsers") {
+        if (reason === "allUsers") {
             if (!validRoles.includes(role)) {
                 return res.status(403).json({ success: false, error: "Not authorized to push Notifications." });
             }
@@ -121,6 +126,8 @@ export const pushNotifications = async (
             `;
 
             for (const u of users as User[]) {
+
+
                 await pool.execute(query, [
                     u.user_id,
                     type,
@@ -128,6 +135,12 @@ export const pushNotifications = async (
                     config.project ?? "none",
                     config.icon_class
                 ]);
+
+                const [result] = await pool.execute('select count(*) as noticount from notifications where user_id =? and is_read = false', [u.user_id]);
+                const notifications = (result as Noti[])[0];
+
+                emitNotificationToUser(u.user_id, notifications.noticount + 1);
+
             }
 
             return res.status(201).json({ success: true, message: "Notifications sent to all users." });

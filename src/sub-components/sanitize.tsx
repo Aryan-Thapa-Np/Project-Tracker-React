@@ -29,4 +29,4 @@ export const sanitizeInput = (value: string) =>
         .replace(/'/g, "''") // escape single quotes
         .replace(/--/g, "") // remove comment sequence
         .replace(/;/g, "")
-        .trim();
+        

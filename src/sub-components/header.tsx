@@ -73,7 +73,6 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
         socket.emit("register_user", user?.user_id);
 
         socket.on("notification", (count) => {
-            console.log("Recieved", count);
             updateBadge(Number(count.noticount));
 
         });

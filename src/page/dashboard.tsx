@@ -106,8 +106,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 if (!res.ok || data.success === false) {
                     setIsLoadingProjects(false);
 
-                    const msg = data.error || "Failed to fetch projects";
-                    return toast.error(msg);
+                    return null;
                 }
 
                 setTimeout(() => {

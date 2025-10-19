@@ -2,6 +2,10 @@ import pool from '../../database/db.ts';
 import type { Request, Response } from 'express';
 import type { AuthenticatedRequest } from "../../types/auth.types.ts";
 import type { ResultSetHeader } from 'mysql2/promise';
+import { insertLog } from "../../services/logger.ts";
+import { pushNotifications } from "../../services/notifiaction.ts";
+import { sanitizeInput } from "../../utils/sanitize.ts";
+import { emitNotificationToUser } from "../../services/socket.ts";
 
 
 interface Total {
@@ -34,7 +38,7 @@ export const getUserTaskController = async (req: Request, res: Response) => {
 
         if (status) {
             baseQuery += " AND status = ?";
-            params.push(status as string);
+            params.push(sanitizeInput(status as string));
         }
 
         baseQuery += " ORDER BY due_date ASC LIMIT ? OFFSET ?";
@@ -60,10 +64,19 @@ export const getUserTaskController = async (req: Request, res: Response) => {
     }
 };
 
+
+
+interface ProjectName {
+    project_name: string;
+}
 export const createTaskController = async (req: Request, res: Response) => {
     try {
         const user_id = (req as AuthenticatedRequest).user.id;
         const { project_id, milestone_id, assigned_to, task_name, due_date, priority, status = "todo" } = req.body;
+        const noticount = (req as AuthenticatedRequest).user.notification_count;
+        const username2 = (req as AuthenticatedRequest).user.username;
+        const user_role = (req as AuthenticatedRequest).user.role;
+
 
         // Validate required fields
         if (!user_id || !project_id || !assigned_to || !task_name || !status || !priority) {
@@ -102,6 +115,13 @@ export const createTaskController = async (req: Request, res: Response) => {
             [pid, mid, assignee, task_name, due_date || null, status, priority.toLowerCase()]
         );
 
+
+        const [rows] = await pool.execute("select project_name from projects where project_id =?", [project_id]);
+        const row = (rows as ProjectName[])[0];
+        insertLog(user_id, username2, 10, `The task '${task_name}' was assigned to  User ID: ${assigned_to} by ID: ${user_id}`);
+        await pushNotifications("Task", assigned_to, ` The task '${task_name}' has been assigned to you for project ID: ${project_id}`, row.project_name, user_role, "normal", req, res);
+        emitNotificationToUser(assigned_to, noticount + 1);
+
         res.status(201).json({
             success: true,
             message: "Task created successfully"
@@ -116,10 +136,15 @@ export const createTaskController = async (req: Request, res: Response) => {
     }
 };
 
+
 export const updateTaskController = async (req: Request, res: Response) => {
     try {
         const user_id = (req as AuthenticatedRequest).user.id;
         const { task_id, project_id, milestone_id, assigned_to, task_name, due_date, priority, status } = req.body;
+        const noticount = (req as AuthenticatedRequest).user.notification_count;
+        const username2 = (req as AuthenticatedRequest).user.username;
+        const user_role = (req as AuthenticatedRequest).user.role;
+
 
         // Validate required fields
         if (!user_id || !task_id || !project_id || !assigned_to || !task_name || !status || !priority) {
@@ -229,7 +254,11 @@ export const updateTaskController = async (req: Request, res: Response) => {
 
 
 
-
+        const [rows] = await pool.execute("select project_name from projects where project_id =?", [project_id]);
+        const row = (rows as ProjectName[])[0];
+        insertLog(user_id, username2, 10, `Task Update: The task '${task_name}' was assigned to  User ID: ${assigned_to} was updated by user ID: ${user_id}`);
+        await pushNotifications("Task", assigned_to, ` Task Update: The task '${task_name}' was Update  for project ID: ${project_id}`, row.project_name, user_role, "normal", req, res);
+        emitNotificationToUser(assigned_to, noticount + 1);
 
 
         res.status(200).json({
@@ -316,6 +345,8 @@ interface Milestone {
 export const updateTaskStatusController = async (req: Request, res: Response) => {
     try {
         const user_id = (req as AuthenticatedRequest).user.id;
+        const username2 = (req as AuthenticatedRequest).user.username;
+
         const { task_id, status } = req.body;
 
         if (!task_id || !status) {
@@ -373,6 +404,7 @@ export const updateTaskStatusController = async (req: Request, res: Response) =>
         if (!result || (result as ResultSetHeader).affectedRows === 0) {
             return res.status(404).json({ success: false, error: "Task not found or not yours" });
         }
+        insertLog(user_id, username2, 10, `Task Update: The task ID: ${task_id} status was updated to ${status} by User ID: ${user_id}`);
 
         return res.status(200).json({ success: true, message: "Task status updated" });
     } catch (error) {
@@ -386,6 +418,8 @@ export const updateTaskStatusController = async (req: Request, res: Response) =>
 export const deleteTaskController = async (req: Request, res: Response) => {
     try {
         const user_id = (req as AuthenticatedRequest).user.id;
+        const username2 = (req as AuthenticatedRequest).user.username;
+
         const { task_id } = req.body;
 
         if (!task_id || !user_id) {
@@ -397,6 +431,9 @@ export const deleteTaskController = async (req: Request, res: Response) => {
         if (!result || (result as ResultSetHeader).affectedRows === 0) {
             return res.status(404).json({ success: false, error: "Failed to delete task." });
         }
+
+        insertLog(user_id, username2, 10, `Task Delete: The task ID: ${task_id}  was deleted by User ID: ${user_id}`);
+
 
         return res.status(200).json({ success: true, message: "Task was deleted." });
     } catch (error) {

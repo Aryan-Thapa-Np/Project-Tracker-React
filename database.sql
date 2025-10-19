@@ -59,7 +59,7 @@ CREATE TABLE tasks (
 CREATE TABLE notifications (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    type ENUM('Task', 'Deadline', 'user', 'new_member', 'Document_update', 'announcement') NOT NULL,
+    type VARCHAR(100) NOT NULL,
     title VARCHAR(255) NOT NULL,
     project VARCHAR(255) DEFAULT 'none',
     icon_class VARCHAR(100) NOT NULL DEFAULT 'Bell',
@@ -91,3 +91,35 @@ CREATE TABLE logs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+
+CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_status ON users(status);
+CREATE INDEX idx_users_email_verified ON users(email_verified);
+CREATE INDEX idx_users_token_expire ON users(token_expire);
+-- Already has PRIMARY KEY
+CREATE INDEX idx_projects_status ON projects(status);
+CREATE INDEX idx_projects_due_date ON projects(due_date);
+
+
+-- Already has PRIMARY KEY
+CREATE INDEX idx_milestones_project_id ON milestones(project_id);
+CREATE INDEX idx_milestones_completed ON milestones(completed);
+CREATE INDEX idx_milestones_due_date ON milestones(due_date);
+
+-- Already has PRIMARY KEY
+CREATE INDEX idx_tasks_project_id ON tasks(project_id);
+CREATE INDEX idx_tasks_milestone_id ON tasks(milestone_id);
+CREATE INDEX idx_tasks_assigned_to ON tasks(assigned_to);
+CREATE INDEX idx_tasks_status ON tasks(status);
+CREATE INDEX idx_tasks_priority ON tasks(priority);
+CREATE INDEX idx_tasks_due_date ON tasks(due_date);
+
+-- Already has PRIMARY KEY and UNIQUE token
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
+CREATE INDEX idx_refresh_tokens_revoked ON refresh_tokens(revoked);
+
+-- Already has PRIMARY KEY
+CREATE INDEX idx_logs_user_id ON logs(user_id);
+CREATE INDEX idx_logs_username ON logs(username);
+CREATE INDEX idx_logs_created_at ON logs(created_at);

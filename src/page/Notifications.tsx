@@ -35,6 +35,7 @@ interface NotificationItem {
     type: keyof typeof iconMap | string;
     is_read?: boolean;
     isFading?: boolean;
+    icon_class:string;
 }
 
 interface Pagination {
@@ -49,7 +50,7 @@ const iconMap: Record<string, LucideIcon> = {
     comment: MessageCircleMore,
     clock: Clock,
     users: Users,
-    User: userSingle,
+    user: userSingle,
     ClipboardCheck: ClipboardCheck,
     FolderKanban: FolderKanban,
     Megaphone: Megaphone,
@@ -121,8 +122,8 @@ const Notifications: React.FC<NotificationProps> = ({ user }) => {
 
         fetchNotifications();
 
-      
-    }, [filterType, pagination.currentPage, searchQuery,notificationCount]);
+
+    }, [filterType, pagination.currentPage, searchQuery, notificationCount]);
 
 
 
@@ -147,7 +148,9 @@ const Notifications: React.FC<NotificationProps> = ({ user }) => {
             setNotifications((prev) =>
                 prev.map((n) => (n.notification_id === id ? { ...n, is_read: true } : n))
             );
-            setNotificationCount(notificationCount ? (notificationCount - 1) : notificationCount);
+
+            setNotificationCount((notificationCount ?? 0) > 0 ? (notificationCount! - 1) : 0);
+
 
         } catch (err) {
             console.error("Failed to mark as read:", err);
@@ -155,13 +158,12 @@ const Notifications: React.FC<NotificationProps> = ({ user }) => {
             setProcessing(false);
         }
     };
+
     const handleDelete = async (id: string | number) => {
         try {
             setProcessing(true);
             setNotifications((prev) =>
-                prev.map((n) =>
-                    n.notification_id === id ? { ...n, isFading: true } : n
-                )
+                prev.map((n) => (n.notification_id === id ? { ...n, isFading: true } : n))
             );
 
             await new Promise((resolve) => setTimeout(resolve, 300));
@@ -172,26 +174,34 @@ const Notifications: React.FC<NotificationProps> = ({ user }) => {
                     "Content-Type": "application/json",
                     "x-csrf-token": await getCsrfToken(),
                 },
-                credentials: 'include',
+                credentials: "include",
             });
+
+            // check if deleted one was unread
+            const deletedNotif = notifications.find(
+                (n) => n.notification_id === id && !n.is_read
+            );
 
             setNotifications((prev) => prev.filter((n) => n.notification_id !== id));
 
-            // Update pagination if needed
+            if (deletedNotif) {
+                setNotificationCount((notificationCount ?? 0) > 0 ? notificationCount! - 1 : 0);
+            }
+
             if (notifications.length === 1 && pagination.currentPage > 1) {
                 setPagination((prev) => ({ ...prev, currentPage: prev.currentPage - 1 }));
             }
         } catch (err) {
             console.error("Failed to delete:", err);
             setNotifications((prev) =>
-                prev.map((n) =>
-                    n.notification_id === id ? { ...n, isFading: false } : n
-                )
+                prev.map((n) => (n.notification_id === id ? { ...n, isFading: false } : n))
             );
         } finally {
             setProcessing(false);
         }
     };
+
+
     const handleMarkAll = async () => {
         try {
             setProcessing(true);
@@ -302,8 +312,10 @@ const Notifications: React.FC<NotificationProps> = ({ user }) => {
                         ) : notifications.length > 0 ? (
                             <ul className="-my-4 divide-y divide-slate-200" role="list">
                                 {notifications.map((notif, i) => {
+                                   
+
                                     const Icon =
-                                        iconMap[notif.type as keyof typeof iconMap] || FileCheck;
+                                        iconMap[notif.icon_class] || BellOff;
                                     return (
                                         <li
                                             key={i}
@@ -324,8 +336,8 @@ const Notifications: React.FC<NotificationProps> = ({ user }) => {
                                                         <p className="truncate text-sm font-medium text-slate-600">
                                                             {notif.title}
                                                         </p>
-                                                        <p className="text-sm text-slate-500">
-                                                            {notif.project === "none" ? "" : notif.project}
+                                                        <p className="text-xs text-slate-500">
+                                                            {notif.project === "none" ? "" : `Project : ${notif.project}`}
                                                         </p>
                                                     </div>
                                                 </div>

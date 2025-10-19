@@ -119,7 +119,7 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
                     <div className="bg-white rounded-sm shadow-lg p-6 border border-gray-200">
                         <div className="flex items-center gap-4 mb-6">
                             <img
-                                src={user?.profile_pic || "/default-avatar.png"}
+                                src={user?.profile_pic || "/image.png"}
                                 alt="Profile"
                                 className="w-20 h-20 rounded-full border-2 border-gray-300 object-cover"
                             />

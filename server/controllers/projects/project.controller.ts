@@ -2,6 +2,11 @@ import pool from '../../database/db.ts';
 import type { Request, Response } from 'express';
 import type { AuthenticatedRequest } from "../../types/auth.types.ts";
 import type { ResultSetHeader } from "mysql2/promise";
+import { insertLog } from "../../services/logger.ts";
+import { pushNotifications } from "../../services/notifiaction.ts";
+import { sanitizeInput } from "../../utils/sanitize.ts";
+import { emitNotificationToUser } from "../../services/socket.ts";
+
 
 export const getProjectsController = async (req: Request, res: Response) => {
     try {
@@ -19,7 +24,7 @@ export const getProjectsController = async (req: Request, res: Response) => {
 
         if (status && typeof status === "string") {
             baseQuery += " AND p.status = ?";
-            params.push(status);
+            params.push(sanitizeInput(status));
         }
 
         if (date && typeof date === "string") {
@@ -53,6 +58,12 @@ export const getProjectsController = async (req: Request, res: Response) => {
 export const updateProjectController = async (req: Request, res: Response) => {
     const conn = await pool.getConnection();
     try {
+
+
+        const username2 = (req as AuthenticatedRequest).user.username;
+
+
+
         const user_id = (req as AuthenticatedRequest).user.id;
         const { project_id, project_name, status, due_date, milestones, removed_milestone_ids } = req.body;
 
@@ -146,6 +157,8 @@ export const updateProjectController = async (req: Request, res: Response) => {
 
         await conn.commit();
 
+        insertLog(user_id, username2, 10, `Project Update: The Project '${project_name}' was updated  by ID: ${user_id}`);
+
         return res.json({ success: true, projectRows: rows, message: "Project updated" });
     } catch (err) {
         await conn.rollback();
@@ -155,11 +168,15 @@ export const updateProjectController = async (req: Request, res: Response) => {
         conn.release();
     }
 };
-
+interface ProjectName {
+    project_name: string;
+}
 
 export const createProjectController = async (req: Request, res: Response) => {
     const conn = await pool.getConnection();
     try {
+        const username2 = (req as AuthenticatedRequest).user.username;
+        const user_role = (req as AuthenticatedRequest).user.role;
         const user_id = (req as AuthenticatedRequest).user.id;
         const { project_name, status, due_date, milestones } = req.body;
 
@@ -221,6 +238,12 @@ export const createProjectController = async (req: Request, res: Response) => {
         );
 
         await conn.commit();
+
+        const [projects] = await pool.execute("select project_name from projects where project_id =?", [project_id]);
+        const row = (projects as ProjectName[])[0];
+        insertLog(user_id, username2, 10, `New Project '${project_name}' was created  by user ID: ${user_id}`);
+        await pushNotifications("project", user_id, ` New Project '${project_name}' was created`, row.project_name, user_role, "allUsers", req, res);
+
 
         return res.status(201).json({ success: true, projectRows: rows });
     } catch (error) {
@@ -354,8 +377,9 @@ export const getSimpleProjectsController = async (req: Request, res: Response) =
 export const deleteProjectController = async (req: Request, res: Response) => {
     try {
         const user_id = (req as AuthenticatedRequest).user.id;
-        const {project_id} = req.body;
+        const { project_id } = req.body;
 
+        const username2 = (req as AuthenticatedRequest).user.username;
 
         if (!user_id || !project_id) {
             return res.status(400).json({
@@ -366,13 +390,15 @@ export const deleteProjectController = async (req: Request, res: Response) => {
 
 
         const [rows] = await pool.execute(`delete from projects where project_id=? `, [project_id]);
-        if (!rows|| (rows as ResultSetHeader).affectedRows === 0) {
+        if (!rows || (rows as ResultSetHeader).affectedRows === 0) {
             return res.status(201).json({
                 success: false,
                 error: "Project not found..",
 
             });
         }
+
+        insertLog(user_id, username2, 10, `Project Delete :'Project ID : ${project_id}' was deleted  by user ID: ${user_id}`);
 
         res.status(200).json({
             success: true,

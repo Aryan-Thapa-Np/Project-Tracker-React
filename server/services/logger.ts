@@ -11,6 +11,7 @@ const actions: string[] = [
     "A password reset was performed", //7
     "profile information was updated",  //8
     "Was Created successfully",  //9
+    "." //10
 ];
 
 export const insertLog = async (

@@ -7,7 +7,7 @@ import TeamTasks from './page/team.tsx';
 import UserManagement from './page/users.tsx';
 import Notifications from './page/Notifications.tsx';
 import LoginPage from "./page/login.tsx";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, Bounce } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PrivateRoute from "./sub-components/protected.tsx";
 import PasswordResetPage from "./page/passwordReset.tsx";
@@ -33,7 +33,7 @@ function App() {
             <ToastContainer
               className="px-5 pt-1 text-sm "
               position="top-center"
-              autoClose={3000}
+              autoClose={2500}
               hideProgressBar={true}
               newestOnTop={true}
               closeOnClick
@@ -52,7 +52,7 @@ function App() {
             <ToastContainer
               className="px-5 pt-1 text-sm "
               position="top-center"
-              autoClose={3000}
+              autoClose={2500}
               hideProgressBar={true}
               newestOnTop={true}
               closeOnClick
@@ -71,7 +71,7 @@ function App() {
             <ToastContainer
               className="px-5 pt-1 text-sm "
               position="top-center"
-              autoClose={3000}
+              autoClose={2500}
               hideProgressBar={true}
               newestOnTop={true}
               closeOnClick
@@ -89,7 +89,7 @@ function App() {
             <ToastContainer
               className="px-5 pt-1 text-sm "
               position="top-center"
-              autoClose={3000}
+              autoClose={2500}
               hideProgressBar={true}
               newestOnTop={true}
               closeOnClick
@@ -109,7 +109,7 @@ function App() {
             <ToastContainer
               className="px-5 pt-1 text-sm "
               position="top-center"
-              autoClose={3000}
+              autoClose={2500}
               hideProgressBar={true}
               newestOnTop={true}
               closeOnClick
@@ -129,7 +129,7 @@ function App() {
             <ToastContainer
               className="px-5 pt-1 text-sm "
               position="top-center"
-              autoClose={3000}
+              autoClose={2500}
               hideProgressBar={true}
               newestOnTop={true}
               closeOnClick
@@ -137,6 +137,7 @@ function App() {
               pauseOnFocusLoss
               draggable
               pauseOnHover
+              transition={Bounce}
             />
           </PrivateRoute>
         } />
@@ -149,7 +150,7 @@ function App() {
             <ToastContainer
               className="px-5 pt-1 text-sm "
               position="top-center"
-              autoClose={3000}
+              autoClose={2500}
               hideProgressBar={true}
               newestOnTop={true}
               closeOnClick
@@ -170,7 +171,7 @@ function App() {
             <ToastContainer
               className="px-5 pt-1 text-sm "
               position="top-center"
-              autoClose={3000}
+              autoClose={2500}
               hideProgressBar={true}
               newestOnTop={true}
               closeOnClick
@@ -188,7 +189,7 @@ function App() {
             <ToastContainer
               className="px-5 pt-1 text-sm "
               position="top-center"
-              autoClose={3000}
+              autoClose={2500}
               hideProgressBar={true}
               newestOnTop={true}
               closeOnClick
@@ -208,7 +209,7 @@ function App() {
             <ToastContainer
               className="px-5 pt-1 text-sm"
               position="top-center"
-              autoClose={3000}
+              autoClose={2500}
               hideProgressBar={true}
               newestOnTop={true}
               closeOnClick

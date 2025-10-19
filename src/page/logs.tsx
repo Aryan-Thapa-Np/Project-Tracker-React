@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Sidebar from "../sub-components/sidebar.tsx";
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { toast } from "react-toastify";
 import { getCsrfToken } from "../sub-components/csrfToken.tsx";
 import type { User } from "../types/usersFTypes.tsx";
+
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 interface LogsProps {
   user?: User | null;
@@ -37,11 +38,17 @@ const LogsPage: React.FC<LogsProps> = ({ user }) => {
     return () => clearTimeout(handler);
   }, [search]);
 
+  // Simulate delay using a Promise
+  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
+      // Wait 2 seconds before fetching
+      await delay(1000);
+
       const params = new URLSearchParams();
       params.append("limit", limit.toString());
       if (debouncedSearch) params.append("search", debouncedSearch);
@@ -70,10 +77,7 @@ const LogsPage: React.FC<LogsProps> = ({ user }) => {
           : "Something went wrong!"
       );
     } finally {
-      setTimeout(() => {
-        
-        setLoading(false);
-      }, 1000);
+      setLoading(false);
     }
   }, [limit, debouncedSearch, startDate, endDate]);
 
@@ -138,10 +142,38 @@ const LogsPage: React.FC<LogsProps> = ({ user }) => {
           </select>
         </div>
 
-        {loading && <p className="text-gray-600">Loading logs...</p>}
-        {error && <p className="text-red-500">{error}</p>}
-
-        {!loading && !error && (
+        {/* Loading / Error / Table */}
+        {loading ? (
+          <div className="overflow-x-auto bg-white rounded-sm shadow-md animate-pulse">
+            <table className="min-w-full divide-y divide-gray-200 text-gray-700">
+              <thead className="bg-gray-100 sticky top-0">
+                <tr>
+                  {["ID", "User ID", "Username", "Action", "Timestamp"].map((col) => (
+                    <th
+                      key={col}
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {[...Array(5)].map((_, idx) => (
+                  <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                    {[...Array(5)].map((__, i) => (
+                      <td key={i} className="px-6 py-4">
+                        <div className={`h-4 bg-gray-300 rounded ${i % 2 === 0 ? "w-3/4" : "w-1/2"}`}></div>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : (
           <div className="overflow-x-auto bg-white rounded-sm shadow-md">
             <table className="min-w-full divide-y divide-gray-200 text-gray-700">
               <thead className="bg-gray-100 sticky top-0">
