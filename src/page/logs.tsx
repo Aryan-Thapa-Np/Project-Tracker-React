@@ -70,7 +70,10 @@ const LogsPage: React.FC<LogsProps> = ({ user }) => {
           : "Something went wrong!"
       );
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        
+        setLoading(false);
+      }, 1000);
     }
   }, [limit, debouncedSearch, startDate, endDate]);
 
