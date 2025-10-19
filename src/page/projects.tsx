@@ -92,7 +92,7 @@ const DeleteTaskModal: React.FC<{
         <div className="flex justify-end gap-3">
           <button
             onClick={() => setDeleteModal(false)}
-            className="px-4 py-2 bg-gray-300 text-gray-800  rounded-sm hover:bg-gray-400 transition-colors cursor-pointer"
+            className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
           >
             Cancel
           </button>
@@ -335,7 +335,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
 
         setProjectId(null);
         msg = data2.error;
-        toast.error(msg || "Failed to Project task.");
+        toast.error(msg || "Failed to delete Project.");
 
         return
       }

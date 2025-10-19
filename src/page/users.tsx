@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Sidebar from "../sub-components/sidebar.tsx";
 import { getCsrfToken } from '../sub-components/csrfToken.tsx';
-import { sanitizeInput } from "../sub-components/sanitize.tsx";
+import { sanitizeInput, escapeHTML } from "../sub-components/sanitize.tsx";
 import { toast } from "react-toastify";
 import type { User } from "../types/usersFTypes.tsx";
 import {
     Plus,
-    
+    X,
+    Trash
 } from "lucide-react";
 
 
@@ -15,12 +16,61 @@ interface UsersProps {
 }
 
 
+/* -------------------------------------------------------------------------- */
+/*                              DELETE TASK MODAL                             */
+/* -------------------------------------------------------------------------- */
+const DeleteTaskModal: React.FC<{
+    showDeleteModal: boolean;
+    setDeleteModal: React.Dispatch<React.SetStateAction<boolean>>;
+    handleConfirmDelete: () => Promise<void>;
+    isLoading: boolean;
+}> = ({ showDeleteModal, setDeleteModal, handleConfirmDelete, isLoading }) => {
+    if (!showDeleteModal) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800">Confirm Deletion</h2>
+                    <button
+                        onClick={() => setDeleteModal(false)}
+                        className="text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+                <p className="text-gray-600 mb-6">Are you sure you want to delete this User? This action cannot be undone.</p>
+                <div className="flex justify-end gap-3">
+                    <button
+                        onClick={() => setDeleteModal(false)}
+                        className="cursor-pointer px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleConfirmDelete}
+                        disabled={isLoading}
+                        className="px-4 py-2 bg-red-600 cursor-pointer text-white rounded-sm hover:bg-red-700 disabled:bg-red-400 transition-colors flex items-center gap-2"
+                    >
+                        {isLoading && (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        )}
+                        {isLoading ? "Deleting..." : "Delete"}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 const roles = ["admin", "project_manager", "team_member", "team_memberPlus", "team_memberSuper"];
 const statuses = ["active", "locked", "banned", "inactive"];
 
-const UserManagement: React.FC<UsersProps> = ({user}) => {
+const UserManagement: React.FC<UsersProps> = ({ user }) => {
     const [users, setUsers] = useState<User[]>([]);
+    const [showDeleteModal, setDeleteModal] = useState(false);
+
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [roleFilter, setRoleFilter] = useState("");
@@ -36,6 +86,9 @@ const UserManagement: React.FC<UsersProps> = ({user}) => {
 
     const pageSize = 5;
     const apiUrl = import.meta.env.VITE_BACKEND_URL;
+    const [isLoading, setIsLoading] = useState(false);
+
+    const [deleteuserId, setDeleteUserid] = useState<number | null>(null);
 
     // Debounce search input
     useEffect(() => {
@@ -156,11 +209,62 @@ const UserManagement: React.FC<UsersProps> = ({user}) => {
                 ? String((err as { error: unknown }).error)
                 : "Something went wrong!");
         }
+
+
+
+
     };
+
+
+
+    const handleDeleteUser = async () => {
+
+        if (!deleteuserId) return;
+        setIsLoading(true);
+        try {
+            const res = await fetch(`${apiUrl}/api/users/userdelete`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-Token": await getCsrfToken(),
+                },
+                credentials: "include",
+                body: JSON.stringify({ deleteuserId: escapeHTML(String(deleteuserId)) }),
+            });
+
+            let msg;
+            const data2 = await res.json();
+
+            if (data2.success === false && data2.error) {
+
+                setDeleteUserid(null);
+                msg = data2.error;
+                toast.error(msg || "Failed to delete User.");
+
+                return
+            }
+
+            if (!res.ok) {
+
+                setDeleteUserid(null);
+                toast.error("Failed to delete User.");
+                return
+            }
+
+            toast.success("User deleted");
+            await fetchUsers();
+        } catch (error) {
+
+            toast.error("Something went wrong.");
+        } finally {
+            setIsLoading(false);
+            setDeleteModal(false);
+        }
+    }
 
     return (
         <div className="flex w-full min-h-screen bg-gray-100">
-            <Sidebar user={user}/>
+            <Sidebar user={user} />
             <main className="flex-1 overflow-y-auto  p-8  bg-gray-100 content-area h-screen">
                 <div className="mx-auto max-w-7xl ">
                     {/* Header */}
@@ -173,7 +277,7 @@ const UserManagement: React.FC<UsersProps> = ({user}) => {
                             onClick={() => setShowCreateModal(true)}
                             className="flex items-center justify-center cursor-pointer rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
                         >
-                            <Plus size={18}/>
+                            <Plus size={18} />
                             Add New User
                         </button>
                     </div>
@@ -218,6 +322,7 @@ const UserManagement: React.FC<UsersProps> = ({user}) => {
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {users.map(user => (
+                                    
                                     <tr key={user.user_id}>
                                         <td className="whitespace-nowrap px-6 py-4">
                                             <div className="text-sm font-medium text-gray-900">{user.username}</div>
@@ -238,7 +343,7 @@ const UserManagement: React.FC<UsersProps> = ({user}) => {
                                         <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                                             <button
                                                 className="cursor-pointer text-blue-600 hover:text-blue-800"
-                                                onClick={() => { setEditUser(user); setShowEditModal(true); }}
+                                                onClick={() => { setEditUser(user); setDeleteUserid(Number(user.user_id)); setShowEditModal(true); }}
                                             >
                                                 Edit
                                             </button>
@@ -281,11 +386,23 @@ const UserManagement: React.FC<UsersProps> = ({user}) => {
                         </div>
                     )}
 
+                    {/* Delete Modal */}
+                    <DeleteTaskModal
+                        showDeleteModal={showDeleteModal}
+                        setDeleteModal={setDeleteModal}
+                        handleConfirmDelete={handleDeleteUser}
+                        isLoading={isLoading}
+                    />
+
+
                     {/* Edit Modal */}
                     {showEditModal && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                        <div className="fixed inset-0 z-50 flex items-center  justify-center bg-black/50">
                             <div className="bg-white rounded-sm p-6 w-full max-w-md">
-                                <h2 className="text-xl font-semibold mb-4">Edit User</h2>
+                                <div className="flex justify-between">
+                                    <h2 className="text-xl font-semibold mb-4">Edit User</h2>
+                                    <button onClick={() => { setDeleteModal(true); setShowEditModal(false); }} className="text-red-500   cursor-pointer "><Trash className="p-1 rounded-full hover:bg-gray-300" size={28} /></button>
+                                </div>
                                 <form onSubmit={handleUpdateUser} className="flex flex-col gap-4">
                                     <input type="text" placeholder="Username" disabled className="border rounded px-3 py-2" value={editUser.username} />
                                     <input type="email" placeholder="Email" disabled className="border rounded px-3 py-2" value={editUser.email} />
@@ -311,8 +428,8 @@ const UserManagement: React.FC<UsersProps> = ({user}) => {
                         </div>
                     )}
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     );
 };
 

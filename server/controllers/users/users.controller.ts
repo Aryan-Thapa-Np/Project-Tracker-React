@@ -327,7 +327,7 @@ export const getUsersNamesController = async (req: Request, res: Response) => {
         if (!user_id) {
             return res.status(400).json({
                 success: false,
-                error: "user_id  are required"
+                error: "user_id  is required"
             });
         }
 
@@ -345,6 +345,41 @@ export const getUsersNamesController = async (req: Request, res: Response) => {
             success: true,
             users: rows,
             message: "Project created successfully",
+
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+
+}
+
+
+
+
+export const deleteUserController = async (req: Request, res: Response) => {
+
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+        const {deleteuserId} = req.body;
+
+
+        if (!user_id || !deleteuserId) {
+            return res.status(400).json({
+                success: false,
+                error: "user_id & deleteuserId are required"
+            });
+        }
+
+
+        const [rows] = await pool.execute(`delete from users where user_id =?`, [Number(deleteuserId)]);
+
+
+        res.status(201).json({
+            success: true,
+
+            message: "User deleted successfully",
 
         });
 

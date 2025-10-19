@@ -6,7 +6,8 @@ import {
     createUserController,
     updateUserSelfController,
     getUsersNamesController,
-    updateUserController
+    updateUserController,
+    deleteUserController
 } from "../controllers/user.controller.ts";
 
 import {
@@ -64,6 +65,8 @@ router.delete("/users/deletenotification/:id", normalLimiter,verifyCsrfTokenMidd
 
 router.get("/users/getnotificationsCount", normalLimiter, authenticateUserMiddleware, getNotificationCountController as RequestHandler)
 
+
+router.delete("/users/userdelete", normalLimiter, authenticateUserMiddleware, deleteUserController as RequestHandler)
 
 
 export default router;

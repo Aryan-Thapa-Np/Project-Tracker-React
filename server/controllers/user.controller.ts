@@ -4,7 +4,8 @@ import {
     createUserController,
     updateUserSelfController,
     updateUserController,
-    getUsersNamesController
+    getUsersNamesController,
+    deleteUserController
 } from "./users/users.controller.ts";
 
 
@@ -15,6 +16,7 @@ export {
     updateUserController,
     createUserController,
     updateUserSelfController,
-    getUsersNamesController
+    getUsersNamesController,
+    deleteUserController
 
 }
