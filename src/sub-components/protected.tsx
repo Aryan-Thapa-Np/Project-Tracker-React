@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { User } from "../types/usersFTypes.tsx";
 import { Navigate, useLocation } from "react-router-dom";
-
+import { notification } from "../context/notificationContext.tsx";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 interface PrivateRouteProps {
@@ -13,12 +13,17 @@ const path = [
     "logs"
 ];
 
+
+
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
+
     const location = useLocation();
     const [loading, setLoading] = useState(true);
     const [hasPermission, setPermission] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState<User | null>(null);
+    const [notificationCount, setNotificationCount] = useState<number | undefined>(0);
+
 
     useEffect(() => {
         async function checkAuth() {
@@ -31,7 +36,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
                 if (!res.ok) {
                     if (res.status === 500) {
                         setLoading(false);
-                        return; // Will render nothing; navigation handled below if needed
+                        return;
                     } else {
                         setIsAuthenticated(false);
                         setLoading(false);
@@ -43,6 +48,8 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
                 setIsAuthenticated(data.isAuth);
                 setUser(data.data);
                 setPermission(data.isAllowedPerm);
+                setNotificationCount(data.data.notification_count);
+     ;
             } catch (error) {
                 setIsAuthenticated(false);
             } finally {
@@ -63,20 +70,20 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
 
     if (!hasPermission) {
         const check = path.includes(location.pathname.replace("/", ""));
-        
+
         if (check) {
             return <Navigate to="/InsufficientPermission" replace />;
         }
     }
 
     return (
-        <>
+        <notification.Provider value={{ user, notificationCount, setNotificationCount }}>
             {React.Children.map(children, (child) =>
                 React.isValidElement<{ user?: User | null }>(child)
                     ? React.cloneElement(child, { user })
                     : child
             )}
-        </>
+        </notification.Provider>
     );
 };
 

@@ -2,14 +2,12 @@ import React, { useEffect, useState, useCallback } from "react";
 import Sidebar from "../sub-components/sidebar.tsx";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { toast } from "react-toastify";
-import { getCsrfToken } from '../sub-components/csrfToken.tsx';
+import { getCsrfToken } from "../sub-components/csrfToken.tsx";
 import type { User } from "../types/usersFTypes.tsx";
 
 interface LogsProps {
   user?: User | null;
 }
-
-
 
 interface Log {
   id: number;
@@ -23,7 +21,6 @@ const LogsPage: React.FC<LogsProps> = ({ user }) => {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const didFetch = React.useRef(false);
 
   // Filters
   const [limit, setLimit] = useState<number>(20);
@@ -34,9 +31,9 @@ const LogsPage: React.FC<LogsProps> = ({ user }) => {
   // Debounce state
   const [debouncedSearch, setDebouncedSearch] = useState(search);
 
-  // Debounce effect
+  // Debounce effect (wait 500ms after user stops typing)
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(search), 500); // 500ms debounce
+    const handler = setTimeout(() => setDebouncedSearch(search), 500);
     return () => clearTimeout(handler);
   }, [search]);
 
@@ -56,14 +53,13 @@ const LogsPage: React.FC<LogsProps> = ({ user }) => {
         headers: {
           "x-csrf-token": await getCsrfToken(),
         },
-        credentials: 'include',
+        credentials: "include",
       });
-      let msg: string;
-      const data = await res.json();
-      if (!res.ok || data.success === false) {
 
-        msg = data.error;
-        return toast.error(msg||"Failed to fetch logs.");
+      const data = await res.json();
+
+      if (!res.ok || data.success === false) {
+        return toast.error(data.error || "Failed to fetch logs.");
       }
 
       setLogs(data);
@@ -79,28 +75,23 @@ const LogsPage: React.FC<LogsProps> = ({ user }) => {
   }, [limit, debouncedSearch, startDate, endDate]);
 
   useEffect(() => {
-    if (didFetch.current) return;
-    didFetch.current = true;
     fetchLogs();
   }, [fetchLogs]);
 
-  const formatDate = (iso: string) => {
-    return new Date(iso).toLocaleString("en-US", {
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
-
-
 
   return (
-    <div className="flex flex-col md:flex-row w-full min-h-screen bg-gray-50">
+    <div className="flex flex-col md:flex-row w-full min-h-screen bg-gray-100">
       <Sidebar user={user} />
 
-      <main className="flex-1 p-8 mt-15 mb-8">
+      <main className="flex-1 p-8 pt-25 h-screen overflow-y-auto">
         <h1 className="text-3xl font-bold mb-6 text-gray-900">Database Logs</h1>
 
         {/* Filters */}

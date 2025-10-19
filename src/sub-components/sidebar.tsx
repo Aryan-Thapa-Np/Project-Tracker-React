@@ -12,6 +12,7 @@ interface SidebarProps {
   user?: User | null;
 }
 
+import { useNotification } from "../context/notificationContext.tsx";
 
 
 
@@ -21,6 +22,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
   const [isOpen, setIsOpen] = useState(false);
 
 
+  const { notificationCount, setNotificationCount } = useNotification();
 
   const getActiveClass = (path: string) =>
     location.pathname === path ? 'bg-black/5 text-[#1173d4]' : 'hover:text-gray-600 hover:bg-black/5';
@@ -131,8 +133,8 @@ const Sidebar: React.FC<SidebarProps> = ({ user }) => {
             <Link to="/notifications" className="flex items-center space-x-2 relative" >
               <Bell size={20} />
               <span>Notifications</span>
-              <span id='countvalue'  className="absolute top-[-5px] right-[-5px] cursor-pointer bg-red-500 pr-[6px] pl-[6px] rounded-full text-white text-[12px]">
-                {user?.notification_count !== 0 ? user?.notification_count : ""}
+              <span id='countvalue' className="absolute top-[-5px] right-[-5px] cursor-pointer bg-red-500 pr-[6px] pl-[6px] rounded-full text-white text-[12px]">
+                {notificationCount ? notificationCount : ""}
               </span>
             </Link>
           </li>

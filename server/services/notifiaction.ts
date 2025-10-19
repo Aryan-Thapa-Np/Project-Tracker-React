@@ -1,8 +1,6 @@
 import pool from '../database/db.ts';
 import type { Request, Response } from 'express';
 import type { User } from "../types/usersTypes.ts";
-import type { AuthenticatedRequest } from "../types/auth.types.ts";
-import { emitNotification } from "./socket.ts";
 import { validRoles } from "..//middleware/valiRoles.ts";
 // Notification configuration using switch-case
 function getNotificationConfig(type: string, titleName: string, project: string = "none") {
@@ -150,12 +148,7 @@ export const pushNotifications = async (
             config.icon_class
         ]);
 
-        try {
-            emitNotification("updateNotifications");
 
-        } catch (error) {
-            console.error(error);
-        }
 
 
     } catch (error) {
@@ -163,3 +156,5 @@ export const pushNotifications = async (
         res.status(500).json({ success: false, error: "Internal Server Error" });
     }
 };
+
+

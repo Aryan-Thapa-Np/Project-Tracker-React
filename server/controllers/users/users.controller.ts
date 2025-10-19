@@ -10,6 +10,7 @@ import { insertLog } from "../../services/logger.ts";
 import { pushNotifications } from "../../services/notifiaction.ts";
 import type { User } from "../../types/usersTypes.ts";
 import { sanitizeInput } from "../../utils/sanitize.ts";
+import { emitNotificationToUser } from "../../services/socket.ts";
 
 import { validRoles } from "../../middleware/valiRoles.ts";
 
@@ -167,7 +168,7 @@ export const updateUserController = async (req: Request, res: Response) => {
         const [result] = await pool.execute(query, params);
 
         insertLog(user_id2, username2, 8, `Username : ${user.username} with Id : ${user_id}`);
-        await pushNotifications("user", user_id, ` Profile was updated successfully by ${username2}`, "none", user_role, req, res);
+        await pushNotifications("user", user_id, ` Profile was updated successfully by ${username2}`, "none", user_role, "normal", req, res);
         res.status(200).json({ success: true, message: "User updated successfully" });
 
     } catch (error) {
@@ -184,6 +185,9 @@ export const updateUserSelfController = async (req: Request, res: Response) => {
         const user_id = (req as AuthenticatedRequest).user.id;
         const username2 = (req as AuthenticatedRequest).user.username;
         const role = (req as AuthenticatedRequest).user.role;
+        const noticount = (req as AuthenticatedRequest).user.notification_count;
+
+
 
 
 
@@ -244,9 +248,10 @@ export const updateUserSelfController = async (req: Request, res: Response) => {
 
         const query = `UPDATE users SET ${updates.join(", ")} WHERE user_id = ? `;
         await pool.execute(query, params);
-
         insertLog(user_id, username2, 8, "User");
-        await pushNotifications("user", user_id, "Profile updated successfully", "none", role, req, res);
+        await pushNotifications("user", user_id, "Profile updated successfully", "none", role, "normal", req, res);
+        console.log(`Sending current: ${noticount}`);
+        emitNotificationToUser(user_id, noticount + 1);
         return res.status(200).json({ success: true, message: "Profile updated successfully" });
     } catch (error) {
         console.error("Update user error:", error);
@@ -282,7 +287,7 @@ export const createUserController = async (req: Request, res: Response) => {
         const id = result.insertId;
 
         insertLog(user_id, username2, 9, `Username : ${username} with Id : ${id}`);
-        await pushNotifications("user", user_id, `Username : ${username} with Id : ${id} was created successfully`, "none", user_role, req, res);
+        await pushNotifications("user", user_id, `Username : ${username} with Id : ${id} was created successfully`, "none", user_role, "normal", req, res);
         res.status(201).json({ success: true, message: "User created successfully" });
 
     } catch (error) {

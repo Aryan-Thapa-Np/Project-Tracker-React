@@ -21,8 +21,7 @@ import {
 } from "lucide-react";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { getCsrfToken } from '../sub-components/csrfToken.tsx';
-import { getSocket } from "../lib/sockets.ts";
-import type { Socket } from "socket.io-client";
+import { useNotification } from "../context/notificationContext.tsx";
 
 import type { User } from "../types/usersFTypes.tsx";
 
@@ -60,9 +59,10 @@ const iconMap: Record<string, LucideIcon> = {
 interface NotificationProps {
     user?: User | null;
 }
-let socket: Socket;
 
 const Notifications: React.FC<NotificationProps> = ({ user }) => {
+    const { notificationCount, setNotificationCount } = useNotification();
+
     const location = useLocation();
     const query = new URLSearchParams(location.search);
     const filterType = query.get("type") || "all";
@@ -121,66 +121,12 @@ const Notifications: React.FC<NotificationProps> = ({ user }) => {
 
         fetchNotifications();
 
-        socket = getSocket();
-
-
-        socket.on("notification", (count: number) => {
-            fetchNotifications();
-
-        });
-        return () => {
-            socket.off("notification");
-        };
-    }, [filterType, pagination.currentPage, searchQuery]);
+      
+    }, [filterType, pagination.currentPage, searchQuery,notificationCount]);
 
 
 
 
-
-
-    function updateUI(data: NotificationItem[] = []) {
-
-        if (data.length > 0) {
-            setNotifications([...notifications, ...data]);
-        }
-    }
-
-    function updatecount() {
-        const countVal = document.getElementById("countvalue") as HTMLSpanElement;
-        if (countVal) {
-            if (Number(countVal.innerHTML) > 0) {
-
-                countVal.innerHTML = (Number(countVal.innerHTML) - 1).toString();
-            }
-        }
-
-        const countVal2 = document.getElementById("countvalueall") as HTMLSpanElement;
-        if (countVal2) {
-            if (Number(countVal2.innerHTML) > 0) {
-
-                countVal2.innerHTML = (Number(countVal2.innerHTML) - 1).toString();
-            }
-        }
-    }
-
-
-    function updateAllcount() {
-        const countVal = document.getElementById("countvalue") as HTMLSpanElement;
-        if (countVal) {
-            if (Number(countVal.innerHTML) > 0) {
-
-                countVal.innerHTML = `{user?.notification_count !== 0 ? user?.notification_count : " "}`
-            }
-        }
-
-        const countVal2 = document.getElementById("countvalueall") as HTMLSpanElement;
-        if (countVal2) {
-            if (Number(countVal2.innerHTML) > 0) {
-
-                countVal2.innerHTML = `{user?.notification_count !== 0 ? user?.notification_count : ""}`
-            }
-        }
-    }
 
 
 
@@ -201,7 +147,7 @@ const Notifications: React.FC<NotificationProps> = ({ user }) => {
             setNotifications((prev) =>
                 prev.map((n) => (n.notification_id === id ? { ...n, is_read: true } : n))
             );
-            updatecount();
+            setNotificationCount(notificationCount ? (notificationCount - 1) : notificationCount);
 
         } catch (err) {
             console.error("Failed to mark as read:", err);
@@ -258,7 +204,7 @@ const Notifications: React.FC<NotificationProps> = ({ user }) => {
                 credentials: 'include',
             });
             setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-            updateAllcount();
+            setNotificationCount(0);
         } catch (err) {
             console.error("Failed to mark all as read:", err);
         } finally {

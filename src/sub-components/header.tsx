@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { sanitizeInput } from "../sub-components/sanitize.tsx";
 
+import { useNotification } from "../context/notificationContext.tsx";
+
 interface HeaderProps {
     user?: User | null;
 }
@@ -29,12 +31,14 @@ const info = [
     { symbol: Settings, title: "Settings", link: "/settings" },
 ];
 
+
 const Header: React.FC<HeaderProps> = ({ user }) => {
+    const { notificationCount, setNotificationCount } = useNotification();
+
     const [isFocused, setIsFocused] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
     const [hamburgerChange, setHamburgerChange] = useState<boolean>(false);
-    const [notiCount, setNoticount] = useState<number | undefined>(0);
 
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => {
@@ -50,23 +54,28 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
 
 
     useEffect(() => {
-        setNoticount(user?.notification_count);
+        setNotificationCount(user?.notification_count);
 
 
-    }, [user?.notification_count]);
+    }, [setNotificationCount, user?.notification_count]);
 
 
     const updateBadge = useCallback((data: number) => {
-        setNoticount(data !== undefined ? data : user?.notification_count);
-    }, [user?.notification_count]);
+        setNotificationCount(data !== undefined ? data : user?.notification_count);
+    }, [user?.notification_count, setNotificationCount]);
 
 
     useEffect(() => {
+        console.log("socket.io initilaize....");
         const socket = getSocket();
 
-        socket.on("notification", (count: number) => {
-            updateBadge(Number(count));
-          
+
+        socket.emit("register_user", user?.user_id);
+
+        socket.on("notification", (count) => {
+            console.log("Recieved", count);
+            updateBadge(Number(count.noticount));
+
         });
 
         return () => {
@@ -158,7 +167,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                     <Link to="/notifications">
                         <Bell size={18} className="text-[17px] text-gray-600 cursor-pointer" />
                         <span id='countvalueall' className="absolute top-[-5px] right-[-5px] bg-red-500 pr-[6px] pl-[6px] rounded-full text-white text-[12px]">
-                            {notiCount === 0 ? "" : notiCount}
+                            {notificationCount === 0 ? "" : notificationCount}
 
                         </span>
                     </Link>
