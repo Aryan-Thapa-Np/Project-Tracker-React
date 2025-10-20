@@ -1,0 +1,481 @@
+import pool from '../../database/db';
+import { Request, Response } from 'express';
+import { AuthenticatedRequest } from "../../types/auth.types";
+import { ResultSetHeader } from 'mysql2/promise';
+import { insertLog } from "../../services/logger";
+import { pushNotifications } from "../../services/notifiaction";
+import { sanitizeInput } from "../../utils/sanitize";
+import { emitNotificationToUser } from "../../services/socket";
+
+interface Total {
+    total: string;
+}
+
+export const getUserTaskController = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+        const { page = "1", limit = "5", status, project_id } = req.query;
+
+        if (!user_id) {
+            return res.status(400).json({ success: false, error: "user_id required" });
+        }
+
+        const pageNum = parseInt(page as string, 10);
+        const limitNum = parseInt(limit as string, 10);
+        const offset = (pageNum - 1) * limitNum;
+
+
+        let baseQuery = "SELECT SQL_CALC_FOUND_ROWS *,(SELECT milestone_name FROM milestones WHERE milestone_id = tasks.milestone_id) AS milestone_name,(SELECT project_name FROM projects WHERE project_id = tasks.project_id) AS project_name  FROM tasks WHERE assigned_to = ?";
+        const params: (string | number)[] = [user_id];
+
+        if (project_id) {
+            const pid = Number(project_id);
+            if (isNaN(pid)) return res.status(400).json({ success: false, error: "Invalid project_id" });
+            baseQuery += " AND project_id = ?";
+            params.push(pid);
+        }
+
+        if (status) {
+            baseQuery += " AND status = ?";
+            params.push(sanitizeInput(status as string));
+        }
+
+        baseQuery += " ORDER BY due_date ASC LIMIT ? OFFSET ?";
+        params.push(limitNum, offset);
+
+        const [rows] = await pool.execute(baseQuery, params);
+        const [totalRows] = await pool.query("SELECT FOUND_ROWS() as total");
+        const total = (totalRows as Total[])[0];
+
+        return res.status(200).json({
+            success: true,
+            tasks: rows,
+            pagination: {
+                total: parseInt(total.total),
+                page: pageNum,
+                limit: limitNum,
+                totalPages: Math.ceil(parseInt(total.total) / limitNum),
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};
+
+
+
+interface ProjectName {
+    project_name: string;
+}
+export const createTaskController = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+        const { project_id, milestone_id, assigned_to, task_name, due_date, priority, status = "todo" } = req.body;
+        const noticount = (req as AuthenticatedRequest).user.notification_count;
+        const username2 = (req as AuthenticatedRequest).user.username;
+        const user_role = (req as AuthenticatedRequest).user.role;
+
+
+        // Validate required fields
+        if (!user_id || !project_id || !assigned_to || !task_name || !status || !priority) {
+            return res.status(400).json({
+                success: false,
+                error: "user_id, project_id, assigned_to, task_name, status, and priority are required"
+            });
+        }
+
+        // Validate priority
+        const validPriorities = ['low', 'medium', 'high', 'urgent'];
+        if (!validPriorities.includes(priority.toLowerCase())) {
+            return res.status(400).json({
+                success: false,
+                error: "Priority must be one of: low, medium, high, urgent"
+            });
+        }
+
+        // Convert string IDs to numbers
+        const pid = Number(project_id);
+        const mid = milestone_id ? Number(milestone_id) : null;
+        const assignee = Number(assigned_to);
+
+        // Validate numeric conversions
+        if (isNaN(pid) || isNaN(assignee) || (milestone_id && isNaN(mid!))) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid numeric value(s) for project_id, milestone_id, or assigned_to"
+            });
+        }
+
+        // Insert task into database
+        const [result] = await pool.execute(
+            `INSERT INTO tasks (project_id, milestone_id, assigned_to, task_name, due_date, status, priority) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [pid, mid, assignee, task_name, due_date || null, status, priority.toLowerCase()]
+        );
+
+
+        const [rows] = await pool.execute("select project_name from projects where project_id =?", [project_id]);
+        const row = (rows as ProjectName[])[0];
+        insertLog(user_id, username2, 10, `The task '${task_name}' was assigned to  User ID: ${assigned_to} by ID: ${user_id}`);
+        await pushNotifications("Task", assigned_to, ` The task '${task_name}' has been assigned to you for project ID: ${project_id}`, row.project_name, user_role, "normal", req, res);
+        emitNotificationToUser(assigned_to, noticount + 1);
+
+        res.status(201).json({
+            success: true,
+            message: "Task created successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            error: "Internal Server Error"
+        });
+    }
+};
+
+
+export const updateTaskController = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+        const { task_id, project_id, milestone_id, assigned_to, task_name, due_date, priority, status } = req.body;
+        const noticount = (req as AuthenticatedRequest).user.notification_count;
+        const username2 = (req as AuthenticatedRequest).user.username;
+        const user_role = (req as AuthenticatedRequest).user.role;
+
+
+        // Validate required fields
+        if (!user_id || !task_id || !project_id || !assigned_to || !task_name || !status || !priority) {
+            return res.status(400).json({
+                success: false,
+                error: "user_id, task_id, project_id, assigned_to, task_name, status, and priority are required"
+            });
+        }
+
+        // Validate priority
+        const validPriorities = ['low', 'medium', 'high', 'urgent'];
+        if (!validPriorities.includes(priority.toLowerCase())) {
+            return res.status(400).json({
+                success: false,
+                error: "Priority must be one of: low, medium, high, urgent"
+            });
+        }
+
+        // Validate status
+        const validStatuses = ['todo', 'in_progress', 'completed'];
+        if (!validStatuses.includes(status.toLowerCase())) {
+            return res.status(400).json({
+                success: false,
+                error: "Status must be one of: todo, in_progress, completed"
+            });
+        }
+
+        // Convert string IDs to numbers
+        const tid = Number(task_id);
+        const pid = Number(project_id);
+        const mid = milestone_id ? Number(milestone_id) : null;
+        const assignee = Number(assigned_to);
+
+        // Validate numeric conversions
+        if (isNaN(tid) || isNaN(pid) || isNaN(assignee) || (milestone_id && isNaN(mid!))) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid numeric value(s) for task_id, project_id, milestone_id, or assigned_to"
+            });
+        }
+
+        // Check if task exists
+        const [existingTask] = await pool.execute(
+            'SELECT * FROM tasks WHERE task_id = ?',
+            [tid]
+        );
+
+        if (!Array.isArray(existingTask) || existingTask.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: "Task not found"
+            });
+        }
+
+        // Update task in database
+        const [result] = await pool.execute(
+            `UPDATE tasks 
+             SET project_id = ?, milestone_id = ?, assigned_to = ?, task_name = ?, due_date = ?, status = ?, priority = ?
+             WHERE task_id = ?`,
+            [pid, mid, assignee, task_name, due_date || null, status.toLowerCase(), priority.toLowerCase(), tid]
+        );
+
+
+
+
+
+        let totalMilestones = 0;
+        let completedCount = 0;
+
+        const [data] = await pool.execute(`select milestone_id,project_id from tasks where task_id =?`, [tid]);
+        const finalData = (data as Milestone[])[0];
+
+
+        if (status.toLowerCase() === "completed") {
+            const [result2] = await pool.execute(
+                "UPDATE milestones SET completed = true WHERE milestone_id = ? ",
+                [finalData.milestone_id]
+            );
+        } else {
+            const [result3] = await pool.execute(
+                "UPDATE milestones SET completed = false WHERE milestone_id = ? ",
+                [finalData.milestone_id]
+            );
+        }
+
+
+        const [countsRows] = await pool.execute(
+            `SELECT 
+         COUNT(*) as total,
+         SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed
+       FROM milestones
+       WHERE project_id = ?`,
+            [finalData.project_id]
+        );
+
+        const counts: { total: number; completed: number } = Array.isArray(countsRows) && countsRows.length > 0
+            ? (countsRows[0] as { total: number; completed: number })
+            : { total: 0, completed: 0 };
+        totalMilestones = Number(counts.total || 0);
+        completedCount = Number(counts.completed || 0);
+
+        const progress_percentage = totalMilestones > 0 ? Math.round((completedCount / totalMilestones) * 100) : 0;
+        await pool.execute(`UPDATE projects SET progress_percentage = ? WHERE project_id = ?`, [progress_percentage, finalData.project_id]);
+
+
+
+
+
+
+        const [rows] = await pool.execute("select project_name from projects where project_id =?", [project_id]);
+        const row = (rows as ProjectName[])[0];
+        insertLog(user_id, username2, 10, `Task Update: The task '${task_name}' was assigned to  User ID: ${assigned_to} was updated by user ID: ${user_id}`);
+        await pushNotifications("Task", assigned_to, ` Task Update: The task '${task_name}' was Update  for project ID: ${project_id}`, row.project_name, user_role, "normal", req, res);
+        emitNotificationToUser(assigned_to, noticount + 1);
+
+
+        res.status(200).json({
+            success: true,
+            message: "Task updated successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            error: "Internal Server Error"
+        });
+    }
+};
+
+export const getTeamTasksController = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+        if (!user_id) {
+            return res.status(401).json({ success: false, error: "Unauthorized" });
+        }
+
+        const { project_id, status, assigned_to, due_date } = req.query;
+
+        let baseQuery = `
+            SELECT 
+                tasks.*,
+                (SELECT project_name FROM projects WHERE project_id = tasks.project_id) AS project_name,
+                (SELECT profile_pic FROM users WHERE user_id = tasks.assigned_to) AS profile_pic,
+                (SELECT milestone_name FROM milestones WHERE milestone_id = tasks.milestone_id) AS milestone_name,
+                (SELECT username FROM users WHERE user_id = tasks.assigned_to) AS username
+
+            FROM tasks 
+            WHERE 1=1
+        `;
+        const params: (string | number)[] = [];
+
+        // Filters
+        if (project_id) {
+            const pid = Number(project_id);
+            if (isNaN(pid)) return res.status(400).json({ success: false, error: "Invalid project_id" });
+            baseQuery += " AND project_id = ?";
+            params.push(pid);
+        }
+
+        if (status && typeof status === "string") {
+            baseQuery += " AND status = ?";
+            params.push(status);
+        }
+
+        if (assigned_to) {
+            const assigneeId = Number(assigned_to);
+            if (isNaN(assigneeId)) return res.status(400).json({ success: false, error: "Invalid assigned_to" });
+            baseQuery += " AND assigned_to = ?";
+            params.push(assigneeId);
+        }
+
+        if (due_date && typeof due_date === "string") {
+            baseQuery += " AND due_date = ?";
+            params.push(due_date);
+        }
+
+        // Execute query
+        const [rows] = await pool.execute(baseQuery, params);
+
+        if (!Array.isArray(rows) || rows.length === 0) {
+            return res.status(200).json({ success: true, tasks: [], message: "No tasks found." });
+        }
+
+        res.status(200).json({ success: true, tasks: rows });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};
+
+interface Milestone {
+    milestone_id: string;
+    project_id: string;
+}
+
+export const updateTaskStatusController = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+        const username2 = (req as AuthenticatedRequest).user.username;
+
+        const { task_id, status } = req.body;
+
+        if (!task_id || !status) {
+            return res.status(400).json({ success: false, error: "task_id & status required" });
+        }
+
+        if (!["todo", "in_progress", "completed"].includes(status)) {
+            return res.status(400).json({ success: false, error: "Invalid status" });
+        }
+        let totalMilestones = 0;
+        let completedCount = 0;
+
+        const [data] = await pool.execute(`select milestone_id,project_id from tasks where task_id =?`, [task_id]);
+        const finalData = (data as Milestone[])[0];
+        const [result] = await pool.execute(
+            "UPDATE tasks SET status = ? WHERE task_id = ? AND assigned_to = ?",
+            [status, task_id, user_id]
+        );
+
+        if (status === "completed") {
+            const [result2] = await pool.execute(
+                "UPDATE milestones SET completed = true WHERE milestone_id = ? ",
+                [finalData.milestone_id]
+            );
+        } else {
+            const [result3] = await pool.execute(
+                "UPDATE milestones SET completed = false WHERE milestone_id = ? ",
+                [finalData.milestone_id]
+            );
+        }
+
+
+        const [countsRows] = await pool.execute(
+            `SELECT 
+         COUNT(*) as total,
+         SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed
+       FROM milestones
+       WHERE project_id = ?`,
+            [finalData.project_id]
+        );
+
+        const counts: { total: number; completed: number } = Array.isArray(countsRows) && countsRows.length > 0
+            ? (countsRows[0] as { total: number; completed: number })
+            : { total: 0, completed: 0 };
+        totalMilestones = Number(counts.total || 0);
+        completedCount = Number(counts.completed || 0);
+
+        const progress_percentage = totalMilestones > 0 ? Math.round((completedCount / totalMilestones) * 100) : 0;
+        await pool.execute(`UPDATE projects SET progress_percentage = ? WHERE project_id = ?`, [progress_percentage, finalData.project_id]);
+
+
+
+
+
+        if (!result || (result as ResultSetHeader).affectedRows === 0) {
+            return res.status(404).json({ success: false, error: "Task not found or not yours" });
+        }
+        insertLog(user_id, username2, 10, `Task Update: The task ID: ${task_id} status was updated to ${status} by User ID: ${user_id}`);
+
+        return res.status(200).json({ success: true, message: "Task status updated" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};
+
+
+
+export const deleteTaskController = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+        const username2 = (req as AuthenticatedRequest).user.username;
+
+        const { task_id } = req.body;
+
+        if (!task_id || !user_id) {
+            return res.status(400).json({ success: false, error: "task_id & user_id required" });
+        }
+
+        const [result] = await pool.execute(`delete from tasks where task_id=? `, [task_id]);
+
+        if (!result || (result as ResultSetHeader).affectedRows === 0) {
+            return res.status(404).json({ success: false, error: "Failed to delete task." });
+        }
+
+        insertLog(user_id, username2, 10, `Task Delete: The task ID: ${task_id}  was deleted by User ID: ${user_id}`);
+
+
+        return res.status(200).json({ success: true, message: "Task was deleted." });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};
+
+
+
+
+
+export const getTeamProgressController = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as AuthenticatedRequest).user.id;
+
+
+        if (!user_id) {
+            return res.status(400).json({ success: false, error: "user_id required" });
+        }
+
+        const [result] = await pool.execute(`
+                SELECT 
+                    t.assigned_to,
+                    u.username,
+                    u.profile_pic,
+                    ROUND(SUM(t.status = 'completed') / COUNT(*) * 100, 2) AS progress_percentage
+                FROM tasks t
+                JOIN users u ON u.user_id = t.assigned_to
+                GROUP BY t.assigned_to
+            `);
+
+        if (!result || (result as ResultSetHeader).affectedRows === 0) {
+            return res.status(404).json({ success: false, error: "Failed to fetch team progress." });
+        }
+
+        return res.status(200).json({ success: true, progress: result, message: "Success" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+};
+
+
+
+

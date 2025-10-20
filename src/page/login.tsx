@@ -18,6 +18,7 @@ import { Link } from 'react-router-dom';
 
 import { Sentry } from "react-activity";
 import { getCsrfToken } from '../sub-components/csrfToken.tsx';
+import { Navigate } from "react-router-dom";
 
 export default function LoginPage() {
 
@@ -174,7 +175,8 @@ export default function LoginPage() {
       setShowCodeModal(false);
 
       setTimeout(() => {
-        window.location.href = "/";
+        <Navigate to="/login" replace />;
+
       }, 1000);
 
     } catch (error) {
