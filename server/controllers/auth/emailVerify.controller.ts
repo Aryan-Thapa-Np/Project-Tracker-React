@@ -44,7 +44,7 @@ export const emailVerifyController = async (req: Request, res: Response) => {
 
         res.cookie('act', token, {
             httpOnly: true,
-            sameSite: "lax",
+            sameSite: "none",
             secure: process.env.NODE_ENV === 'production', // Secure only in production
             maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
@@ -64,7 +64,7 @@ export const emailVerifyController = async (req: Request, res: Response) => {
 
             res.cookie('ref', refToken, {
                 httpOnly: true,
-                sameSite: 'lax',
+                sameSite: 'none',
                 secure: process.env.NODE_ENV === 'production', // Secure only in production
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });

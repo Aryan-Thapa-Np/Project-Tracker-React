@@ -88,7 +88,7 @@ const UserManagement: React.FC<UsersProps> = ({ user }) => {
     const apiUrl = import.meta.env.VITE_BACKEND_URL;
     const [isLoading, setIsLoading] = useState(false);
 
-    const [deleteuserId, setDeleteUserid] = useState<number | null>(null);
+    const [deleteuserId, setDeleteUserid] = useState < number | string| null > (null);
 
     // Debounce search input
     useEffect(() => {
@@ -322,7 +322,7 @@ const UserManagement: React.FC<UsersProps> = ({ user }) => {
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {users.map(user => (
-                                    
+
                                     <tr key={user.user_id}>
                                         <td className="whitespace-nowrap px-6 py-4">
                                             <div className="text-sm font-medium text-gray-900">{user.username}</div>

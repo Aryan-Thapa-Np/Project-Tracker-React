@@ -21,7 +21,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173","file://"],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -34,11 +34,25 @@ app.use(cookieParser());
 
 
 
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true,
-}));
+// app.use(cors({
+//   origin: 'http://localhost:5173',
+//   credentials: true,
+// }));
 
+
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || origin === 'null' || origin.startsWith('file://')) {
+      callback(null, true); // Allow `file://` and requests without origin (e.g., Electron)
+    } else if (origin === 'http://localhost:5173') {
+      callback(null, true); // Allow localhost development
+    } else {
+      callback(new Error('Origin not allowed'), false); // Deny any other origins
+    }
+  },
+  credentials: true, // Allow cookies to be sent and received
+}));
 
 
 app.use("/user", express.static(path.join(__dirname, "./uploads/user")));
@@ -51,8 +65,8 @@ app.use(
         scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:", "http://localhost:5173", "http://localhost:4000"], // allow images
-        connectSrc: ["'self'", "http://localhost:5173", "http://localhost:4000"],     // allow API
+        imgSrc: ["'self'", "data:", "http://localhost:5173", "http://localhost:4000", "file://"], // allow images
+        connectSrc: ["'self'", "http://localhost:5173", "http://localhost:4000","file://"],     // allow API
         objectSrc: ["'none'"],
         upgradeInsecureRequests: [],
       },

@@ -30,7 +30,7 @@ function getNotificationConfig(type: string, titleName: string, project: string 
             };
         case 'user':
             return {
-                icon_class: 'users',
+                icon_class: 'user',
                 title: `${titleName}`
 
             };

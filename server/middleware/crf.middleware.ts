@@ -9,13 +9,14 @@ export const createCsrfTokenMiddleware = async (req: Request, res: Response) => 
     try {
         const csrfToken = crypto.randomBytes(32).toString('hex');
 
-        
+
         res.cookie('csrfToken', csrfToken, {
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'none',
             httpOnly: true
         });
-        
+
+
         res.json({
             success: true,
             csrfToken,
@@ -36,8 +37,9 @@ export const verifyCsrfTokenMiddleware = async (req: Request, res: Response, nex
         const csrfToken = req.cookies?.csrfToken;
         const csrfHeaderToken = req.headers['x-csrf-token'];
 
- 
 
+        // console.log("Received CSRF Cookie:", csrfToken);
+        // console.log("Received CSRF Header Token:", csrfHeaderToken);
 
         if (!csrfToken || !csrfHeaderToken) {
             return res.status(400).json({

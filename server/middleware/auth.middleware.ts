@@ -86,7 +86,7 @@ export const authenticateUserMiddleware = async (
 
       res.cookie('act', token, {
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none',
         secure: process.env.NODE_ENV === 'production', // Secure only in production
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       });

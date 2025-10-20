@@ -13,7 +13,7 @@ import PrivateRoute from "./sub-components/protected.tsx";
 import PasswordResetPage from "./page/passwordReset.tsx";
 import SettingsPage from "./page/settings.tsx";
 import LogsPage from "./page/logs.tsx";
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter  as Router, Routes, Route } from 'react-router-dom';
 import PageNotFound from "./page/404.tsx";
 import InternalServerError from "./page/500.tsx";
 

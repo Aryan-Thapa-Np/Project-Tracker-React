@@ -106,7 +106,7 @@ export const loginController = async (req: Request, res: Response) => {
 
         res.cookie('act', token, {
             httpOnly: true,
-            sameSite: 'lax',
+            sameSite: 'none',
             secure: process.env.NODE_ENV === 'production', // Secure only in production
             maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
@@ -126,7 +126,7 @@ export const loginController = async (req: Request, res: Response) => {
 
             res.cookie('ref', refToken, {
                 httpOnly: true,
-                sameSite: 'lax',
+                sameSite: 'none',
                 secure: process.env.NODE_ENV === 'production', 
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
@@ -172,14 +172,14 @@ export const LogoutController = async (req: Request, res: Response) => {
     try {
         res.clearCookie('act', {
             httpOnly: true,
-            sameSite: 'lax',
+            sameSite: 'none',
             secure: process.env.NODE_ENV === 'production',
             maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
 
         res.clearCookie('ref', {
             httpOnly: true,
-            sameSite: 'lax',
+            sameSite: 'none',
             secure: process.env.NODE_ENV === 'production',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
