@@ -17,6 +17,7 @@ import {
     deleteNotificationController,
     getNotificationCountController
 } from "../controllers/others.controller.ts";
+
 import {
     createUserValidation,
     getUsersValidation,
@@ -24,8 +25,10 @@ import {
     updateUserSelfValidation,
     getNotificationsValidator,
     markAsReadValidator,
-    deleteNotificationValidator
+    deleteNotificationValidator,
+    deleteUserValidator
 } from "../middleware/validator.ts";
+
 import {
     universalLimiter,
     normalLimiter
@@ -59,14 +62,14 @@ router.get("/users/userNames", normalLimiter, authenticateUserMiddleware, getUse
 
 
 router.get("/users/getnotifications", normalLimiter, getNotificationsValidator, authenticateUserMiddleware, getNotificationsController as RequestHandler)
-router.patch("/users/markasread/:id", normalLimiter,verifyCsrfTokenMiddleware, markAsReadValidator, authenticateUserMiddleware, markAsReadController as RequestHandler)
+router.patch("/users/markasread/:id", normalLimiter,verifyCsrfTokenMiddleware, authenticateUserMiddleware,markAsReadValidator, markAsReadController as RequestHandler)
 router.patch("/users/markallasread", normalLimiter,verifyCsrfTokenMiddleware, authenticateUserMiddleware, markAllAsReadController as RequestHandler)
 router.delete("/users/deletenotification/:id", normalLimiter,verifyCsrfTokenMiddleware, deleteNotificationValidator, authenticateUserMiddleware, deleteNotificationController as RequestHandler)
 
 router.get("/users/getnotificationsCount", normalLimiter, authenticateUserMiddleware, getNotificationCountController as RequestHandler)
 
 
-router.delete("/users/userdelete", normalLimiter, authenticateUserMiddleware, deleteUserController as RequestHandler)
+router.delete("/users/userdelete", normalLimiter, authenticateUserMiddleware,deleteUserValidator, deleteUserController as RequestHandler)
 
 
 export default router;

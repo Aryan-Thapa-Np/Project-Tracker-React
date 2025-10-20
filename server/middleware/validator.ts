@@ -213,6 +213,7 @@ const createProjectValidation = [
         .isArray().withMessage("Milestones must be an array."),
 
     body("milestones.*.milestone_name")
+        .optional()
         .notEmpty().withMessage("Milestone name is required.")
         .isLength({ min: 3 }).withMessage("Milestone name must be at least 3 characters."),
 
@@ -411,9 +412,157 @@ const deleteNotificationValidator = [
     validationresults,
 ];
 
+const deleteProjectValidator = [
+    body("project_id")
+        .notEmpty()
+        .withMessage("Project ID is required.")
+        .isNumeric()
+        .withMessage("Project ID must be a number."),
+    validationresults,
+];
+
+const updateProjectValidator = [
+    body("project_id")
+        .notEmpty()
+        .withMessage("Project ID is required.")
+        .isNumeric()
+        .withMessage("Project ID must be a number."),
+    body("project_name")
+        .optional()
+        .isString()
+        .withMessage("Project name must be a string.")
+        .trim()
+        .isLength({ min: 1 })
+        .withMessage("Project name cannot be empty if provided."),
+    body("status")
+        .optional()
+        .isIn(["on_track", "completed", "pending"])
+        .withMessage("Status must be one of: on_track, completed, pending."),
+    body("due_date")
+        .optional({ nullable: true })
+        .isISO8601()
+        .withMessage("Due date must be a valid ISO 8601 date."),
+    body("milestones")
+        .optional()
+        .isArray()
+        .withMessage("Milestones must be an array.")
+        .custom((milestones) => {
+            if (milestones) {
+                for (const m of milestones) {
+                    if (m.milestone_id && !Number.isInteger(Number(m.milestone_id))) {
+                        throw new Error("Milestone ID must be a number.");
+                    }
+                    if (!m.milestone_name || typeof m.milestone_name !== "string" || m.milestone_name.trim() === "") {
+                        throw new Error("Milestone name must be a non-empty string.");
+                    }
+                    if (m.completed !== undefined && typeof m.completed !== "boolean") {
+                        throw new Error("Milestone completed must be a boolean.");
+                    }
+                    if (m.due_date && !new Date(m.due_date).toISOString()) {
+                        throw new Error("Milestone due date must be a valid ISO 8601 date.");
+                    }
+                }
+            }
+            return true;
+        }),
+    body("removed_milestone_ids")
+        .optional()
+        .isArray()
+        .withMessage("Removed milestone IDs must be an array.")
+        .custom((ids) => {
+            if (ids) {
+                for (const id of ids) {
+                    if (!Number.isInteger(Number(id))) {
+                        throw new Error("Removed milestone IDs must be numbers.");
+                    }
+                }
+            }
+            return true;
+        }),
+    validationresults,
+];
+
+const updateTaskStatusValidator = [
+    body("task_id")
+        .notEmpty()
+        .withMessage("Task ID is required.")
+        .isNumeric()
+        .withMessage("Task ID must be a number."),
+    body("status")
+        .notEmpty()
+        .withMessage("Status is required.")
+        .isIn(["todo", "in_progress", "completed"])
+        .withMessage("Status must be one of: todo, in_progress, completed."),
+    validationresults,
+];
+
+
+const updateTaskValidator = [
+    body("task_id")
+        .notEmpty()
+        .withMessage("Task ID is required.")
+        .isNumeric()
+        .withMessage("Task ID must be a number."),
+    body("project_id")
+        .notEmpty()
+        .withMessage("Project ID is required.")
+        .isNumeric()
+        .withMessage("Project ID must be a number."),
+    body("milestone_id")
+        .optional()
+        .isNumeric()
+        .withMessage("Milestone ID must be a number if provided."),
+    body("assigned_to")
+        .notEmpty()
+        .withMessage("Assigned user ID is required.")
+        .isNumeric()
+        .withMessage("Assigned user ID must be a number."),
+    body("task_name")
+        .notEmpty()
+        .withMessage("Task name is required.")
+        .isString()
+        .withMessage("Task name must be a string.")
+        .trim()
+        .isLength({ min: 1 })
+        .withMessage("Task name cannot be empty."),
+    body("due_date")
+        .optional({ nullable: true })
+        .isISO8601()
+        .withMessage("Due date must be a valid ISO 8601 date if provided."),
+    body("priority")
+        .notEmpty()
+        .withMessage("Priority is required.")
+        .isIn(["low", "medium", "high", "urgent"])
+        .withMessage("Priority must be one of: low, medium, high, urgent."),
+    body("status")
+        .notEmpty()
+        .withMessage("Status is required.")
+        .isIn(["todo", "in_progress", "completed"])
+        .withMessage("Status must be one of: todo, in_progress, completed."),
+    validationresults,
+];
+
+
+const deleteTaskValidator = [
+    body("task_id")
+        .notEmpty()
+        .withMessage("Task ID is required.")
+        .isNumeric()
+        .withMessage("Task ID must be a number."),
+    validationresults,
+];
+
+const deleteUserValidator = [
+    body("deleteuserId")
+        .notEmpty()
+        .withMessage("Delete user ID is required.")
+        .isNumeric()
+        .withMessage("Delete user ID must be a number."),
+    validationresults,
+];
 
 export {
-
+    //auth
     loginValidation,
     emailVerificationValidation,
     resendEmailVerificationValidation,
@@ -421,17 +570,34 @@ export {
     changePasswordvalidation,
     resetEmailValidation,
     resendEmailVerification2FAValidation,
+
+    //user
     createUserValidation,
     getUsersValidation,
-    createTaskValidation,
-    getTaskValidation,
-    createProjectValidation,
     updateUserSelfValidation,
-    getProjectsValidation,
     getTeamTasksValidation,
     updateUsersValidation,
+    deleteUserValidator,
+
+    //logs
     logsFiltersValidation,
+
+    //notifications
     getNotificationsValidator,
     markAsReadValidator,
-    deleteNotificationValidator
+    deleteNotificationValidator,
+
+    //task
+    getTaskValidation,
+    createTaskValidation,
+    updateTaskStatusValidator,
+    updateTaskValidator,
+    deleteTaskValidator,
+
+
+    //project
+    createProjectValidation,
+    getProjectsValidation,
+    deleteProjectValidator,
+    updateProjectValidator
 };

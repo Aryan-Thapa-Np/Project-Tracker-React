@@ -10,10 +10,17 @@ import {
    deleteTaskController,
    getTeamProgressController
 } from "../controllers/others.controller.ts";
+
+
 import {
    createTaskValidation,
-   getTaskValidation
+   getTaskValidation,
+   updateTaskStatusValidator,
+   updateTaskValidator,
+   deleteTaskValidator
 } from "../middleware/validator.ts";
+
+
 import {
    universalLimiter,
    normalLimiter
@@ -29,16 +36,16 @@ import { authenticateUserMiddleware } from "../middleware/auth.middleware.ts";
 const router = express.Router();
 
 
-router.get("/users/getMytask", normalLimiter, authenticateUserMiddleware, getUserTaskController as RequestHandler);
+router.get("/users/getMytask", normalLimiter, authenticateUserMiddleware,getTaskValidation, getUserTaskController as RequestHandler);
 
-router.post("/users/assignTask", universalLimiter, verifyCsrfTokenMiddleware, authenticateUserMiddleware, checkPermission(["create_task"]), createTaskController as RequestHandler);
+router.post("/users/assignTask", universalLimiter, verifyCsrfTokenMiddleware, authenticateUserMiddleware,createTaskValidation, checkPermission(["create_task"]), createTaskController as RequestHandler);
 
-router.post("/users/updateTaskStatus", normalLimiter, authenticateUserMiddleware, updateTaskStatusController as RequestHandler);
+router.post("/users/updateTaskStatus", normalLimiter, authenticateUserMiddleware,updateTaskStatusValidator, updateTaskStatusController as RequestHandler);
 
 router.get("/users/getAllTeamTasks", normalLimiter, authenticateUserMiddleware, getTeamTasksController as RequestHandler);
-router.put("/users/updateTask", normalLimiter, authenticateUserMiddleware,checkPermission(["update_task"]), updateTaskController as RequestHandler);
+router.put("/users/updateTask", normalLimiter, authenticateUserMiddleware,updateTaskValidator,checkPermission(["update_task"]), updateTaskController as RequestHandler);
 
-router.delete("/users/updateTask", normalLimiter, authenticateUserMiddleware,checkPermission(["delete_task"]), deleteTaskController as RequestHandler);
+router.delete("/users/updateTask", normalLimiter, authenticateUserMiddleware,deleteTaskValidator,checkPermission(["delete_task"]), deleteTaskController as RequestHandler);
 router.get("/users/getTeamProgress", normalLimiter, authenticateUserMiddleware, getTeamProgressController as RequestHandler);
 
 
