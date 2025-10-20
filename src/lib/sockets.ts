@@ -3,7 +3,7 @@ import { io, Socket } from "socket.io-client";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 // Create a singleton socket instance
-const SOCKET_URL = `${apiUrl}`|| "http://localhost:3000"; 
+const SOCKET_URL = `${apiUrl}`; 
 
 let socket: Socket;
 

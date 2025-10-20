@@ -3,10 +3,26 @@ import type { Request, Response, NextFunction } from 'express';
 
 
 
+const appToken = process.env.APP_TOKEN;
 
 
 export const createCsrfTokenMiddleware = async (req: Request, res: Response) => {
     try {
+        const isValidApp = req.headers['x-app-token'];
+        if (!isValidApp || !appToken) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing app Token',
+            });
+        }
+
+        if (isValidApp !== appToken) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invlaid app Token',
+            });
+        }
+
         const csrfToken = crypto.randomBytes(32).toString('hex');
 
 
@@ -34,6 +50,8 @@ export const verifyCsrfTokenMiddleware = async (req: Request, res: Response, nex
 
 
     try {
+
+
         const csrfToken = req.cookies?.csrfToken;
         const csrfHeaderToken = req.headers['x-csrf-token'];
 
