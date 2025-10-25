@@ -103,7 +103,7 @@ export default function LoginPage() {
       msg = data.message;
       toast.success(msg);
       setTimeout(() => {
-        window.location.href = "/";
+        window.location.href = "/index.html";
       }, 1000);
 
     } catch (error) {

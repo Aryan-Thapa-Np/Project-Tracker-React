@@ -91,6 +91,10 @@ const SettingsPage: React.FC<SettingsProps> = ({ user }) => {
             if (res.ok) {
                 msg = data.message;
                 toast.success(msg || "Profile updated successfully!");
+                setTimeout(() => {
+                    window.location.href = "/index.html/#/settings";
+
+                }, 500);
 
             } else {
                 msg = data.error;
