@@ -171,8 +171,7 @@ const createTaskValidation = [
 
 const getTaskValidation = [
     query("project_id")
-        .isEmpty().withMessage("Project id required.")
-        .isInt({ gt: 0 }).withMessage("project_id must be a positive integer."),
+        .isEmpty().withMessage("Project id required."),
 
     query("status")
         .optional()

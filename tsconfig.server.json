@@ -7,8 +7,12 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "outDir": "dist/server"
+    "outDir": "dist/server",
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["server/*"]
+    }
   },
   "include": ["server/**/*.ts"],
-  "exclude": ["node_modules","src", "dist"]
+  "exclude": ["node_modules", "src", "dist"]
 }

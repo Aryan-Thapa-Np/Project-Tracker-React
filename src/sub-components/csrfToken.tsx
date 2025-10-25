@@ -1,16 +1,24 @@
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const appToken = import.meta.env.VITE_APP_TOKEN;
+
+
 export const getCsrfToken = async () => {
     try {
         const res = await fetch(`${apiUrl}/api/user/getCsrf`, {
             method: "GET",
             credentials: "include",
+
             headers: {
-                "x-app-token": `${appToken}`,
-            }
+
+                "x-app-token": await appToken,
+
+            },
+
         })
 
         const data = await res.json();
+        // console.log(data);
+
         if (!data.ok && data.success === false) {
             return;
         }

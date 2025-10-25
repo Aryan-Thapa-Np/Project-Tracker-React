@@ -71,6 +71,7 @@ export default function LoginPage() {
 
 
     try {
+      
       const res = await fetch(`${apiUrl}/api/user/login`, {
         method: "POST",
         headers: {
@@ -87,6 +88,8 @@ export default function LoginPage() {
       });
       let msg: string;
       const data = await res.json();
+
+      // console.log(data);
 
       if (!res.ok && data.success === false) {
 
