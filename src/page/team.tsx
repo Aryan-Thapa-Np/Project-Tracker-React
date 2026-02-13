@@ -976,6 +976,9 @@ const TeamTasks: React.FC<TeamProps> = ({ user }) => {
                     }),
                 });
 
+                const data2 = await res.json();
+                console.log(data2);
+
                 if (!res.ok) throw new Error("Assign failed");
                 toast.success("Task assigned");
                 setAssignOpen(false);

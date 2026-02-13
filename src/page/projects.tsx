@@ -11,7 +11,10 @@ import { escapeHTML } from "../sub-components/sanitize.tsx";
 import {
   Plus,
   Trash,
-  X
+  X,
+  Filter,
+  Calendar,
+  RotateCcw
 } from "lucide-react";
 
 interface Milestone {
@@ -199,38 +202,26 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
 
         const grouped: Record<number, Project> = {};
 
-        (data.projects || data.projectRows || []).forEach((row: Project & { [key: string]: unknown }) => {
+        (data.projects || data.projectRows || []).forEach((row: any) => {
           const pid = Number(row.project_id);
 
           if (!grouped[pid]) {
             grouped[pid] = {
               project_id: pid,
-              project_name: row.project_name || row.project_name,
-              project_status: typeof row.project_status === "string"
-                ? row.project_status
-                : typeof row.status === "string"
-                  ? row.status
-                  : "pending",
+              project_name: row.project_name,
+              project_status: row.project_status || row.status || "pending",
               progress_percentage: Number(row.progress_percentage || 0),
-              project_due_date: typeof row.project_due_date === "string"
-                ? row.project_due_date
-                : typeof row.due_date === "string"
-                  ? row.due_date
-                  : null,
+              project_due_date: row.project_due_date || row.due_date || null,
               milestones: [],
             };
           }
 
           if (row.milestone_id) {
             grouped[pid].milestones.push({
-              milestone_id: typeof row.milestone_id === "number" ? row.milestone_id : Number(row.milestone_id),
-              milestone_name: typeof row.milestone_name === "string" ? row.milestone_name : "",
+              milestone_id: Number(row.milestone_id),
+              milestone_name: row.milestone_name || "",
               milestone_completed: !!row.milestone_completed,
-              milestone_due_date: typeof row.milestone_due_date === "string"
-                ? row.milestone_due_date
-                : typeof row.due_date === "string"
-                  ? row.due_date
-                  : null,
+              milestone_due_date: row.milestone_due_date || null,
             });
           }
         });
@@ -438,11 +429,12 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
           <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-between gap-3 sm:gap-4 mb-6">
             <div className="flex flex-col sm:flex-row gap-3">
               {/* Status Filter */}
-              <div className="relative">
+              <div className="relative group">
+                <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="pl-8 pr-4 py-2 w-full sm:w-auto bg-white border outline-0 border-gray-300 rounded-lg text-gray-700 focus:ring-primary focus:border-primary text-sm sm:text-base"
+                  className="pl-9 pr-4 py-2 w-full sm:w-auto bg-white border outline-0 border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base transition-all"
                 >
                   <option value="all">Status: All</option>
                   <option value="on_track">On Track</option>
@@ -452,20 +444,32 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
               </div>
 
               {/* Date Filter */}
-              <div className="relative">
+              <div className="relative group">
+                <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
                 <input
                   type="month"
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
-                  className="pl-8 pr-4 py-2 w-full sm:w-auto bg-white border outline-0 border-gray-300 rounded-lg text-gray-700 focus:ring-primary focus:border-primary text-sm sm:text-base"
+                  className="pl-9 pr-4 py-2 w-full sm:w-auto bg-white border outline-0 border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base transition-all"
                 />
               </div>
+
+              {/* Reset Filters */}
+              {(statusFilter !== "all" || dateFilter !== "") && (
+                <button
+                  onClick={() => { setStatusFilter("all"); setDateFilter(""); }}
+                  className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer"
+                >
+                  <RotateCcw size={16} />
+                  <span>Reset</span>
+                </button>
+              )}
             </div>
 
             {/* New Project Button */}
             <button
               onClick={() => setShowCreateModal(true)}
-              className=" flex items-center justify-center cursor-pointer rounded-sm bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+              className=" flex items-center justify-center gap-2 cursor-pointer rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               <Plus size={18} />
               <span>Create Project</span>
@@ -480,15 +484,32 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                 <SkeletonProjectCard key={index} />
               ))
             ) : projects.length === 0 ? (
-              <div className="col-span-full flex flex-col items-center justify-center gap-4 p-8 bg-white rounded-xl shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6M3 7h18" />
-                </svg>
-                <div className="text-center">
-                  <h4 className="text-lg font-semibold text-gray-800">No projects created yet</h4>
-                  <p className="text-sm text-gray-500">Create your first project to track milestones and progress.</p>
+              <div className="col-span-full flex flex-col items-center justify-center gap-4 p-12 bg-white rounded-2xl shadow-sm border border-dashed border-gray-200">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
+                  <Filter className="h-8 w-8 text-gray-300" />
                 </div>
-                <button onClick={() => setShowCreateModal(true)} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded cursor-pointer">Create Project</button>
+                <div className="text-center">
+                  <h4 className="text-lg font-semibold text-gray-800">
+                    {statusFilter !== "all" || dateFilter !== "" ? "No projects match your filters" : "No projects created yet"}
+                  </h4>
+                  <p className="text-sm text-gray-500 max-w-xs mx-auto">
+                    {statusFilter !== "all" || dateFilter !== "" 
+                      ? "Try adjusting your filters or reset them to see all projects."
+                      : "Create your first project to track milestones and progress."}
+                  </p>
+                </div>
+                {statusFilter !== "all" || dateFilter !== "" ? (
+                  <button 
+                    onClick={() => { setStatusFilter("all"); setDateFilter(""); }}
+                    className="mt-2 px-6 py-2 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100 transition-colors cursor-pointer"
+                  >
+                    Clear all filters
+                  </button>
+                ) : (
+                  <button onClick={() => setShowCreateModal(true)} className="mt-2 px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all cursor-pointer shadow-lg shadow-blue-500/20">
+                    Create Project
+                  </button>
+                )}
               </div>
             ) : (
               projects.map((project) => (
