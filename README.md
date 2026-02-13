@@ -4,6 +4,34 @@ A powerful, modern, and real-time project management application built with **Re
 
 ![Project Tracker Logo](public/fav.png)
 
+## 📸 Sneak Peek
+
+### 📊 Dashboard Overview
+
+![Dashboard](sneak_peak/dashboard.png)
+
+### 📁 Project Management
+
+|            Projects List             |                 Project Details                  |
+| :----------------------------------: | :----------------------------------------------: |
+| ![Projects](sneak_peak/projects.png) | ![Projects Detail](<sneak_peak/projects(2).png>) |
+
+### 📋 Tasks & Teams
+
+|              My Tasks              |               Team Tasks                |
+| :--------------------------------: | :-------------------------------------: |
+| ![My Tasks](sneak_peak/mytask.png) | ![Team Tasks](sneak_peak/team_task.png) |
+
+### 👥 Admin & Settings
+
+|                  User Management                   |                 Notifications                  |               Settings               |
+| :------------------------------------------------: | :--------------------------------------------: | :----------------------------------: |
+| ![User Management](sneak_peak/user_management.png) | ![Notifications](sneak_peak/notifications.png) | ![Settings](sneak_peak/settings.png) |
+
+### 📜 Activity Logs
+
+![Logs](sneak_peak/logs.png)
+
 ## ✨ Features
 
 - **🔐 Secure Authentication**: JWT-based login, registration, and professional password reset flow.
